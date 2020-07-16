@@ -3,11 +3,14 @@
 #include <sys/stat.h>
 #include <opencv2/opencv.hpp>
 
+#include "people_counter.h" 
 #include "json.h"
 
 #define RESOLUTION	(width * height)
 
 using namespace cv;
+
+/*---------------------------------------global variables--------------------------------------*/
 
 /* the width of the image and the height of the image, width * height = resolution */
 static int width = 8;
@@ -25,12 +28,43 @@ static unsigned long img_ptr = 0;
 /* how many frames are there in this video */
 static unsigned long frame_count = 0; 
 
+/* background image that will be passed into pipeline */
+static uint8_t* background;
+
+/* counting result */
+ip_count count = {0, 0};
+
+/* configuration of the pipeline */
+ip_config config = {
+	.kernel_1 = 5,
+	.kernel_2 = 1,
+	.kernel_3 = 1,
+	.threshold = 32,
+	.blob_width_min = 0,
+	.blob_height_min = 0,
+	.updated_threshold = 84, 
+	.max_area = 18
+};
+
+/*---------------------------------------------------------------------------------------------*/
+
+
+/*--------------------------------------------function prototypes------------------------------*/
+
 static void parse_json(char *file_name);
 static double **parse_value(json_value* value);
 static uint8_t grey_map(int low, int high, double temp);
-static void show_image(void);
+static void show_image(uint8_t* frame);
+static void get_background(uint8_t *frame, unsigned long img_ptr);
+
+/*---------------------------------------------------------------------------------------------*/
+
 
 int main(int argc, char *argv[]) {
+	uint8_t cur_frame[RESOLUTION] = {0};
+	background = (uint8_t *)malloc(RESOLUTION * sizeof(uint8_t));
+	ip_mat mat_background = {.data = background};
+
 	/* Check whether the amount of arguments is correct */
 	if (argc != 2) {
 		fprintf(stderr, "Invalid argument(s) please only enter the name of the json file\n");
@@ -44,8 +78,24 @@ int main(int argc, char *argv[]) {
 	namedWindow("Thermal image", WINDOW_NORMAL);
 	resizeWindow("Thermal image", 200, 200);
 	while (img_ptr++ < frame_count) {
-		show_image();
+		show_image(cur_frame);
+		ip_mat mat = {.data = cur_frame};
+		get_background(cur_frame, img_ptr);
+		ip_status status = IpProcess((void *)&mat, (void *)&mat_background, (void *)&count);
+		if (status == IP_EMPTY) 
+			printf("The frame is empty\n");
+		else if (status == IP_STILL) 
+			printf("The frame is still\n");
+		else {
+			printf("Dir: %s, Count: %d\n", (count.direc == DIRECTION_UP)? "UP" : "DOWN", count.num);
+
+		}
 	}
+	free(background);
+	for (int i = 0; i < frame_count; i++) {
+		free(frames_ptr[i]);
+	}
+	free(frames_ptr);
 
 }
 		
@@ -161,10 +211,10 @@ static uint8_t grey_map(int low, int high, double temp) {
 
 
 /**
- * @breif display the image in a named window
+ * @breif covert the data format of the frame into uint8, display the image in a named window
+ * 	  and save it into cur_frame which will be passed into pipeline later.
  */
-static void show_image(void) {
-	uint8_t frame[RESOLUTION];
+static void show_image(uint8_t* frame) {
 	for (int i = 0; i < RESOLUTION; i++) {
 		frame[i] = grey_map(llimit, hlimit, frames_ptr[img_ptr][i]);
 	}
@@ -178,8 +228,16 @@ static void show_image(void) {
 }
 
 
-
-
+/**
+ * @brief Wrapper function, get the background of the pipeline, the way that the background
+ * 	  is retrived can be replaced by overwritten this function 
+ * @param frame background frame
+ */
+static void get_background(uint8_t* frame, unsigned long frame_count) {
+	/* take the first frame as the background frame */
+	if (frame_count == 1)
+		memcpy(background, frame, RESOLUTION * sizeof(uint8_t));
+}
 
 
 

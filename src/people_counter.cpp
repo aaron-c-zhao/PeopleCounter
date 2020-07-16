@@ -6,55 +6,16 @@
 **/
 
 #include "people_counter.h"
-#include "main.h"
 #include "string.h"
 
-/* DWT control register */
-#define KIN1_DWT_CONTROL 	(*((volatile uint32_t*)0xE0001000))
-/* CYCCNTENA bit in DWT_CONTROL register */
-#define KIN1_DWT_CYCCNTENA_BIT	(1UL<<0)
-/* DWT cycle counter register */
-#define KIN1_DWT_CYCCNT 	(*((volatile uint32_t*)0xE0001004))
-/* DWT debug exception and monitor control register */
-#define KIN1_DEMCR		(*((volatile uint32_t*)0xE000EDFC))
-/* Trace enable bit in DEMCR register  */
-#define KIN1_TRCENA_BIT		(1UL << 24)
-
-/* enable tarce and debug block DEMCR */
-#define KIN1_InitCycleCounter() \
-  KIN1_DEMCR |= KIN1_TRCENA_BIT
-/* Reset cycle counter */
-#define KIN1_ResetCycleCounter() \
-  KIN1_DWT_CYCCNT = 0
-/* enable cycle counter */
-#define KIN1_EnableCycleCounter() \
-  KIN1_DWT_CONTROL |= KIN1_DWT_CYCCNTENA_BIT
-/* Disable cycle counter */
-#define KIN1_DisableCycleCounter() \
-  KIN1_DWT_CONTROL &= ~KIN1_DWT_CYCCNTENA_BIT
-/* Read cycle counter register */
-#define KIN1_GetCycleCounter() \
-  KIN1_DWT_CYCCNT
-
 extern ip_config config;
-extern UART_HandleTypeDef huart2;
 
-/* cycle count */
-uint32_t cycles;
-
-
-ip_status IpProcess(void *frame, void *background_image, void *count, void *cycles)
+ip_status IpProcess(void *frame, void *background_image, void *count)
 {
   // stores all the bounding rectangles in the frame
   ip_rect rects[RECTS_MAX_SIZE];
-  KIN1_InitCycleCounter();
-  KIN1_ResetCycleCounter();
-  KIN1_EnableCycleCounter();
   /* detect people in the frame */
   uint8_t rects_count = detectPeople((ip_mat *)frame, (ip_mat *)background_image, rects);
-  *((uint32_t *)cycles) = KIN1_GetCycleCounter();
-  KIN1_DisableCycleCounter();
-
 
   /* update centroids location */
   ip_count count_update = updateObjects(rects, rects_count);

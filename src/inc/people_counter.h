@@ -14,24 +14,7 @@ extern "C"
 {
 #endif
 
-#include <time.h>
-#include "cmsis_os.h"
-
-/* constants -------------------------------------------------------------------*/
-/* base address of where the configurations are written on flash ---------------*/
-#define CONFIG_BASE_ADDRESS (uint32_t)0x8067FF0
-/* offsets for parameters ------------------------------------------------------*/
-
-// PD = People Detector
-#define KERNEL_1 		0
-#define KERNEL_2 		1
-#define KERNEL_3 		2
-#define THRESHOLD 		3
-#define BLOB_WIDTH_MIN 		4
-#define BLOB_HEIGHT_MIN 	5
-#define UPDATED_THRESHOLD	6
-#define MAX_AREA		7
-#define COUNT			8
+#include <stdint.h>
 
 // CT = Centroid Tracker
 #define CT_MAX_DISAPPEARED 	2
@@ -43,8 +26,8 @@ extern "C"
 #define TRACKABLE_OBJECT_MAX_SIZE 10
 
 // Image size
-#define SENSOR_IMAGE_WIDTH 	32
-#define SENSOR_IMAGE_HEIGHT 	24
+#define SENSOR_IMAGE_WIDTH 	8
+#define SENSOR_IMAGE_HEIGHT 	8
 
 // Directions
 #define DIRECTION_UP 	0x00
@@ -63,13 +46,6 @@ extern "C"
     uint8_t *data;
   } ip_mat;
 
-  /* FRAME STRUCT */
-
-  typedef struct frame
-  {
-    ip_mat pixels;
-    uint32_t stamp;
-  } ip_frame;
 
   /* PEOPLE COUNT STRUCT */
   typedef struct count
@@ -136,7 +112,7 @@ extern "C"
 
   /* Function prototypes -------------------------------------------------------- */
 
-  ip_status IpProcess(void *, void *, void *, void *);
+  ip_status IpProcess(void *, void *, void *);
 
   /* PEOPLE DETECTOR */
 

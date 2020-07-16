@@ -12,6 +12,7 @@ add_library(JSON STATIC
 
 set(SOURCE_FILES 
 	${CMAKE_SOURCE_DIR}/util/testing_harness.cpp
+	${CMAKE_SOURCE_DIR}/src/people_counter.cpp
 	)
 
 find_package ( OpenCV REQUIRED)
@@ -19,6 +20,7 @@ find_package ( OpenCV REQUIRED)
 include_directories( 
 	${OpenCV_INCLUDE_DIRS} 
 	${CMAKE_SOURCE_DIR}/util/inc
+	${CMAKE_SOURCE_DIR}/src/inc
 	)
 add_executable ( PeopleCounter ${SOURCE_FILES} )
 
