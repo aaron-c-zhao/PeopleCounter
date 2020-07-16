@@ -1,7 +1,7 @@
 # !/bin/sh
 
 #if there's no build folder, create one
-[ -d "./build" ] && mkdir build
+[ ! -d "./build" ] && mkdir build
 
 cd ./build
 
