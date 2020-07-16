@@ -20,7 +20,7 @@ static int hlimit = 40;
 static double** frames_ptr;
 
 /* image pointer which indicates which image should be processed next */
-static unsigned long img_prt = 0;
+static unsigned long img_ptr = 0;
 
 /* how many frames are there in this video */
 static unsigned long frame_count = 0; 
@@ -41,6 +41,8 @@ int main(int argc, char *argv[]) {
 
 	parse_json(file_name);
 	
+	namedWindow("Thermal image", WINDOW_NORMAL);
+	resizeWindow("Thermal image", 200, 200);
 	while (img_ptr++ < frame_count) {
 		show_image();
 	}
@@ -152,21 +154,27 @@ static double **parse_value(json_value* value) {
  *  */ 
 static uint8_t grey_map(int low, int high, double temp) {
 	temp = (temp - low) * 255 / (high - low);
-	temp = (temp < 0) 0 : temp;
-	temp = (temp > high) 255 : temp; 
+	temp = (temp < 0)? 0 : temp;
+	temp = (temp > 255)? 255 : temp; 
 	return (uint8_t)temp;
 }
 
 
-
-static uint8_t show_image(void) {
-	uint8_t frame[RESOLUTION * height];
+/**
+ * @breif display the image in a named window
+ */
+static void show_image(void) {
+	uint8_t frame[RESOLUTION];
 	for (int i = 0; i < RESOLUTION; i++) {
-		frame[i] = grey_map(llimit, hlimit, frames[img_prt][i]);
+		frame[i] = grey_map(llimit, hlimit, frames_ptr[img_ptr][i]);
 	}
-	
-		
 
+	Mat image;
+	image = Mat(width, height, CV_8UC1, frame); 
+
+	imshow("Thermal image", image);
+
+	waitKey(0);
 }
 
 
