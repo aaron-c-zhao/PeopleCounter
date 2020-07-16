@@ -19,8 +19,14 @@ static int height = 8;
 static int llimit = 20;
 static int hlimit = 40;
 
+/* frame rate */
+static int frame_rate = 10;
+
 /* pointer to the frame array */
 static double** frames_ptr;
+
+/* path to the configuration file */
+const static char *config_path = "../config.txt";
 
 /* image pointer which indicates which image should be processed next */
 static unsigned long img_ptr = 0;
@@ -52,10 +58,11 @@ ip_config config = {
 /*--------------------------------------------function prototypes------------------------------*/
 
 static void parse_json(char *file_name);
-static double **parse_value(json_value* value);
+static void parse_value(json_value* value);
 static uint8_t grey_map(int low, int high, double temp);
 static void show_image(uint8_t* frame);
 static void get_background(uint8_t *frame, unsigned long img_ptr);
+static void read_config(void);
 
 /*---------------------------------------------------------------------------------------------*/
 
@@ -152,14 +159,14 @@ static void parse_json(char *file_name) {
 		exit(1);
 	}
 
-	double** frames = parse_value(value);	
+	parse_value(value);	
 }
 
 /**
  * @brief Parse the json value into the two demansional array.
  * @param value the vaule parsed out from the json string
  */ 
-static double **parse_value(json_value* value) {
+static void parse_value(json_value* value) {
 	if (value->type != json_object && value->u.object.length) {
 		fprintf(stderr, "Json file has a wrong format\n");
 		exit(1);
@@ -193,7 +200,6 @@ static double **parse_value(json_value* value) {
 			frame_ptr[j] = value_dbl->u.dbl;
 		}
 	}
-	return frames_ptr;
 }
 
 /**
@@ -241,7 +247,11 @@ static void get_background(uint8_t* frame, unsigned long frame_count) {
 
 
 
-
+/**
+ * @brief Read the configuration from the config file and load the parameters
+ */
+static void read_config(void) {
+}
 
 
 
