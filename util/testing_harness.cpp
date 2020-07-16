@@ -26,7 +26,7 @@ static int frame_rate = 10;
 static double** frames_ptr;
 
 /* path to the configuration file */
-const static char *config_path = "../config.txt";
+static char *config_path = "../config.json";
 
 /* image pointer which indicates which image should be processed next */
 static unsigned long img_ptr = 0;
@@ -57,17 +57,19 @@ ip_config config = {
 
 /*--------------------------------------------function prototypes------------------------------*/
 
-static void parse_json(char *file_name);
-static void parse_value(json_value* value);
-static uint8_t grey_map(int low, int high, double temp);
-static void show_image(uint8_t* frame);
-static void get_background(uint8_t *frame, unsigned long img_ptr);
-static void read_config(void);
+static void parse_json(char*, void (*parse_value)(json_value *, int));
+static void parse_frame(json_value*, int);
+static uint8_t grey_map(int, int, double);
+static void show_image(uint8_t*);
+static void get_background(uint8_t *, unsigned long);
+static void read_config(json_value* ,int);
 
 /*---------------------------------------------------------------------------------------------*/
 
 
 int main(int argc, char *argv[]) {
+	parse_json(config_path, read_config);
+
 	uint8_t cur_frame[RESOLUTION] = {0};
 	background = (uint8_t *)malloc(RESOLUTION * sizeof(uint8_t));
 	ip_mat mat_background = {.data = background};
@@ -80,7 +82,7 @@ int main(int argc, char *argv[]) {
 
 	char *file_name = argv[1];
 
-	parse_json(file_name);
+	parse_json(file_name, parse_frame);
 	
 	namedWindow("Thermal image", WINDOW_NORMAL);
 	resizeWindow("Thermal image", 200, 200);
@@ -110,9 +112,9 @@ int main(int argc, char *argv[]) {
  * @brief Parse the json file into a two-demansinal array consits of temperatures retrived
  * 	  by the sensor.
  * @param file_name path to the json file
- *
+ * @param parse_value a function pointer that points to the function which parses the json_value
  */ 
-static void parse_json(char *file_name) {
+static void parse_json(char *file_name, void (*parse_value)(json_value *, int)) {
 	FILE *json_file;
 	int file_size;
 	struct stat filestatus;
@@ -159,14 +161,14 @@ static void parse_json(char *file_name) {
 		exit(1);
 	}
 
-	parse_value(value);	
+	parse_value(value, 0);	
 }
 
 /**
  * @brief Parse the json value into the two demansional array.
  * @param value the vaule parsed out from the json string
  */ 
-static void parse_value(json_value* value) {
+static void parse_frame(json_value* value, int depth) {
 	if (value->type != json_object && value->u.object.length) {
 		fprintf(stderr, "Json file has a wrong format\n");
 		exit(1);
@@ -246,11 +248,56 @@ static void get_background(uint8_t* frame, unsigned long frame_count) {
 }
 
 
+constexpr unsigned int str2int(const char* str, int h = 0)
+{
+    return !str[h] ? 5381 : (str2int(str, h+1) * 33) ^ str[h];
+}
+
 
 /**
  * @brief Read the configuration from the config file and load the parameters
+ * @param depth a counter that counts how deep the recursion goes
  */
-static void read_config(void) {
+static void read_config(json_value* value, int depth) {	
+	for (int i = 0; !depth && i < value->u.object.length; i++)  {
+		read_config(value->u.object.values[i].value, depth + 1);
+	}
+	for (int i = 0; depth == 1 && i < value->u.object.length; i++) {
+		json_value* temp = value->u.object.values[i].value;
+		int temp_value = temp->u.integer;	
+		switch (str2int(value->u.object.values[i].name)) {	
+			case str2int("kernel_1"): config.kernel_1 = temp_value;
+			break;
+			case str2int("kernel_2"): config.kernel_2 = temp_value; 
+			break;
+			case str2int("kernel_3"): config.kernel_3 = temp_value;
+			break;
+			case str2int("threshold"): config.threshold = temp_value;
+			break;
+			case str2int("blob_width_min"): config.blob_width_min = temp_value;
+			break;
+			case str2int("blob_height_min"): config.blob_height_min = temp_value;
+			break;
+			case str2int("updated_threshold"): config.updated_threshold = temp_value;
+			break;
+			case str2int("max_area"): config.max_area = temp_value;	  
+			break;
+			case str2int("width"): width = temp_value;
+			break;
+			case str2int("height"): height = temp_value;
+			break;
+			case str2int("llimit"): llimit = temp_value;
+			break;
+			case str2int("hlimit"): hlimit = temp_value;
+			break;
+			case str2int("frame_rate"): frame_rate = temp_value;
+			break;
+			default: {
+					 fprintf(stderr, "Unknown configuration: %s\n", value->u.object.values[i].name);
+					 exit(1);
+				 }
+		}
+	}
 }
 
 

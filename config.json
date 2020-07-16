@@ -1,0 +1,19 @@
+{
+	"parameters": {
+		"kernel_1": 5,
+		"kernel_2": 1,
+		"kernel_3": 1,
+		"threshold": 32,
+		"blob_width_min": 0,
+		"blob_height_min": 0,
+		"updated_threshold": 84,
+		"max_area": 18
+	},
+	"harness_setup": {
+		"width": 8,
+		"height": 8,
+		"llimit": 20,
+		"hlimit": 40,
+		"frame_rate": 10	
+	}
+}
