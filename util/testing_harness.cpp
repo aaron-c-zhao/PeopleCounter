@@ -70,7 +70,7 @@ static void read_config(json_value* ,int);
 int main(int argc, char *argv[]) {
 	parse_json(config_path, read_config);
 
-	uint8_t cur_frame[RESOLUTION] = {0};
+	uint8_t *cur_frame = (uint8_t *)malloc(RESOLUTION * sizeof(uint8_t));
 	background = (uint8_t *)malloc(RESOLUTION * sizeof(uint8_t));
 	ip_mat mat_background = {.data = background};
 
@@ -100,6 +100,7 @@ int main(int argc, char *argv[]) {
 
 		}
 	}
+	free(cur_frame);
 	free(background);
 	for (int i = 0; i < frame_count; i++) {
 		free(frames_ptr[i]);

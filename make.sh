@@ -6,8 +6,11 @@
 cd ./build
 
 rm -rf *
-
-cmake ..
+if [[ "$OSTYPE" == "darwin"* ]]; then
+	cmake -DCMAKE_CXX_FLAGS="-Wno-error=narrowing" ..
+else
+	cmake ..
+fi
 
 make -j12
 
