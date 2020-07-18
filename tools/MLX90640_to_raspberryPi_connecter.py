@@ -18,6 +18,9 @@ BASE_PATH = os.environ['PWD']
 # count the frames in this scene
 frame_counter = 0;
 
+# array to host the calibration data
+eeData = [0] * 832
+
 I2C_BUS = busio.I2C(board.SCL, board.SDA, frequency=400000)
 
 # low range of the sensor (this will be blue on the screen)
@@ -28,6 +31,10 @@ COLORDEPTH = 1024
 SENSOR = adafruit_mlx90640.MLX90640(I2C_BUS)
 
 SENSOR.refresh_rate = adafruit_mlx90640.RefreshRate.REFRESH_16_HZ
+
+eeData = SENSOR.getEeData()
+
+
 
 # pylint: disable=invalid-slice-index
 POINTS = [(math.floor(ix / 8), (ix % 8)) for ix in range(0, 64)]
@@ -96,6 +103,12 @@ while not name_collision:
         else:
             print("Please enter the directory name again:")
 
+# save the eeprom data as a seperate json file
+file_name = "eeprom_" + datetime.now().strftime("%H_%M_%S") + '.json'
+
+file_name = os.path.join(path, file_name) 
+with open(file_name, "w") as outfile:
+    json.dump(eeData, outfile, indent = 4)
 
    
 
@@ -111,20 +124,21 @@ while True:
     file_name = input()
     now = datetime.now()
     file_name = file_name + "_" + now.strftime("%H_%M_%S") + '.json'
-    frame = {}
+    frame = {'frames':[], 'raw':[]}
     frame_counter = 0
     print("Start recording")
     PIXELS = [0] * 768
+    RAW_DATA = [0] * 834
     try:
         while True:
             # read the pixels
             try:
-                SENSOR.getFrame(PIXELS)
+                RAW_DATA = SENSOR.getFrame(PIXELS)
             except ValueError:
                 continue
             frame_counter += 1
-            frame['frame' + str(frame_counter)] = PIXELS
-            
+            frame['frames'].append(PIXELS)
+            frame['raw'].append(RAW_DATA)
             PIXELS = [map_value(p, MINTEMP, MAXTEMP, 0, COLORDEPTH - 1) for p in PIXELS]
             
             # perform interpolation
