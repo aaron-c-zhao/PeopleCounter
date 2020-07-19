@@ -113,7 +113,7 @@ with open(file_name, "w") as outfile:
    
 
 # let the sensor initialize
-time.sleep(0.1)
+time.sleep(0.5)
 
 COLOR_RANGE = 1
 
@@ -124,7 +124,7 @@ while True:
     file_name = input()
     now = datetime.now()
     file_name = file_name + "_" + now.strftime("%H_%M_%S") + '.json'
-    frame = {'frames':[], 'raw':[]}
+    frame = {'frame_count': 0, 'frames':[], 'raw_frames':[]}
     frame_counter = 0
     print("Start recording")
     PIXELS = [0] * 768
@@ -138,7 +138,7 @@ while True:
                 continue
             frame_counter += 1
             frame['frames'].append(PIXELS)
-            frame['raw'].append(RAW_DATA)
+            frame['raw_frames'].append(RAW_DATA)
             PIXELS = [map_value(p, MINTEMP, MAXTEMP, 0, COLORDEPTH - 1) for p in PIXELS]
             
             # perform interpolation
@@ -174,6 +174,7 @@ while True:
             COLOR_RANGE = HEAT_RANGE / len(CONSOLE_COLORS)
     except KeyboardInterrupt:
         print("Stop recording and writing to the file {}".format(file_name))
+        frame['frame_count'] = frame_counter
         file_name = os.path.join(path, file_name) 
         with open(file_name, "w") as outfile:
             json.dump(frame, outfile, indent = 4)
