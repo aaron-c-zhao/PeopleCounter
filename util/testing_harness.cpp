@@ -99,11 +99,11 @@ int main(int argc, char *argv[]) {
 		get_background(cur_frame, img_ptr);
 		ip_status status = IpProcess((void *)&mat, (void *)&mat_background, (void *)&count);
 		if (status == IP_EMPTY) 
-			printf("The frame is empty\n");
+			printf(" Frame[%d]ame is empty\n", img_ptr);
 		else if (status == IP_STILL) 
-			printf("The frame is still\n");
+			printf("Frame[%d] is still\n", img_ptr);
 		else {
-			printf("Dir: %s, Count: %d\n", (count.direc == DIRECTION_UP)? "UP" : "DOWN", count.num);
+			printf("Frame[%d], Dir: %s, Count: %d\n", img_ptr,  (count.direc == DIRECTION_UP)? "UP" : "DOWN", count.num);
 
 		}
 		*/
