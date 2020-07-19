@@ -186,7 +186,7 @@ static void parse_frame(json_value* value, int depth) {
 
 	for (int i = 0; i < frame_count; i++) {
 
-		double* frame_ptr = (double *)malloc(RESOLUTION * height * sizeof(double *));
+		double* frame_ptr = (double *)malloc(RESOLUTION * sizeof(double));
 		frames_ptr[i] = frame_ptr;
 
 		json_value* frame = frames->u.array.values[i];
