@@ -91,10 +91,11 @@ int main(int argc, char *argv[]) {
 	parse_json(file_name, parse_frame);
 	
 	namedWindow("Thermal image", WINDOW_NORMAL);
-	resizeWindow("Thermal image", 200, 200);
+	resizeWindow("Thermal image", 300, 300);
 	while (img_ptr++ < frame_count) {
 		show_image(cur_frame);
 		ip_mat mat = {.data = cur_frame};
+		/*
 		get_background(cur_frame, img_ptr);
 		ip_status status = IpProcess((void *)&mat, (void *)&mat_background, (void *)&count);
 		if (status == IP_EMPTY) 
@@ -105,6 +106,7 @@ int main(int argc, char *argv[]) {
 			printf("Dir: %s, Count: %d\n", (count.direc == DIRECTION_UP)? "UP" : "DOWN", count.num);
 
 		}
+		*/
 	}
 	free(cur_frame);
 	free(background);
@@ -185,7 +187,7 @@ static void parse_frame(json_value* value, int depth) {
 	for (int i = 0; i < value->u.object.length; i++) {
 		if (!strcmp(value->u.object.values[i].name, "frames"))
 			frames = value->u.object.values[i].value;
-	
+	}
 	if (frames->type != json_array) {
 		fprintf(stderr, "Json file has a wrong format\n");
 		exit(1);
@@ -214,6 +216,7 @@ static void parse_frame(json_value* value, int depth) {
 		}
 	}
 }
+
 
 
 /**

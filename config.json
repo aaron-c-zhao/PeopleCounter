@@ -10,10 +10,10 @@
 		"max_area": 18
 	},
 	"harness_setup": {
-		"width": 8,
-		"height": 8,
+		"width": 24,
+		"height": 32,
 		"llimit": 20,
 		"hlimit": 40,
-		"frame_rate": 10	
+		"frame_rate": 16	
 	}
 }
