@@ -66,6 +66,12 @@ static void read_config(json_value* ,int);
 
 /*---------------------------------------------------------------------------------------------*/
 
+/* hash function that will map string to an int */
+constexpr unsigned int str2int(const char* str, int h = 0)
+{
+    return !str[h] ? 5381 : (str2int(str, h+1) * 33) ^ str[h];
+}
+
 
 int main(int argc, char *argv[]) {
 	parse_json(config_path, read_config);
@@ -85,10 +91,11 @@ int main(int argc, char *argv[]) {
 	parse_json(file_name, parse_frame);
 	
 	namedWindow("Thermal image", WINDOW_NORMAL);
-	resizeWindow("Thermal image", 200, 200);
+	resizeWindow("Thermal image", 300, 300);
 	while (img_ptr++ < frame_count) {
 		show_image(cur_frame);
 		ip_mat mat = {.data = cur_frame};
+		/*
 		get_background(cur_frame, img_ptr);
 		ip_status status = IpProcess((void *)&mat, (void *)&mat_background, (void *)&count);
 		if (status == IP_EMPTY) 
@@ -99,6 +106,7 @@ int main(int argc, char *argv[]) {
 			printf("Dir: %s, Count: %d\n", (count.direc == DIRECTION_UP)? "UP" : "DOWN", count.num);
 
 		}
+		*/
 	}
 	free(cur_frame);
 	free(background);
@@ -174,8 +182,12 @@ static void parse_frame(json_value* value, int depth) {
 		fprintf(stderr, "Json file has a wrong format\n");
 		exit(1);
 	}
-	json_value *frames = value->u.object.values[0].value;
-	
+
+	json_value *frames;
+	for (int i = 0; i < value->u.object.length; i++) {
+		if (!strcmp(value->u.object.values[i].name, "frames"))
+			frames = value->u.object.values[i].value;
+	}
 	if (frames->type != json_array) {
 		fprintf(stderr, "Json file has a wrong format\n");
 		exit(1);
@@ -204,6 +216,8 @@ static void parse_frame(json_value* value, int depth) {
 		}
 	}
 }
+
+
 
 /**
  *  @brief map the temperature value to grey scale value from 0 - 255 
@@ -249,10 +263,6 @@ static void get_background(uint8_t* frame, unsigned long frame_count) {
 }
 
 
-constexpr unsigned int str2int(const char* str, int h = 0)
-{
-    return !str[h] ? 5381 : (str2int(str, h+1) * 33) ^ str[h];
-}
 
 
 /**
