@@ -56,6 +56,11 @@ ip_config config = {
 	.max_area = 18
 };
 
+/* number of rectangles detected in the frame */
+uint8_t rec_num = 0; 
+/* rectangles find by the pipeline */
+ip_rect hrects[RECTS_MAX_SIZE] = {{0,0,0,0}};
+
 /*---------------------------------------------------------------------------------------------*/
 
 
@@ -99,18 +104,16 @@ int main(int argc, char *argv[]) {
 	while (img_ptr++ < frame_count) {
 		show_image(cur_frame);
 		ip_mat mat = {.data = cur_frame};
-		/*
 		get_background(cur_frame, img_ptr);
 		ip_status status = IpProcess((void *)&mat, (void *)&mat_background, (void *)&count);
 		if (status == IP_EMPTY) 
-			printf(" Frame[%d]ame is empty\n", img_ptr);
+			printf(" Frame[%ld]ame is empty\n", img_ptr);
 		else if (status == IP_STILL) 
-			printf("Frame[%d] is still\n", img_ptr);
+			printf("Frame[%ld] is still\n", img_ptr);
 		else {
-			printf("Frame[%d], Dir: %s, Count: %d\n", img_ptr,  (count.direc == DIRECTION_UP)? "UP" : "DOWN", count.num);
+			printf("Frame[%ld], Dir: %s, Count: %d\n", img_ptr,  (count.direc == DIRECTION_UP)? "UP" : "DOWN", count.num);
 
 		}
-		*/
 	}
 	free(cur_frame);
 	free(background);

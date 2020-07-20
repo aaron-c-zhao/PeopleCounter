@@ -18,16 +18,16 @@ extern "C"
 
 // CT = Centroid Tracker
 #define CT_MAX_DISAPPEARED 	2
-#define CT_MAX_DISTANCE 	3
+#define CT_MAX_DISTANCE 	8
 
 // Array max sizes
-#define RECTS_MAX_SIZE 		8
+#define RECTS_MAX_SIZE 		18
 // TODO consider a power 2 size for optimization sake. See: https://stackoverflow.com/questions/11040646/faster-modulus-in-c-c
-#define TRACKABLE_OBJECT_MAX_SIZE 10
+#define TRACKABLE_OBJECT_MAX_SIZE 18
 
 // Image size
-#define SENSOR_IMAGE_WIDTH 	32
-#define SENSOR_IMAGE_HEIGHT 	24 
+#define SENSOR_IMAGE_WIDTH 	24
+#define SENSOR_IMAGE_HEIGHT 	32 
 
 // Directions
 #define DIRECTION_UP 	0x00

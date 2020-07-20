@@ -10,12 +10,21 @@
 
 extern ip_config config;
 
+#ifdef __TESTING_HARNESS
+extern rec_num;
+#endif
+
 ip_status IpProcess(void *frame, void *background_image, void *count)
 {
   // stores all the bounding rectangles in the frame
   ip_rect rects[RECTS_MAX_SIZE];
   /* detect people in the frame */
   uint8_t rects_count = detectPeople((ip_mat *)frame, (ip_mat *)background_image, rects);
+
+/* output the number of rectangles in the frame */
+#ifdef __TESTING_HARNESS
+  rec_num = rects_count;
+#endif
 
   /* update centroids location */
   ip_count count_update = updateObjects(rects, rects_count);
