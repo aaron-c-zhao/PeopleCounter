@@ -5,11 +5,14 @@
 
 cd ./build
 
+#clean the old building file
 rm -rf *
+rm ../src/inc/people_counter.h
+
 if [[ "$OSTYPE" == "darwin"* ]]; then
-	cmake -DCMAKE_CXX_FLAGS="-Wno-error=narrowing" ..
+	cmake -C ../header_config.txt -DCMAKE_CXX_FLAGS="-Wno-error=narrowing" ..
 else
-	cmake ..
+	cmake -C ../header_config.txt ..
 fi
 
 make -j12

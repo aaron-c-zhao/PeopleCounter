@@ -6,6 +6,10 @@
 #include "people_counter.h" 
 #include "json.h"
 
+#ifndef __TESTING_HARNESS
+#define __TESTING_HARNESS
+#endif
+
 #define RESOLUTION	(width * height)
 
 using namespace cv;
@@ -26,7 +30,7 @@ static int frame_rate = 10;
 static double** frames_ptr;
 
 /* path to the configuration file */
-static char *config_path = "../config.json";
+static char *config_path = "../harness_config.json";
 
 /* image pointer which indicates which image should be processed next */
 static unsigned long img_ptr = 0;
