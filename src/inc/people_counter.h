@@ -26,8 +26,8 @@ extern "C"
 #define TRACKABLE_OBJECT_MAX_SIZE 10
 
 // Image size
-#define SENSOR_IMAGE_WIDTH 	8
-#define SENSOR_IMAGE_HEIGHT 	8
+#define SENSOR_IMAGE_WIDTH 	32
+#define SENSOR_IMAGE_HEIGHT 	24 
 
 // Directions
 #define DIRECTION_UP 	0x00
