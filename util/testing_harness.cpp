@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
 	char *file_name = argv[1];
 
 	parse_json(file_name, parse_frame);
-	printf("frame count is %d\n", frame_count);
+	printf("Total frame:  %d\n", frame_count);
 	
 	namedWindow("Thermal image", WINDOW_NORMAL);
 	resizeWindow("Thermal image", 300, 300);
@@ -118,17 +118,17 @@ int main(int argc, char *argv[]) {
 		if (status == IP_EMPTY) {
 			printf("\033[1;31m");	
 			printf("Frame[%ld]ame is empty\n", img_ptr);
-			printf("\033[0m;");
+			printf("\033[0m");
 		}
 		else if (status == IP_STILL) {
 			printf("\033[1;33m");	
 			printf("Frame[%ld] is still\n", img_ptr);
-			printf("\033[0m;");
+			printf("\033[0m");
 		}
 		else {
 			printf("\033[1;32m");	
 			printf("Frame[%ld], Dir: %s, Count: %d\n", img_ptr,  (count.direc == DIRECTION_UP)? "UP" : "DOWN", count.num);
-			printf("\033[0m;");
+			printf("\033[0m");
 
 		}
 		img_ptr++;
