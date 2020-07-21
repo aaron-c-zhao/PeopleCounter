@@ -15,13 +15,14 @@ extern "C"
 #endif
 
 #include <stdint.h>
+#include "testing_harness.h"
 
 // CT = Centroid Tracker
 #define CT_MAX_DISAPPEARED 	2
 #define CT_MAX_DISTANCE 	8
 
 // Array max sizes
-#define RECTS_MAX_SIZE 		18
+#define RECTS_MAX_SIZE 		28
 // TODO consider a power 2 size for optimization sake. See: https://stackoverflow.com/questions/11040646/faster-modulus-in-c-c
 #define TRACKABLE_OBJECT_MAX_SIZE 18
 

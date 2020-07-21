@@ -11,7 +11,8 @@
 extern ip_config config;
 
 #ifdef __TESTING_HARNESS
-extern rec_num;
+extern uint8_t rec_num;
+extern ip_rect hrects[RECTS_MAX_SIZE];
 #endif
 
 ip_status IpProcess(void *frame, void *background_image, void *count)
@@ -24,6 +25,7 @@ ip_status IpProcess(void *frame, void *background_image, void *count)
 /* output the number of rectangles in the frame */
 #ifdef __TESTING_HARNESS
   rec_num = rects_count;
+  memcpy(hrects, rects, RECTS_MAX_SIZE * sizeof(ip_rect));
 #endif
 
   /* update centroids location */

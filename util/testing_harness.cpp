@@ -5,10 +5,7 @@
 
 #include "people_counter.h" 
 #include "json.h"
-
-#ifndef __TESTING_HARNESS
-#define __TESTING_HARNESS
-#endif
+#include "testing_harness.h"
 
 #define RESOLUTION	(width * height)
 
@@ -58,8 +55,10 @@ ip_config config = {
 
 /* number of rectangles detected in the frame */
 uint8_t rec_num = 0; 
+
 /* rectangles find by the pipeline */
 ip_rect hrects[RECTS_MAX_SIZE] = {{0,0,0,0}};
+
 
 /*---------------------------------------------------------------------------------------------*/
 
@@ -72,6 +71,7 @@ static uint8_t grey_map(int, int, double);
 static void show_image(uint8_t*);
 static void get_background(uint8_t *, unsigned long);
 static void read_config(json_value* ,int);
+static void frame_convert(uint8_t*);
 
 /*---------------------------------------------------------------------------------------------*/
 
@@ -86,6 +86,7 @@ int main(int argc, char *argv[]) {
 	parse_json(config_path, read_config);
 
 	uint8_t *cur_frame = (uint8_t *)malloc(RESOLUTION * sizeof(uint8_t));
+	uint8_t *buf_frame = (uint8_t *)malloc(RESOLUTION * sizeof(uint8_t));
 	background = (uint8_t *)malloc(RESOLUTION * sizeof(uint8_t));
 	ip_mat mat_background = {.data = background};
 
@@ -102,20 +103,36 @@ int main(int argc, char *argv[]) {
 	namedWindow("Thermal image", WINDOW_NORMAL);
 	resizeWindow("Thermal image", 300, 300);
 	while (img_ptr++ < frame_count) {
-		show_image(cur_frame);
+		/* first convert the raw thermal data into processable and displayable format, namely frame and Mat */
+		frame_convert(cur_frame);
+		memcpy(buf_frame, cur_frame, RESOLUTION * sizeof(uint8_t));
+		/* construct the proper struct required by the pipeline */
 		ip_mat mat = {.data = cur_frame};
+		/* get the background TODO: should be done by the pipeline */
 		get_background(cur_frame, img_ptr);
 		ip_status status = IpProcess((void *)&mat, (void *)&mat_background, (void *)&count);
-		if (status == IP_EMPTY) 
-			printf(" Frame[%ld]ame is empty\n", img_ptr);
-		else if (status == IP_STILL) 
+		/* the show_image should be called after the IpProcess to correctly display the rectangles 
+		 * found by pipeline */
+		show_image(buf_frame);
+		if (status == IP_EMPTY) {
+			printf("\033[1;31m");	
+			printf("Frame[%ld]ame is empty\n", img_ptr);
+			printf("\033[0m;");
+		}
+		else if (status == IP_STILL) {
+			printf("\033[1;33m");	
 			printf("Frame[%ld] is still\n", img_ptr);
+			printf("\033[0m;");
+		}
 		else {
+			printf("\033[1;32m");	
 			printf("Frame[%ld], Dir: %s, Count: %d\n", img_ptr,  (count.direc == DIRECTION_UP)? "UP" : "DOWN", count.num);
+			printf("\033[0m;");
 
 		}
 	}
 	free(cur_frame);
+	free(buf_frame);
 	free(background);
 	for (int i = 0; i < frame_count; i++) {
 		free(frames_ptr[i]);
@@ -241,16 +258,39 @@ static uint8_t grey_map(int low, int high, double temp) {
 
 
 /**
- * @breif covert the data format of the frame into uint8, display the image in a named window
- * 	  and save it into cur_frame which will be passed into pipeline later.
+ * @brief this function also convert the raw temperature values within the fame to 8bit greyscale values that are processable
+ * 	  by the pipeline. This function should be called befor the IpProcess.
+ * @param frame frame retrieved from the sensor
  */
-static void show_image(uint8_t* frame) {
+static void frame_convert(uint8_t* frame) {
 	for (int i = 0; i < RESOLUTION; i++) {
 		frame[i] = grey_map(llimit, hlimit, frames_ptr[img_ptr][i]);
 	}
+}
 
-	Mat image;
-	image = Mat(width, height, CV_8UC1, frame); 
+
+
+/**
+ * @breif covert the data format of the frame into uint8, display the image in a named window
+ * 	  and save it into cur_frame which will be passed into pipeline later.
+ */
+static void show_image(uint8_t *frame) {
+	Mat image = Mat(width, height, CV_8UC1, frame); 
+
+	/* draw rectangles found by the pipeline */
+	for (int i = 0; i < rec_num; i++) {
+		ip_rect temp = hrects[i];
+		Point pt_min;
+		pt_min.x = temp.x;
+		pt_min.y = temp.y;
+		Point pt_max;
+		pt_max.x = temp.x + temp.width;
+		pt_max.y = temp.y + temp.height;
+		rectangle(image, pt_min, pt_max, Scalar(255));
+	}
+
+	char buf[100] = {'\0'};
+	sprintf(buf, "%d", rec_num);
 
 	imshow("Thermal image", image);
 

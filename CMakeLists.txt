@@ -19,7 +19,9 @@ add_definitions(
 	-DTRACKABLE_OBJECT_MAX_SIZE=${TRACKABLE_OBJECT_MAX_SIZE}
 	)
 
-message ( STATUS  ${SENSOR_IMAGE_WIDTH} )
+message ( STATUS  
+	"\\033\[0;31m---------------------------------------------------------------------------------\n"
+	${SENSOR_IMAGE_WIDTH} )
 configure_file( people_counter.h.in ${CMAKE_SOURCE_DIR}/src/inc/people_counter.h )
 
 set(SOURCE_FILES 
@@ -34,10 +36,20 @@ include_directories(
 	${CMAKE_SOURCE_DIR}/util/inc
 	${CMAKE_SOURCE_DIR}/src/inc
 	)
+
 add_executable ( PeopleCounter ${SOURCE_FILES} )
+
+target_compile_options( PeopleCounter PRIVATE
+
+	-Wall
+
+	$<$<CONFIG:Debug>:-O0>
+	$<$<CONFIG:Debug>:-g3>
+	$<$<CONFIG:Debug>:-DDBUG>
+	)
+
 
 target_link_libraries( PeopleCounter 
 	${OpenCV_LIBS} 
 	JSON)
-
 
