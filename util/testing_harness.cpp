@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
 	
 	namedWindow("Thermal image", WINDOW_NORMAL);
 	resizeWindow("Thermal image", 300, 300);
-	while (img_ptr++ < frame_count) {
+	while (img_ptr++ < frame_count - 1) {
 		/* first convert the raw thermal data into processable and displayable format, namely frame and Mat */
 		frame_convert(cur_frame);
 		memcpy(buf_frame, cur_frame, RESOLUTION * sizeof(uint8_t));
