@@ -1,6 +1,6 @@
 # !/bin/sh
 
-echo "Please enter build mode: 1 for Debug, 2 for Release"
+echo "Please enter build mode: 1 for Debug, else for Release"
 
 read option
 
@@ -9,9 +9,11 @@ mode=""
 if [ $option == 1 ] 
 then
 	mode="-DCMAKE_BUILD_TYPE=Debug "
+	echo -e "Compilation mode: \e[1:32m DEBUG \e[0m"
+else
+	echo -e "Compilation mode: \e[1:33m RELEASE \e[0m"
 fi
 
-echo "Compilation mode: $mode"
 
 #if there's no build folder, create one
 [ ! -d "./build" ] && mkdir build
