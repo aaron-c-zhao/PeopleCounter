@@ -26,7 +26,7 @@ configure_file( people_counter.h.in ${CMAKE_SOURCE_DIR}/src/inc/people_counter.h
 
 set(SOURCE_FILES 
 	${CMAKE_SOURCE_DIR}/util/testing_harness.cpp
-	${CMAKE_SOURCE_DIR}/src/people_counter.cpp
+	${CMAKE_SOURCE_DIR}/src/people_counter.c
 	)
 
 find_package ( OpenCV REQUIRED)
