@@ -23,6 +23,9 @@ static int hlimit = 40;
 /* frame rate */
 static int frame_rate = 10;
 
+/* the step of fowarding the image pointer */
+static int step = 0;
+
 /* pointer to the frame array */
 static double** frames_ptr;
 
@@ -99,8 +102,18 @@ int main(int argc, char *argv[]) {
 	char *file_name = argv[1];
 
 	parse_json(file_name, parse_frame);
-	printf("Total frame:  %d\n", frame_count);
+	printf("Total frame:  %d, Pipeline frame rate: %d, video frame rate: %d\n", frame_count, FRAME_RATE, frame_rate);
 	
+	/* check if the frame rate is valid */
+	if (FRAME_RATE > frame_rate) {
+		fprintf(stderr, "Invalid frame rate setting in harness_config.txt\n");
+		exit(1);
+	}
+	else {
+		/* step = the frame rate of the video divided by the frame rate that the pipeline works with */
+		step = frame_rate / FRAME_RATE;
+		
+	}	
 	namedWindow("Thermal image", WINDOW_NORMAL);
 	resizeWindow("Thermal image", 300, 300);
 	while (img_ptr < frame_count) {
@@ -117,7 +130,7 @@ int main(int argc, char *argv[]) {
 		show_image(buf_frame);
 		if (status == IP_EMPTY) {
 			printf("\033[1;31m");	
-			printf("Frame[%ld]ame is empty\n", img_ptr);
+			printf("Frame[%ld] is empty\n", img_ptr);
 			printf("\033[0m");
 		}
 		else if (status == IP_STILL) {
@@ -131,7 +144,7 @@ int main(int argc, char *argv[]) {
 			printf("\033[0m");
 
 		}
-		img_ptr++;
+		img_ptr += step;
 	}
 	free(cur_frame);
 	free(buf_frame);

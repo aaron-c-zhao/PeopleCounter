@@ -38,7 +38,7 @@ After clone this repository onto your local machine, first you need to configure
 		* height: image height which will affect the image shown in the window
 		* llimit: the lower limit applied when map the floating point temperature figure to 8bit grey value
 		* hlimit: the upper limit applied when map the floating point temperature figure to 8bit grey value
-		* frame_rate: the frame rate that was adopted(TODO: adjust the data passed into the pipeline according to the framerate)
+		* frame_rate: the frame rate of the video, this combined with the FRAME_RATE seeting in header_config.txt will decide the step of the image pointer.
 * header_config.txt
 	* SENSOR_IMAGE_WIDTH: the width of the image to be processed by the pipeline, default value 32
 	* SENSOR_IMAGE_HEIGHT: the height of the image to be processed by the pipeline, default valut 24
@@ -46,6 +46,8 @@ After clone this repository onto your local machine, first you need to configure
 	* CT_MAX_DISTANCE: the maximum distance that a blob is allowed to jump between frames
 	* RECTS_MAX_SIZE: the maximum size that a blob is allowd to be regared as a single blob, values above that indicates that the blob consists of two or more small blobs that merging together
 	* TRACKABLE_OBJECT_MAX_SIZE: the maximum number of blobs that the pipeline could trace
+	* FRAME_RATE: the frame rate that the pipeline will work with. 
+
 
 
 #### RUN THE PIPELINE LINE

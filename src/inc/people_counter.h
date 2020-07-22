@@ -30,6 +30,8 @@ extern "C"
 #define SENSOR_IMAGE_WIDTH 	24
 #define SENSOR_IMAGE_HEIGHT 	32 
 
+/* Sensor frame rate */
+#define FRAME_RATE	8
 // Directions
 #define DIRECTION_UP 	0x00
 #define DIRECTION_DOWN 	0x01
