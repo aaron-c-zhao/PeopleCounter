@@ -13,6 +13,7 @@ extern ip_config config;
 #ifdef __TESTING_HARNESS
 extern uint8_t rec_num;
 extern ip_rect hrects[RECTS_MAX_SIZE];
+extern uint8_t *th_frame;
 #endif
 
 ip_status IpProcess(void *frame, void *background_image, void *count)
@@ -64,6 +65,11 @@ uint8_t detectPeople(ip_mat *frame, ip_mat *background_image, ip_rect *rects)
       data[i] = frame->data[i];
   }
   threshold(frame, config.threshold);
+
+#ifdef __TESTING_HARNESS
+  memcpy(th_frame, frame->data, SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT *sizeof(uint8_t));
+#endif 
+
   /* Blur(frame, config.kernel_4); */
   ip_rect temp_rects[RECTS_MAX_SIZE];
   uint8_t n_rects = findCountours(frame, temp_rects);
