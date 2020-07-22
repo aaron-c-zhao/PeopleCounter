@@ -104,9 +104,9 @@ int main(int argc, char *argv[]) {
 	parse_json(file_name, parse_frame);
 	printf("Total frame:  %d, Pipeline frame rate: %d, video frame rate: %d\n", frame_count, FRAME_RATE, frame_rate);
 	
-	/* check if the frame rate is valid */
-	if (FRAME_RATE > frame_rate) {
-		fprintf(stderr, "Invalid frame rate setting in harness_config.txt\n");
+	/* check if the frame rate is valid, to be valid the frame_rate has to be smaller or equal to FRAME_RATE and to be a power of 2 as well */
+	if (FRAME_RATE > frame_rate || (frame_rate % 2)) {
+		fprintf(stderr, "Invalid frame rate setting[%d] in harness_config.txt\n", frame_rate);
 		exit(1);
 	}
 	else {
