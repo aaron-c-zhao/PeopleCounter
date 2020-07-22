@@ -131,20 +131,18 @@ int main(int argc, char *argv[]) {
 		show_image(buf_frame);
 		if (status == IP_EMPTY) {
 			printf("\033[1;31m");	
-			printf("Frame[%ld] is empty\n", img_ptr);
-			printf("\033[0m");
+			printf("Frame[%ld] is empty", img_ptr);
 		}
 		else if (status == IP_STILL) {
 			printf("\033[1;33m");	
-			printf("Frame[%ld] is still\n", img_ptr);
-			printf("\033[0m");
+			printf("Frame[%ld] is still", img_ptr);
 		}
 		else {
 			printf("\033[1;32m");	
-			printf("Frame[%ld], Dir: %s, Count: %d\n", img_ptr,  (count.direc == DIRECTION_UP)? "UP" : "DOWN", count.num);
-			printf("\033[0m");
-
+			printf("Frame[%ld], Dir: %s, Count: %d", img_ptr,  (count.direc == DIRECTION_UP)? "UP" : "DOWN", count.num);
 		}
+		printf(", [%d] rects deteced\n", rec_num);
+		printf("\033[0m");
 		img_ptr += step;
 	}
 	free(cur_frame);
