@@ -62,7 +62,8 @@ uint8_t rec_num = 0;
 /* rectangles find by the pipeline */
 ip_rect hrects[RECTS_MAX_SIZE] = {{0,0,0,0}};
 
-
+/* Intermedia result 1: image after thresholding */
+uint8_t* th_frame;
 /*---------------------------------------------------------------------------------------------*/
 
 
@@ -71,10 +72,11 @@ ip_rect hrects[RECTS_MAX_SIZE] = {{0,0,0,0}};
 static void parse_json(char*, void (*parse_value)(json_value *, int));
 static void parse_frame(json_value*, int);
 static uint8_t grey_map(int, int, double);
-static void show_image(uint8_t*);
+static void show_image(uint8_t*, char*, void (*process_mat)(Mat *));
 static void get_background(uint8_t *, unsigned long);
 static void read_config(json_value* ,int);
 static void frame_convert(uint8_t*);
+static void draw_rect(Mat *);
 
 /*---------------------------------------------------------------------------------------------*/
 
@@ -114,8 +116,17 @@ int main(int argc, char *argv[]) {
 		step = frame_rate / FRAME_RATE;
 		
 	}	
-	namedWindow("Thermal image", WINDOW_NORMAL);
-	resizeWindow("Thermal image", 300, 300);
+	
+	/* Intermedia result 1: image after thresholding */	
+	th_frame = (uint8_t *)malloc(RESOLUTION * sizeof(uint8_t));
+	char *thermal_window = "Thermal iamge";
+	char *threshold_window = "Thresholding_image";
+
+	namedWindow(thermal_window, WINDOW_NORMAL);
+	namedWindow(threshold_window, WINDOW_NORMAL);
+	resizeWindow(thermal_window, 300, 300);
+	resizeWindow(threshold_window, 300, 300); 
+
 	while (img_ptr < frame_count) {
 		/* first convert the raw thermal data into processable and displayable format, namely frame and Mat */
 		frame_convert(cur_frame);
@@ -127,7 +138,8 @@ int main(int argc, char *argv[]) {
 		ip_status status = IpProcess((void *)&mat, (void *)&mat_background, (void *)&count);
 		/* the show_image should be called after the IpProcess to correctly display the rectangles 
 		 * found by pipeline */
-		show_image(buf_frame);
+		show_image(buf_frame, thermal_window, draw_rect);
+		show_image(th_frame, threshold_window, NULL);
 		if (status == IP_EMPTY) {
 			printf("\033[1;31m");	
 			printf("Frame[%ld] is empty\n", img_ptr);
@@ -149,6 +161,7 @@ int main(int argc, char *argv[]) {
 	free(cur_frame);
 	free(buf_frame);
 	free(background);
+	free(th_frame);
 	for (int i = 0; i < frame_count; i++) {
 		free(frames_ptr[i]);
 	}
@@ -286,12 +299,26 @@ static void frame_convert(uint8_t* frame) {
 
 
 /**
- * @breif covert the data format of the frame into uint8, display the image in a named window
+ * @brief covert the data format of the frame into uint8, display the image in a named window
  * 	  and save it into cur_frame which will be passed into pipeline later.
+ * @param process_mat a function pointer that will execute additional functionalities to the image
  */
-static void show_image(uint8_t *frame) {
+static void show_image(uint8_t *frame, char *window, void (*process_mat)(Mat *)) {
 	Mat image = Mat(width, height, CV_8UC1, frame); 
 
+	if (process_mat != NULL)	
+		process_mat(&image);
+
+	imshow(window, image);
+
+	waitKey(0);
+}
+
+/**
+ * @brief draw rectangles detected by the pipeline on the image
+ * @param image a pointer points to the image to be drawn on
+ */
+static void draw_rect(Mat *image) {
 	/* draw rectangles found by the pipeline */
 	for (int i = 0; i < rec_num; i++) {
 		ip_rect temp = hrects[i];
@@ -301,13 +328,10 @@ static void show_image(uint8_t *frame) {
 		Point pt_max;
 		pt_max.x = temp.x + temp.width;
 		pt_max.y = temp.y + temp.height;
-		rectangle(image, pt_min, pt_max, Scalar(255));
+		rectangle(*image, pt_min, pt_max, Scalar(255));
 	}
-
-	imshow("Thermal image", image);
-
-	waitKey(0);
 }
+
 
 
 /**
