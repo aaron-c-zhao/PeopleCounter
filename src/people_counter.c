@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file           : people_counter.cpp
+  * @file           : people_counter.c
   * @brief          : Implementation of the image processing pipeline
   ******************************************************************************
 **/
@@ -192,7 +192,7 @@ uint8_t findCountours(ip_mat *frame, ip_rect *rects)
           found_pixels_indexes[found_pixels_count++] = neighbours[n_idx];
         }
       }
-      rects[result_rects_length++] = {min_x, min_y, max_x - min_x + 1, max_y - min_y + 1};
+      rects[result_rects_length++] = (ip_rect) {min_x, min_y, max_x - min_x + 1, max_y - min_y + 1};
     }
   }
   return (result_rects_length);
@@ -364,7 +364,7 @@ void gaussianBlur(ip_mat *frame, uint8_t kernel_size)
 
 ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
 {
-  static ip_object_list objects{0, {}, 0, 0};
+  static ip_object_list objects = {0, {}, 0, 0};
 
   // TODO find a way to properly return these values.
   uint8_t total_up = 0, total_down = 0;
@@ -414,7 +414,7 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
   for (int i = 0; i < rects_count; ++i)
   {
     //use the bounding box coordinates to derive the centroid
-    input_centroids[i] = {(uint8_t)(rects[i].x + (uint8_t)(rects[i].width / 2)),
+    input_centroids[i] = (ip_point) {(uint8_t)(rects[i].x + (uint8_t)(rects[i].width / 2)),
                           (uint8_t)(rects[i].y + (uint8_t)(rects[i].height / 2))};
   }
 
@@ -424,7 +424,7 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
     for (int i = 0; i < rects_count; ++i)
     {
       // uint8_t next_index = objects.start_index+objects.length;
-      objects.object[objects.next_id % TRACKABLE_OBJECT_MAX_SIZE] = {objects.next_id, input_centroids[i], 0};
+      objects.object[objects.next_id % TRACKABLE_OBJECT_MAX_SIZE] = (ip_object) {objects.next_id, input_centroids[i], 0};
 
       ++objects.length;
       ++objects.next_id;
@@ -476,7 +476,7 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
       }
     }
 
-    closest_centroids[i] = {minimum, (objects.start_index + i) % TRACKABLE_OBJECT_MAX_SIZE, temp_index};
+    closest_centroids[i] = (ip_closest_centroid) {minimum, (objects.start_index + i) % TRACKABLE_OBJECT_MAX_SIZE, temp_index};
   }
 
   // sort based on length
@@ -553,7 +553,7 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
         }
       }
 
-      objects.object[objects.next_id % TRACKABLE_OBJECT_MAX_SIZE] = {objects.next_id, input_centroids[i], 0};
+      objects.object[objects.next_id % TRACKABLE_OBJECT_MAX_SIZE] = (ip_object) {objects.next_id, input_centroids[i], 0};
 
       ++objects.length;
       ++objects.next_id;
@@ -599,7 +599,7 @@ void bubbleSort(ip_closest_centroid *array, uint8_t length)
     {
       if (array[j].distance > array[j + 1].distance)
       {
-        closest_centroid temp = array[j];
+        ip_closest_centroid temp = array[j];
         array[j] = array[j+1];
         array[j+1] = temp;
       }

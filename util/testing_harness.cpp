@@ -104,11 +104,11 @@ int main(int argc, char *argv[]) {
 	char *file_name = argv[1];
 
 	parse_json(file_name, parse_frame);
-	printf("Total frame:  %d, Pipeline frame rate: %d, video frame rate: %d\n", frame_count, FRAME_RATE, frame_rate);
+	printf("Total frame:  %ld, Pipeline frame rate: %d, video frame rate: %d\n", frame_count, FRAME_RATE, frame_rate);
 	
-	/* check if the frame rate is valid */
-	if (FRAME_RATE > frame_rate) {
-		fprintf(stderr, "Invalid frame rate setting in harness_config.txt\n");
+	/* check if the frame rate is valid, to be valid the frame_rate has to be smaller or equal to FRAME_RATE and to be a power of 2 as well */
+	if (FRAME_RATE > frame_rate || (frame_rate % 2)) {
+		fprintf(stderr, "Invalid frame rate setting[%d] in harness_config.txt\n", frame_rate);
 		exit(1);
 	}
 	else {
@@ -142,27 +142,26 @@ int main(int argc, char *argv[]) {
 		show_image(th_frame, threshold_window, NULL);
 		if (status == IP_EMPTY) {
 			printf("\033[1;31m");	
-			printf("Frame[%ld] is empty\n", img_ptr);
-			printf("\033[0m");
+			printf("Frame[%ld] is empty", img_ptr);
 		}
 		else if (status == IP_STILL) {
 			printf("\033[1;33m");	
-			printf("Frame[%ld] is still\n", img_ptr);
-			printf("\033[0m");
+			printf("Frame[%ld] is still", img_ptr);
 		}
 		else {
 			printf("\033[1;32m");	
-			printf("Frame[%ld], Dir: %s, Count: %d\n", img_ptr,  (count.direc == DIRECTION_UP)? "UP" : "DOWN", count.num);
-			printf("\033[0m");
-
+			printf("Frame[%ld], Dir: %s, Count: %d", img_ptr,  (count.direc == DIRECTION_UP)? "UP" : "DOWN", count.num);
 		}
+		printf(", [%d] rects deteced\n", rec_num);
+		printf("\033[0m");
 		img_ptr += step;
 	}
 	free(cur_frame);
 	free(buf_frame);
 	free(background);
 	free(th_frame);
-	for (int i = 0; i < frame_count; i++) {
+
+	for (unsigned long i = 0; i < frame_count; i++) {
 		free(frames_ptr[i]);
 	}
 	free(frames_ptr);
@@ -236,7 +235,7 @@ static void parse_frame(json_value* value, int depth) {
 	}
 
 	json_value *frames;
-	for (int i = 0; i < value->u.object.length; i++) {
+	for (unsigned int i = 0; i < value->u.object.length; i++) {
 		if (!strcmp(value->u.object.values[i].name, "frames"))
 			frames = value->u.object.values[i].value;
 	}
@@ -248,7 +247,7 @@ static void parse_frame(json_value* value, int depth) {
 	frame_count = frames->u.array.length;
 	frames_ptr = (double **)malloc( frame_count * sizeof(double *));	
 
-	for (int i = 0; i < frame_count; i++) {
+	for (unsigned long i = 0; i < frame_count; i++) {
 
 		double* frame_ptr = (double *)malloc(RESOLUTION * sizeof(double));
 		frames_ptr[i] = frame_ptr;
@@ -258,7 +257,7 @@ static void parse_frame(json_value* value, int depth) {
 			fprintf(stderr, "Invalid frame\n");
 			exit(1);
 		}
-		for (int j = 0; j < frame->u.array.length; j++) {
+		for (unsigned int j = 0; j < frame->u.array.length; j++) {
 			json_value* value_dbl = frame->u.array.values[j];
 			if (value_dbl->type != json_double) {
 				fprintf(stderr, "Invalid data format\n");
@@ -353,10 +352,10 @@ static void get_background(uint8_t* frame, unsigned long frame_count) {
  * @param depth a counter that counts how deep the recursion goes
  */
 static void read_config(json_value* value, int depth) {	
-	for (int i = 0; !depth && i < value->u.object.length; i++)  {
+	for (unsigned int i = 0; !depth && i < value->u.object.length; i++)  {
 		read_config(value->u.object.values[i].value, depth + 1);
 	}
-	for (int i = 0; depth == 1 && i < value->u.object.length; i++) {
+	for (unsigned int i = 0; depth == 1 && i < value->u.object.length; i++) {
 		json_value* temp = value->u.object.values[i].value;
 		int temp_value = temp->u.integer;	
 		switch (str2int(value->u.object.values[i].name)) {	
