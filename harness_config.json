@@ -7,7 +7,7 @@
 		"blob_width_min": 0,
 		"blob_height_min": 0,
 		"updated_threshold": 84,
-		"max_area": 18
+		"max_area": 38
 	},
 	"harness_setup": {
 		"width": 24,

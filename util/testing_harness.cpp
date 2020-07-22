@@ -23,6 +23,9 @@ static int hlimit = 40;
 /* frame rate */
 static int frame_rate = 10;
 
+/* the step of fowarding the image pointer */
+static int step = 0;
+
 /* pointer to the frame array */
 static double** frames_ptr;
 
@@ -99,10 +102,22 @@ int main(int argc, char *argv[]) {
 	char *file_name = argv[1];
 
 	parse_json(file_name, parse_frame);
+	printf("Total frame:  %d, Pipeline frame rate: %d, video frame rate: %d\n", frame_count, FRAME_RATE, frame_rate);
 	
+	/* check if the frame rate is valid */
+	if (FRAME_RATE > frame_rate) {
+		fprintf(stderr, "Invalid frame rate setting in harness_config.txt\n");
+		exit(1);
+	}
+	else {
+		/* step = the frame rate of the video divided by the frame rate that the pipeline works with */
+		step = frame_rate / FRAME_RATE;
+		
+	}	
 	namedWindow("Thermal image", WINDOW_NORMAL);
 	resizeWindow("Thermal image", 300, 300);
-	while (img_ptr++ < frame_count - 1) {
+	
+	while (img_ptr < frame_count) {
 		/* first convert the raw thermal data into processable and displayable format, namely frame and Mat */
 		frame_convert(cur_frame);
 		memcpy(buf_frame, cur_frame, RESOLUTION * sizeof(uint8_t));
@@ -116,20 +131,21 @@ int main(int argc, char *argv[]) {
 		show_image(buf_frame);
 		if (status == IP_EMPTY) {
 			printf("\033[1;31m");	
-			printf("Frame[%ld]ame is empty\n", img_ptr);
-			printf("\033[0m;");
+			printf("Frame[%ld] is empty\n", img_ptr);
+			printf("\033[0m");
 		}
 		else if (status == IP_STILL) {
 			printf("\033[1;33m");	
 			printf("Frame[%ld] is still\n", img_ptr);
-			printf("\033[0m;");
+			printf("\033[0m");
 		}
 		else {
 			printf("\033[1;32m");	
 			printf("Frame[%ld], Dir: %s, Count: %d\n", img_ptr,  (count.direc == DIRECTION_UP)? "UP" : "DOWN", count.num);
-			printf("\033[0m;");
+			printf("\033[0m");
 
 		}
+		img_ptr += step;
 	}
 	free(cur_frame);
 	free(buf_frame);
@@ -289,9 +305,6 @@ static void show_image(uint8_t *frame) {
 		rectangle(image, pt_min, pt_max, Scalar(255));
 	}
 
-	char buf[100] = {'\0'};
-	sprintf(buf, "%d", rec_num);
-
 	imshow("Thermal image", image);
 
 	waitKey(0);
@@ -305,7 +318,7 @@ static void show_image(uint8_t *frame) {
  */
 static void get_background(uint8_t* frame, unsigned long frame_count) {
 	/* take the first frame as the background frame */
-	if (frame_count == 1)
+	if (frame_count == 0)
 		memcpy(background, frame, RESOLUTION * sizeof(uint8_t));
 }
 
