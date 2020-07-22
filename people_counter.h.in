@@ -82,9 +82,9 @@ extern "C"
   typedef struct object_list
   {
     uint16_t next_id;
-    ip_object object[TRACKABLE_OBJECT_MAX_SIZE];
     uint8_t start_index;
     uint8_t length;
+    ip_object object[TRACKABLE_OBJECT_MAX_SIZE];
   } ip_object_list;
 
   typedef struct closest_centroid

@@ -119,13 +119,13 @@ int main(int argc, char *argv[]) {
 	
 	/* Intermedia result 1: image after thresholding */	
 	th_frame = (uint8_t *)malloc(RESOLUTION * sizeof(uint8_t));
-	char *thermal_window = "Thermal iamge";
+	char *thermal_window = "Thermal image";
 	char *threshold_window = "Thresholding_image";
 
 	namedWindow(thermal_window, WINDOW_NORMAL);
 	namedWindow(threshold_window, WINDOW_NORMAL);
-	resizeWindow(thermal_window, 300, 300);
-	resizeWindow(threshold_window, 300, 300); 
+	resizeWindow(thermal_window, 320, 240);
+	resizeWindow(threshold_window, 320, 240);
 
 	while (img_ptr < frame_count) {
 		/* first convert the raw thermal data into processable and displayable format, namely frame and Mat */
@@ -152,7 +152,7 @@ int main(int argc, char *argv[]) {
 			printf("\033[1;32m");	
 			printf("Frame[%ld], Dir: %s, Count: %d", img_ptr,  (count.direc == DIRECTION_UP)? "UP" : "DOWN", count.num);
 		}
-		printf(", [%d] rects deteced\n", rec_num);
+		printf(", [%d] rects detected\n", rec_num);
 		printf("\033[0m");
 		img_ptr += step;
 	}
