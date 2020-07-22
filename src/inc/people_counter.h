@@ -27,8 +27,8 @@ extern "C"
 #define TRACKABLE_OBJECT_MAX_SIZE 18
 
 // Image size
-#define SENSOR_IMAGE_WIDTH 	24
-#define SENSOR_IMAGE_HEIGHT 	32 
+#define SENSOR_IMAGE_WIDTH 	32
+#define SENSOR_IMAGE_HEIGHT 	24 
 
 /* Sensor frame rate */
 #define FRAME_RATE	8
