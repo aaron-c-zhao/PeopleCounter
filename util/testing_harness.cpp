@@ -30,7 +30,7 @@ static int step = 0;
 static double** frames_ptr;
 
 /* path to the configuration file */
-static char *config_path = "../harness_config.json";
+static const char *config_path = "harness_config.json";
 
 /* image pointer which indicates which image should be processed next */
 static unsigned long img_ptr = 0;
@@ -69,15 +69,23 @@ uint8_t* th_frame;
 
 /*--------------------------------------------function prototypes------------------------------*/
 
-static void parse_json(char*, void (*parse_value)(json_value *, int));
+static void parse_json(const char*, void (*parse_value)(json_value *, int));
 static void parse_frame(json_value*, int);
 static uint8_t grey_map(int, int, double);
-static void show_image(uint8_t*, char*, void (*process_mat)(Mat *));
+static void show_image(uint8_t*, const char*, void (*process_mat)(Mat *));
 static void get_background(uint8_t *, unsigned long);
 static void read_config(json_value* ,int);
 static void frame_convert(uint8_t*);
 static void draw_rect(Mat *);
-
+static void create_trackbar(const char*, void*);
+void rec_areaCallback(int, void*);
+void kernel_1Callback(int, void*);
+void kernel_2Callback(int, void*);
+void kernel_3Callback(int, void*);
+void threshold_Callback(int, void*);
+void updated_thresholdCallback(int, void*);
+void blob_width_minCallback(int, void*);
+void blob_height_minCallback(int, void*);
 /*---------------------------------------------------------------------------------------------*/
 
 /* hash function that will map string to an int */
@@ -119,13 +127,14 @@ int main(int argc, char *argv[]) {
 	
 	/* Intermedia result 1: image after thresholding */	
 	th_frame = (uint8_t *)malloc(RESOLUTION * sizeof(uint8_t));
-	char *thermal_window = "Thermal iamge";
-	char *threshold_window = "Thresholding_image";
+	const char *thermal_window = "Thermal iamge";
+	const char *threshold_window = "Thresholding_image";
 
 	namedWindow(thermal_window, WINDOW_NORMAL);
 	namedWindow(threshold_window, WINDOW_NORMAL);
-	resizeWindow(thermal_window, 300, 300);
-	resizeWindow(threshold_window, 300, 300); 
+	resizeWindow(thermal_window, 500, 700);
+	resizeWindow(threshold_window, 500, 500); 
+	create_trackbar(thermal_window, NULL);
 
 	while (img_ptr < frame_count) {
 		/* first convert the raw thermal data into processable and displayable format, namely frame and Mat */
@@ -167,14 +176,86 @@ int main(int argc, char *argv[]) {
 	free(frames_ptr);
 
 }
-		
+
+/**
+ * @brief Create trackbars on the window
+ * @param window on which window the call backs are going to be created
+ * @param data user data with which global variable could be avoid.
+ */
+static void create_trackbar(const char *window, void* data) {
+	/* create slide bar to adjust the rectangles' max area */
+	const char* rec_max = "Rec max area";
+	int irec_max = config.max_area;
+	createTrackbar(rec_max, window, (int *)&irec_max, 255, rec_areaCallback, data);
+	/* slide bar to adjust the kernel 1 */
+	const char *kernel_1 = "kernel_1";
+	int ikernel_1 = config.kernel_1;
+	createTrackbar(kernel_1, window, &ikernel_1, 24, NULL, data);
+	/* slide bar to adjust the kernel 2 */
+	const char *kernel_2 = "kernel_2";
+	int ikernel_2 = config.kernel_2;
+	createTrackbar(kernel_2, window, &ikernel_2, 24, NULL, data);
+	/* slide bar to adjust the kernel 3 */
+	const char *kernel_3 = "kernel_3";
+	int ikernel_3 = config.kernel_3;
+	createTrackbar(kernel_3, window, &ikernel_3, 24, NULL, data);
+	/* slide bar to adjust the threshold*/
+	const char *threshold = "threshold";
+	int ithreshold= config.threshold;
+	createTrackbar(threshold, window, &ithreshold, 255, NULL, data);
+	/* slide bar to adjust the updated threshold*/
+	const char *updated_threshold = "updated threshold";
+	int iupdated_threshold= config.updated_threshold;
+	createTrackbar(updated_threshold, window, &iupdated_threshold, 255, NULL, data);
+	/* slide bar to adjust the blob width min*/
+	const char *blob_width_min = "blob_width_min";
+	int iblob_width_min= config.blob_width_min;
+	createTrackbar(blob_width_min, window, &iblob_width_min, 32, NULL, data);
+	/* slide bar to adjust the blob height min*/
+	const char *blob_height_min = "blob_height_min";
+	int iblob_height_min= config.blob_height_min;
+	createTrackbar(blob_height_min, window, &iblob_height_min, 32, NULL, data);
+}
+
+void rec_areaCallback(int value, void* data) {
+	config.max_area = (uint8_t)value;
+}
+
+void kernel_1Callback(int value, void* data) {
+	config.kernel_1 = (uint8_t)value;
+}
+
+void kernel_2Callback(int value, void* data) {
+	config.kernel_2 = (uint8_t)value;
+}
+
+void kernel_3Callback(int value, void* data) {
+	config.kernel_3 = (uint8_t)value;
+}
+
+void threshold_Callback(int value, void* data) {
+	config.threshold = (uint8_t)value;
+}
+
+void updated_thresholdCallback(int value, void* data) {
+	config.updated_threshold = (uint8_t)value;
+}
+
+void blob_width_minCallback(int value, void* data) {
+	config.blob_width_min = (uint8_t)value;
+}
+
+void blob_height_minCallback(int value, void* data) {
+	config.blob_height_min = (uint8_t)value;
+}
+
 /**
  * @brief Parse the json file into a two-demansinal array consits of temperatures retrived
  * 	  by the sensor.
  * @param file_name path to the json file
  * @param parse_value a function pointer that points to the function which parses the json_value
  */ 
-static void parse_json(char *file_name, void (*parse_value)(json_value *, int)) {
+static void parse_json(const char *file_name, void (*parse_value)(json_value *, int)) {
 	FILE *json_file;
 	int file_size;
 	struct stat filestatus;
@@ -302,7 +383,7 @@ static void frame_convert(uint8_t* frame) {
  * 	  and save it into cur_frame which will be passed into pipeline later.
  * @param process_mat a function pointer that will execute additional functionalities to the image
  */
-static void show_image(uint8_t *frame, char *window, void (*process_mat)(Mat *)) {
+static void show_image(uint8_t *frame, const char *window, void (*process_mat)(Mat *)) {
 	Mat image = Mat(width, height, CV_8UC1, frame); 
 
 	if (process_mat != NULL)	
