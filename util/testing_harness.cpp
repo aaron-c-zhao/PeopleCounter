@@ -149,6 +149,7 @@ int main(int argc, char *argv[]) {
 		 * found by pipeline */
 		show_image(buf_frame, thermal_window, draw_rect);
 		show_image(th_frame, threshold_window, NULL);
+		waitKey(0);
 		if (status == IP_EMPTY) {
 			printf("\033[1;31m");	
 			printf("Frame[%ld] is empty", img_ptr);
@@ -390,8 +391,6 @@ static void show_image(uint8_t *frame, const char *window, void (*process_mat)(M
 		process_mat(&image);
 
 	imshow(window, image);
-
-	waitKey(0);
 }
 
 /**
