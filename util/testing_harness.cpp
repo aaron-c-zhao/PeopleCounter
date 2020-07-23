@@ -149,6 +149,7 @@ int main(int argc, char *argv[]) {
 		 * found by pipeline */
 		show_image(buf_frame, thermal_window, draw_rect);
 		show_image(th_frame, threshold_window, NULL);
+		waitKey(0);
 		if (status == IP_EMPTY) {
 			printf("\033[1;31m");	
 			printf("Frame[%ld] is empty", img_ptr);
@@ -190,31 +191,31 @@ static void create_trackbar(const char *window, void* data) {
 	/* slide bar to adjust the kernel 1 */
 	const char *kernel_1 = "kernel_1";
 	int ikernel_1 = config.kernel_1;
-	createTrackbar(kernel_1, window, &ikernel_1, 24, NULL, data);
+	createTrackbar(kernel_1, window, &ikernel_1, 24, kernel_1Callback, data);
 	/* slide bar to adjust the kernel 2 */
 	const char *kernel_2 = "kernel_2";
 	int ikernel_2 = config.kernel_2;
-	createTrackbar(kernel_2, window, &ikernel_2, 24, NULL, data);
+	createTrackbar(kernel_2, window, &ikernel_2, 24, kernel_2Callback, data);
 	/* slide bar to adjust the kernel 3 */
 	const char *kernel_3 = "kernel_3";
 	int ikernel_3 = config.kernel_3;
-	createTrackbar(kernel_3, window, &ikernel_3, 24, NULL, data);
+	createTrackbar(kernel_3, window, &ikernel_3, 24, kernel_3Callback, data);
 	/* slide bar to adjust the threshold*/
 	const char *threshold = "threshold";
 	int ithreshold= config.threshold;
-	createTrackbar(threshold, window, &ithreshold, 255, NULL, data);
+	createTrackbar(threshold, window, &ithreshold, 255, threshold_Callback, data);
 	/* slide bar to adjust the updated threshold*/
 	const char *updated_threshold = "updated threshold";
 	int iupdated_threshold= config.updated_threshold;
-	createTrackbar(updated_threshold, window, &iupdated_threshold, 255, NULL, data);
+	createTrackbar(updated_threshold, window, &iupdated_threshold, 255, updated_thresholdCallback, data);
 	/* slide bar to adjust the blob width min*/
 	const char *blob_width_min = "blob_width_min";
 	int iblob_width_min= config.blob_width_min;
-	createTrackbar(blob_width_min, window, &iblob_width_min, 32, NULL, data);
+	createTrackbar(blob_width_min, window, &iblob_width_min, 32, blob_width_minCallback, data);
 	/* slide bar to adjust the blob height min*/
 	const char *blob_height_min = "blob_height_min";
 	int iblob_height_min= config.blob_height_min;
-	createTrackbar(blob_height_min, window, &iblob_height_min, 32, NULL, data);
+	createTrackbar(blob_height_min, window, &iblob_height_min, 32, blob_height_minCallback, data);
 }
 
 void rec_areaCallback(int value, void* data) {
@@ -390,8 +391,6 @@ static void show_image(uint8_t *frame, const char *window, void (*process_mat)(M
 		process_mat(&image);
 
 	imshow(window, image);
-
-	waitKey(0);
 }
 
 /**
