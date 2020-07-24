@@ -11,6 +11,20 @@
 extern ip_config config;
 
 #ifdef __TESTING_HARNESS
+// include for printf
+#include <stdio.h>
+// include for getting amount of instructions
+#include <x86intrin.h>
+
+uint64_t min_IpProcess = -1;
+uint64_t max_IpProcess = 0;
+uint64_t min_detectPeople = -1;
+uint64_t max_detectPeople = 0;
+uint64_t min_updateObjects = -1;
+uint64_t max_updateObjects = 0;
+uint64_t min_findCountours = -1;
+uint64_t max_findCountours = 0;
+
 extern uint8_t rec_num;
 extern ip_rect hrects[RECTS_MAX_SIZE];
 extern uint8_t *th_frame;
@@ -18,6 +32,10 @@ extern uint8_t *th_frame;
 
 ip_status IpProcess(void *frame, void *background_image, void *count)
 {
+  // get start instructions
+  #ifdef __TESTING_HARNESS
+    uint64_t ipProcess_tsc = readTSC();
+  #endif
   // stores all the bounding rectangles in the frame
   ip_rect rects[RECTS_MAX_SIZE];
   /* detect people in the frame */
@@ -25,17 +43,60 @@ ip_status IpProcess(void *frame, void *background_image, void *count)
 
 /* output the number of rectangles in the frame */
 #ifdef __TESTING_HARNESS
+  uint64_t detectPeople_tsc = readTSC();
   rec_num = rects_count;
   memcpy(hrects, rects, RECTS_MAX_SIZE * sizeof(ip_rect));
+  uint64_t start_updateObjects_tsc = readTSC();
 #endif
 
   /* update centroids location */
   ip_count count_update = updateObjects(rects, rects_count);
 
+  // get instructions after update Objects
+  #ifdef __TESTING_HARNESS
+    uint64_t updateObjects_tsc = readTSC();
+  #endif
+
   ip_count *result = (ip_count *)count;
 
   result->direc = count_update.direc;
   result->num = count_update.num < 0 ? 0 : count_update.num;
+
+  // get start instructions
+  #ifdef __TESTING_HARNESS
+    uint64_t Final_tsc = readTSC();
+
+    uint64_t detectPeople_instructions = detectPeople_tsc - ipProcess_tsc;
+    if (detectPeople_instructions > max_detectPeople) {
+      max_detectPeople = detectPeople_instructions;
+    }
+    if (detectPeople_instructions < min_detectPeople) {
+      min_detectPeople = detectPeople_instructions;
+    }
+
+    uint64_t updateObjects_instructions = updateObjects_tsc - start_updateObjects_tsc;
+    if (updateObjects_instructions > max_updateObjects) {
+      max_updateObjects = updateObjects_instructions;
+    }
+    if (updateObjects_instructions < min_updateObjects) {
+      min_updateObjects = updateObjects_instructions;
+    }
+
+    uint64_t total_instructions = detectPeople_instructions + Final_tsc - start_updateObjects_tsc;
+    if (total_instructions > max_IpProcess) {
+      max_IpProcess = total_instructions;
+    }
+    if (total_instructions < min_IpProcess) {
+      min_IpProcess = total_instructions;
+    }
+
+    printf("[IpProcess]\tmin:%lu\tmax:%lu\
+    \n[detectPeople]\tmin:%lu\tmax:%lu\
+    \n[updateObjects]\tmin:%lu \tmax:%lu\
+    \n[findcountours]\tmin:%lu\tmax:%lu\n", 
+    min_IpProcess, max_IpProcess, min_detectPeople, max_detectPeople, min_updateObjects, max_updateObjects, min_findCountours, max_findCountours );
+  #endif
+
   switch (count_update.num){
     case -1:
       return (IP_EMPTY);
@@ -72,7 +133,26 @@ uint8_t detectPeople(ip_mat *frame, ip_mat *background_image, ip_rect *rects)
 
   /* Blur(frame, config.kernel_4); */
   ip_rect temp_rects[RECTS_MAX_SIZE];
+
+  #ifdef __TESTING_HARNESS
+    uint64_t start_findCountours_tsc = readTSC();
+  #endif
+
   uint8_t n_rects = findCountours(frame, temp_rects);
+
+  #ifdef __TESTING_HARNESS
+    uint64_t end_findCountours_tsc = readTSC();
+    uint64_t findCountours_tsc = end_findCountours_tsc - start_findCountours_tsc;
+
+    if (findCountours_tsc > max_findCountours) {
+      max_findCountours = findCountours_tsc;
+    }
+    if (findCountours_tsc < min_findCountours) {
+      min_findCountours = findCountours_tsc;
+    }
+  #endif
+
+
 
   uint8_t final_n_rects = 0;
 
@@ -606,3 +686,16 @@ void bubbleSort(ip_closest_centroid *array, uint8_t length)
     }
   }
 }
+
+
+#ifdef __TESTING_HARNESS
+// reads instructions
+inline
+uint64_t readTSC() {
+    // _mm_lfence();  // optionally wait for earlier insns to retire before reading the clock
+    uint64_t tsc = __rdtsc();
+    // _mm_lfence();  // optionally block later instructions until rdtsc retires
+    return tsc;
+}
+#endif
+
