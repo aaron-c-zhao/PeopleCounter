@@ -78,6 +78,7 @@ static void read_config(json_value* ,int);
 static void frame_convert(uint8_t*);
 static void draw_rect(Mat *);
 static void create_trackbar(const char*, void*);
+static void hist_euqalize(Mat *);
 void rec_areaCallback(int, void*);
 void kernel_1Callback(int, void*);
 void kernel_2Callback(int, void*);
@@ -148,7 +149,8 @@ int main(int argc, char *argv[]) {
 		/* the show_image should be called after the IpProcess to correctly display the rectangles 
 		 * found by pipeline */
 		show_image(buf_frame, thermal_window, draw_rect);
-		show_image(th_frame, threshold_window, NULL);
+		show_image(buf_frame, threshold_window, hist_euqalize);
+			
 		waitKey(0);
 		if (status == IP_EMPTY) {
 			printf("\033[1;31m");	
@@ -409,6 +411,12 @@ static void draw_rect(Mat *image) {
 		pt_max.y = temp.y + temp.height;
 		rectangle(*image, pt_min, pt_max, Scalar(255));
 	}
+}
+
+static void hist_euqalize(Mat* src) {
+	GaussianBlur(*src, *src, Size(3, 3), 0, 0);
+	equalizeHist(*src, *src);
+	
 }
 
 

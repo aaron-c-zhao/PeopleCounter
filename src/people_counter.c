@@ -17,9 +17,9 @@ extern ip_rect hrects[RECTS_MAX_SIZE];
 extern uint8_t *th_frame;
 #endif
 
-ip_status ip_process(void *frame, void *background_image, void *count)
+ip_status IpProcess(void *frame, void *background_image, void *count)
 {
-
+	return IP_EMPTY;
 
 }
 
