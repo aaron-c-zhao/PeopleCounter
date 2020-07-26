@@ -684,6 +684,12 @@ static uint8_t const stackblur_shr[255] =
 
 void stackBlur(uint8_t *src, uint8_t radius)
 {
+  /* skip blur if blur is < 1*/
+  if(radius < 1)
+  {
+    return;
+  }
+
   uint16_t x, y, xp, yp, i;
 
   uint8_t stack[radius * (radius + 2) + 1];
