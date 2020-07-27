@@ -1,6 +1,6 @@
 {
 	"parameters": {
-		"kernel_1": 5,
+		"kernel_1": 1,
 		"kernel_2": 1,
 		"kernel_3": 1,
 		"threshold": 32,

@@ -24,6 +24,8 @@ cd ./build
 rm -rf *
 rm ../src/inc/people_counter.h
 
+[ -f "../PeopleCounter.executable" ] && rm ../PeopleCounter.executable
+
 if [[ "$OSTYPE" == "darwin"* ]]; then
 	cmake -C ../header_config.txt -DCMAKE_CXX_FLAGS="-Wno-error=narrowing" $mode..
 else
@@ -32,5 +34,5 @@ fi
 
 make -j12
 
-
+mv PeopleCounter ../PeopleCounter.executable
 

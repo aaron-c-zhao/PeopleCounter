@@ -1,2 +1,6 @@
 build/
 *.swp
+*.executable
+src/inc/people_counter.h
+
+.vscode/
