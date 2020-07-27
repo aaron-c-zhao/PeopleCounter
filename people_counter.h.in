@@ -149,7 +149,9 @@ extern "C"
   void bubbleSort(ip_closest_centroid *, uint8_t);
 
   void IpInit();
-
+  #ifdef __TESTING_HARNESS
+  uint64_t readTSC();
+  #endif
 #ifdef __cplusplus
 }
 #endif
