@@ -168,6 +168,9 @@ int main(int argc, char *argv[])
 		}
 		printf(", [%d] rects detected\n", rec_num);
 		printf("\033[0m");
+		
+		/* wait for keyboard input to continue to next frame */
+		waitKey(0);
 		img_ptr += step;
 	}
 	free(cur_frame);
@@ -409,7 +412,7 @@ static void show_image(uint8_t *frame, const char *window, void (*process_mat)(M
 
 	imshow(window, image);
 
-	waitKey(0);
+	/* waitKey(0); */
 }
 
 /**
