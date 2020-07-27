@@ -637,7 +637,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 
 This is the C monochrome (8 bit grayscale) single threaded version
-heavily based on the inplementation by Victor Laskin (victor.laskin@gmail.com)
+Based heavily on http://vitiy.info/Code/stackblur.cpp by Victor Laskin (victor.laskin@gmail.com)
 More details: http://vitiy.info/stackblur-algorithm-multi-threaded-blur-for-cpp
 */
 
@@ -745,8 +745,8 @@ void stackBlur(uint8_t *src, uint8_t radius)
     {
       xp = wm;
     } 
-    src_ptr = src + (xp + y * SENSOR_IMAGE_WIDTH); //   img.pix_ptr(xp, y);
-    dst_ptr = src + y * SENSOR_IMAGE_WIDTH;            // img.pix_ptr(0, y);
+    src_ptr = src + (xp + y * SENSOR_IMAGE_WIDTH);  // img.pix_ptr(xp, y);
+    dst_ptr = src + y * SENSOR_IMAGE_WIDTH;         // img.pix_ptr(0, y);
     for (x = 0; x < SENSOR_IMAGE_WIDTH; x++)
     {
       dst_ptr[0] = (sum_a * mul_sum) >> shr_sum;
