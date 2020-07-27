@@ -33,10 +33,10 @@ extern uint8_t *th_frame;
 
 ip_status IpProcess(void *frame, void *background_image, void *count)
 {
-  // get amount of instructions at the start
-  #ifdef __TESTING_HARNESS
-    uint64_t ipProcess_tsc = readTSC();
-  #endif
+// get amount of instructions at the start
+#ifdef __TESTING_HARNESS
+  uint64_t ipProcess_tsc = readTSC();
+#endif
 
   // stores all the bounding rectangles in the frame
   ip_rect rects[RECTS_MAX_SIZE];
@@ -50,7 +50,7 @@ ip_status IpProcess(void *frame, void *background_image, void *count)
 
   rec_num = rects_count;
   memcpy(hrects, rects, RECTS_MAX_SIZE * sizeof(ip_rect));
-  
+
   //get amount of instructions before update objects
   uint64_t start_updateObjects_tsc = readTSC();
 #endif
@@ -58,61 +58,68 @@ ip_status IpProcess(void *frame, void *background_image, void *count)
   /* update centroids location */
   ip_count count_update = updateObjects(rects, rects_count);
 
-  // get instructions after update Objects
-  #ifdef __TESTING_HARNESS
-    uint64_t updateObjects_tsc = readTSC();
-  #endif
+// get instructions after update Objects
+#ifdef __TESTING_HARNESS
+  uint64_t updateObjects_tsc = readTSC();
+#endif
 
   ip_count *result = (ip_count *)count;
 
   result->direc = count_update.direc;
   result->num = count_update.num < 0 ? 0 : count_update.num;
 
-  #ifdef __TESTING_HARNESS
-    // get amount of instructions after the entire pipeline
-    uint64_t Final_tsc = readTSC();
+#ifdef __TESTING_HARNESS
+  // get amount of instructions after the entire pipeline
+  uint64_t Final_tsc = readTSC();
 
-    // calculate the amount of instructions executed in detectpeople
-    uint64_t detectPeople_instructions = detectPeople_tsc - ipProcess_tsc;
-    if (detectPeople_instructions > max_detectPeople) {
-      max_detectPeople = detectPeople_instructions;
-    }
-    if (detectPeople_instructions < min_detectPeople) {
-      min_detectPeople = detectPeople_instructions;
-    }
+  // calculate the amount of instructions executed in detectpeople
+  uint64_t detectPeople_instructions = detectPeople_tsc - ipProcess_tsc;
+  if (detectPeople_instructions > max_detectPeople)
+  {
+    max_detectPeople = detectPeople_instructions;
+  }
+  if (detectPeople_instructions < min_detectPeople)
+  {
+    min_detectPeople = detectPeople_instructions;
+  }
 
-    // calculate the amount of instructions executed in updateObjects
-    uint64_t updateObjects_instructions = updateObjects_tsc - start_updateObjects_tsc;
-    if (updateObjects_instructions > max_updateObjects) {
-      max_updateObjects = updateObjects_instructions;
-    }
-    if (updateObjects_instructions < min_updateObjects) {
-      min_updateObjects = updateObjects_instructions;
-    }
+  // calculate the amount of instructions executed in updateObjects
+  uint64_t updateObjects_instructions = updateObjects_tsc - start_updateObjects_tsc;
+  if (updateObjects_instructions > max_updateObjects)
+  {
+    max_updateObjects = updateObjects_instructions;
+  }
+  if (updateObjects_instructions < min_updateObjects)
+  {
+    min_updateObjects = updateObjects_instructions;
+  }
 
-    // calculate the amount of instructions executed for whole pipeline
-    uint64_t total_instructions = detectPeople_instructions + Final_tsc - start_updateObjects_tsc;
-    if (total_instructions > max_IpProcess) {
-      max_IpProcess = total_instructions;
-    }
-    if (total_instructions < min_IpProcess) {
-      min_IpProcess = total_instructions;
-    }
+  // calculate the amount of instructions executed for whole pipeline
+  uint64_t total_instructions = detectPeople_instructions + Final_tsc - start_updateObjects_tsc;
+  if (total_instructions > max_IpProcess)
+  {
+    max_IpProcess = total_instructions;
+  }
+  if (total_instructions < min_IpProcess)
+  {
+    min_IpProcess = total_instructions;
+  }
 
-    printf("[IpProcess]\tmin:%lu\tmax:%lu\
+  printf("[IpProcess]\tmin:%lu\tmax:%lu\
     \n[detectPeople]\tmin:%lu\tmax:%lu\
     \n[updateObjects]\tmin:%lu \tmax:%lu\
-    \n[findcountours]\tmin:%lu\tmax:%lu\n", 
-    min_IpProcess, max_IpProcess, min_detectPeople, max_detectPeople, min_updateObjects, max_updateObjects, min_findCountours, max_findCountours );
-  #endif
+    \n[findcountours]\tmin:%lu\tmax:%lu\n",
+         min_IpProcess, max_IpProcess, min_detectPeople, max_detectPeople, min_updateObjects, max_updateObjects, min_findCountours, max_findCountours);
+#endif
 
-  switch (count_update.num){
-    case -1:
-      return (IP_EMPTY);
-    case 0:
-      return (IP_STILL);
-    default:
-      return (IP_UPDATE);
+  switch (count_update.num)
+  {
+  case -1:
+    return (IP_EMPTY);
+  case 0:
+    return (IP_STILL);
+  default:
+    return (IP_UPDATE);
   }
 }
 
@@ -128,19 +135,20 @@ uint8_t detectPeople(ip_mat *frame, ip_mat *background_image, ip_rect *rects)
   stackBlur(frame->data, config.kernel_1);
 
 #ifdef __TESTING_HARNESS
-  memcpy(th_frame, frame->data, SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT *sizeof(uint8_t));
-#endif 
+  memcpy(th_frame, frame->data, SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT * sizeof(uint8_t));
+#endif
 
   absDiff(frame, background_image);
   gaussianBlur(frame, config.kernel_3);
   // copy blurred image in case we need to re-apply the threshold.
   uint8_t data[SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT];
   ip_mat blurred_image = {.data = data};
-  for(int i = 0; i < SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT; ++i) {
-      data[i] = frame->data[i];
+  for (int i = 0; i < SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT; ++i)
+  {
+    data[i] = frame->data[i];
   }
   threshold(frame, config.threshold);
-/*
+  /*
 #ifdef __TESTING_HARNESS
   memcpy(th_frame, frame->data, SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT *sizeof(uint8_t));
 #endif 
@@ -148,26 +156,26 @@ uint8_t detectPeople(ip_mat *frame, ip_mat *background_image, ip_rect *rects)
   /* Blur(frame, config.kernel_4); */
   ip_rect temp_rects[RECTS_MAX_SIZE];
 
-  #ifdef __TESTING_HARNESS
-    uint64_t start_findCountours_tsc = readTSC();
-  #endif
+#ifdef __TESTING_HARNESS
+  uint64_t start_findCountours_tsc = readTSC();
+#endif
 
   uint8_t n_rects = findCountours(frame, temp_rects);
 
-  #ifdef __TESTING_HARNESS
-    uint64_t end_findCountours_tsc = readTSC();
-    uint64_t findCountours_tsc = end_findCountours_tsc - start_findCountours_tsc;
+#ifdef __TESTING_HARNESS
+  uint64_t end_findCountours_tsc = readTSC();
+  uint64_t findCountours_tsc = end_findCountours_tsc - start_findCountours_tsc;
 
-    // calculate the amount of instructions executed in findcontours
-    if (findCountours_tsc > max_findCountours) {
-      max_findCountours = findCountours_tsc;
-    }
-    if (findCountours_tsc < min_findCountours) {
-      min_findCountours = findCountours_tsc;
-    }
-  #endif
-
-
+  // calculate the amount of instructions executed in findcontours
+  if (findCountours_tsc > max_findCountours)
+  {
+    max_findCountours = findCountours_tsc;
+  }
+  if (findCountours_tsc < min_findCountours)
+  {
+    min_findCountours = findCountours_tsc;
+  }
+#endif
 
   uint8_t final_n_rects = 0;
 
@@ -287,7 +295,7 @@ uint8_t findCountours(ip_mat *frame, ip_rect *rects)
           found_pixels_indexes[found_pixels_count++] = neighbours[n_idx];
         }
       }
-      rects[result_rects_length++] = (ip_rect) {min_x, min_y, max_x - min_x + 1, max_y - min_y + 1};
+      rects[result_rects_length++] = (ip_rect){min_x, min_y, max_x - min_x + 1, max_y - min_y + 1};
     }
   }
   return (result_rects_length);
@@ -395,55 +403,56 @@ void gaussianBlur(ip_mat *frame, uint8_t kernel_size)
 
   if (kernel_size == 3)
   {
-  //get the target pixel
+    //get the target pixel
     for (uint8_t y = 0; y < SENSOR_IMAGE_HEIGHT; ++y)
     {
       for (uint8_t x = 0; x < SENSOR_IMAGE_WIDTH; ++x)
       {
-	uint32_t sum = 0;
-	uint16_t count = 0;
+        uint32_t sum = 0;
+        uint16_t count = 0;
 
-	//loop through all directions of that pixel
-	for (int8_t d_y = -radius; d_y <= radius; ++d_y)
-	{
-	  for (int8_t d_x = -radius; d_x <= radius; ++d_x)
-	  {
-	    if (y + d_y > -1 && y + d_y < SENSOR_IMAGE_HEIGHT && x + d_x > -1 && x + d_x < SENSOR_IMAGE_WIDTH)
-	    {
-	      sum += frame->data[SENSOR_IMAGE_WIDTH * (y + d_y) + (x + d_x)] * kernel_3[radius + d_y][radius + d_x];
-	      count += kernel_3[radius + d_y][radius + d_x];
-	    }
-	  }
-	}
+        //loop through all directions of that pixel
+        for (int8_t d_y = -radius; d_y <= radius; ++d_y)
+        {
+          for (int8_t d_x = -radius; d_x <= radius; ++d_x)
+          {
+            if (y + d_y > -1 && y + d_y < SENSOR_IMAGE_HEIGHT && x + d_x > -1 && x + d_x < SENSOR_IMAGE_WIDTH)
+            {
+              sum += frame->data[SENSOR_IMAGE_WIDTH * (y + d_y) + (x + d_x)] * kernel_3[radius + d_y][radius + d_x];
+              count += kernel_3[radius + d_y][radius + d_x];
+            }
+          }
+        }
 
-	result[SENSOR_IMAGE_WIDTH * y + x] = (count == 0) ? 0 : (uint8_t)(sum / count);
+        result[SENSOR_IMAGE_WIDTH * y + x] = (count == 0) ? 0 : (uint8_t)(sum / count);
       }
     }
   }
 
   // duplicate code, find better way to optimise this
-  else if (kernel_size == 5) {
+  else if (kernel_size == 5)
+  {
     for (uint8_t y = 0; y < SENSOR_IMAGE_HEIGHT; ++y)
     {
       for (uint8_t x = 0; x < SENSOR_IMAGE_WIDTH; ++x)
       {
-	uint32_t sum = 0;
-	uint16_t count = 0;
+        uint32_t sum = 0;
+        uint16_t count = 0;
 
-	//loop through all directions of that pixel
-	for (int8_t d_y = -radius; d_y <= radius; ++d_y)
-	{
-	  for (int8_t d_x = -radius; d_x <= radius; ++d_x)
-	  {
-	    if (y + d_y > -1 && y + d_y < SENSOR_IMAGE_HEIGHT && x + d_x > -1 && x + d_x < SENSOR_IMAGE_WIDTH)
-	    {
-	      sum += frame->data[SENSOR_IMAGE_WIDTH * (y + d_y) + (x + d_x)] * kernel_5[radius + d_y][radius + d_x];
-	      count += kernel_5[radius + d_y][radius + d_x];
-	    }
-	  }
-	}
+        //loop through all directions of that pixel
+        for (int8_t d_y = -radius; d_y <= radius; ++d_y)
+        {
+          for (int8_t d_x = -radius; d_x <= radius; ++d_x)
+          {
+            if (y + d_y > -1 && y + d_y < SENSOR_IMAGE_HEIGHT && x + d_x > -1 && x + d_x < SENSOR_IMAGE_WIDTH)
+            {
+              sum += frame->data[SENSOR_IMAGE_WIDTH * (y + d_y) + (x + d_x)] * kernel_5[radius + d_y][radius + d_x];
+              count += kernel_5[radius + d_y][radius + d_x];
+            }
+          }
+        }
 
-	result[SENSOR_IMAGE_WIDTH * y + x] = (count == 0) ? 0 : (uint8_t)(sum / count);
+        result[SENSOR_IMAGE_WIDTH * y + x] = (count == 0) ? 0 : (uint8_t)(sum / count);
       }
     }
   }
@@ -459,21 +468,23 @@ void gaussianBlur(ip_mat *frame, uint8_t kernel_size)
 
 ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
 {
-  static ip_object_list objects = {0, {}, 0, 0};
+  /* TODO assign the ip_object array to the memory address given as parameter instead of an empty array. */
+  static ip_object_list objects = {0, 0, 0, {}};
 
-  // TODO find a way to properly return these values.
+  /* TODO return this in a struct */
   uint8_t total_up = 0, total_down = 0;
 
-  // if there are no blobs in the frame, then increase the count of disappeared frames of every object
+  /* if there are no blobs in the frame, then increase the count of disappeared frames of every object */
   if (rects_count == 0)
   {
-    // increase disappered count of every object
+    /* increase disappered count of every object */
     for (int i = objects.start_index; i < objects.start_index + objects.length; ++i)
     {
       ++objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].disappeared_frames_count;
     }
 
-    // shift forward the starting index by "removing" old objects
+    /* shift forward the starting index by "removing" objects that have disappeared for more than CT_MAX_DISAPPEARED.
+    stops as soon as an object that should not be deleted is met */
     for (int i = objects.start_index; i < objects.start_index + objects.length; ++i)
     {
       if (objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].disappeared_frames_count > CT_MAX_DISAPPEARED)
@@ -487,51 +498,52 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
       }
     }
 
-    // loop back index if necessary
+    /* loop back index if necessary */
     objects.start_index %= TRACKABLE_OBJECT_MAX_SIZE;
-    if (objects.length == 0)
-    {
-	return ((ip_count){DIRECTION_UP, -1});
-    }
 
-    if(objects.length == 0)
+    /* if no more objects are being tracked, return -1 (IP_EMPTY). The direction does not matter*/
+    if (objects.length == 0)
     {
       return ((ip_count){DIRECTION_UP, -1});
     }
-
+    /* otherwise there are still some objects that are being tracked, therefore return 0 (IP_STILL), */
     return ((ip_count){DIRECTION_UP, 0});
   }
 
+  /* convert bounding boxes to their centroid points */
   ip_point input_centroids[rects_count];
 
-  // loop over the bounding box rectangles
-  // TODO check if it's necessary to reverse order (as c++ code)
   for (int i = 0; i < rects_count; ++i)
   {
-    //use the bounding box coordinates to derive the centroid
-    input_centroids[i] = (ip_point) {(uint8_t)(rects[i].x + (uint8_t)(rects[i].width / 2)),
-                          (uint8_t)(rects[i].y + (uint8_t)(rects[i].height / 2))};
+    /* use the bounding box coordinates to derive the centroid */
+    input_centroids[i] = (ip_point){(uint8_t)(rects[i].x + (uint8_t)(rects[i].width >> 1)),
+                                    (uint8_t)(rects[i].y + (uint8_t)(rects[i].height >> 1))};
   }
 
+  /* if no objects are being tracked, then the new centroids are all new objects */
   if (objects.length == 0)
   {
-    // Register centroids
+    /* register centroids as new objects */
     for (int i = 0; i < rects_count; ++i)
     {
-      // uint8_t next_index = objects.start_index+objects.length;
-      objects.object[objects.next_id % TRACKABLE_OBJECT_MAX_SIZE] = (ip_object) {objects.next_id, input_centroids[i], 0};
+      objects.object[objects.next_id % TRACKABLE_OBJECT_MAX_SIZE] = (ip_object){objects.next_id, input_centroids[i], 0};
 
       ++objects.length;
       ++objects.next_id;
     }
 
-    // Return early since there is no need to update old object centroids
+    /* return 0 (IP_STILL) since nobody can have crossed the middle line if no people were being tracked before */
     return ((ip_count){DIRECTION_UP, 0});
   }
 
+  /* create an object to new centroids map (matrix) as a 1D array */
   uint16_t distance_vector[objects.length * rects_count];
 
-  //object_centroids is a list of centroids we already have, input_centroids is the new centroid
+  /* object_centroids is a list of centroids we already have, input_centroids is the list of new centroids.
+  calculate the squared distance between each object and new centroids.
+  x axis = input centroids
+  y axis = object centroids
+  */
   for (uint8_t i = 0; i < objects.length; ++i)
   {
     for (uint8_t j = 0; j < rects_count; ++j)
@@ -540,25 +552,24 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
       int8_t delta_x = objects.object[object_index].centroid.x - input_centroids[j].x;
       int8_t delta_y = objects.object[object_index].centroid.y - input_centroids[j].y;
 
-      // calculate euclidean distance (skip the square root, because we just need to sort based on it)
+      /* calculate squared euclidean distance (skip the square root, because we just need to sort based on it) */
       uint16_t distance = delta_x * delta_x + delta_y * delta_y;
 
       distance_vector[i * rects_count + j] = distance;
     }
   }
 
-  /*in order to perform this matching we must(1) find the
-		smallest value in each rowand then (2) sort the row
-		indexes based on their minimum values so that the row
-		with the smallest value as at the* front* of the index list*/
-
-  // temporary struct to make algorithm easier
-
+  /* in order to perform this matching we must
+    (1) find the smallest value in each row and then
+    (2) sort the row indexes based on their minimum values so that the row
+		with the smallest value as at the* front* of the index list */
+  /* find the closest input centroid for each object centroid. */
+  /* use helper struct to make algorithm easier */
   ip_closest_centroid closest_centroids[objects.length];
 
   for (uint8_t i = 0; i < objects.length; ++i)
   {
-    // set minimum to largest uint16_t value by converting complement 2 -1 int to unsigned int
+    /* initialize minimum distance to largest uint16_t value by converting complement 2 -1 int to unsigned int */
     uint16_t minimum = -1;
     uint8_t temp_index = 0;
 
@@ -566,22 +577,25 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
     {
       if (distance_vector[i * rects_count + j] < minimum)
       {
+        /* keep track of both the distance and the index of the closest input centroid */
         minimum = distance_vector[i * rects_count + j];
         temp_index = j;
       }
     }
 
-    closest_centroids[i] = (ip_closest_centroid) {minimum, (objects.start_index + i) % TRACKABLE_OBJECT_MAX_SIZE, temp_index};
+    closest_centroids[i] = (ip_closest_centroid){minimum, (objects.start_index + i) % TRACKABLE_OBJECT_MAX_SIZE, temp_index};
   }
 
-  // sort based on length
+  /* sort the object-input centroid pairings based on their distance */
   bubbleSort(closest_centroids, objects.length);
 
+  /* use a counter to not have to loop over closest_centroids */
   uint8_t used_count = 0;
 
+  /* iterate at most max(#objects, #input_centroids) times */
   for (uint8_t i = 0; i < ((objects.length < rects_count) ? objects.length : rects_count); ++i)
   {
-
+    /* if the input centroids has already been assigned to a previous object, then skip this object */
     if (isCentroidUsed(closest_centroids, i) ||
         closest_centroids[i].distance > CT_MAX_DISTANCE * CT_MAX_DISTANCE)
     {
@@ -591,6 +605,7 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
     ++used_count;
     uint8_t object_id = closest_centroids[i].object_index;
 
+    /* check if this object has crossed the middle line, if so increase the count depending on the direction */
     if (input_centroids[closest_centroids[i].rect_index].y < SENSOR_IMAGE_HEIGHT / 2 && objects.object[object_id].centroid.y >= SENSOR_IMAGE_HEIGHT / 2)
     {
       ++total_up;
@@ -600,15 +615,19 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
       ++total_down;
     }
 
-    // update the object id centroid location to the closest input centroid
+    /* update the object centroid to the assigned closest input centroid */
     objects.object[object_id].centroid = input_centroids[closest_centroids[i].rect_index];
 
-    // reset the disapperead counter of that
+    /* reset the disapperead counter of that object */
     objects.object[object_id].disappeared_frames_count = 0;
   }
 
+  /* after assigning the input centroids, if there were more tracked objects than centroids in the current frame then 
+    some of the objects were not assigned a new centroid, therefore its disappeared count has to be updated and
+    the object deleted if necessary */
   if (objects.length >= rects_count)
   {
+    /* increase the object disappeared count after used_count */
     for (uint8_t i = used_count; i < objects.length; ++i)
     {
       uint8_t object_id = closest_centroids[i].object_index;
@@ -616,10 +635,9 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
     }
 
     // TODO duplicate code as at the start of function, refactor?
-    // Deregister old objects
+    /* Deregister old objects, same as before */
     for (int i = objects.start_index; i < objects.start_index + objects.length; ++i)
     {
-      // shift forward the starting index to "remove" old objects
       if (objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].disappeared_frames_count > CT_MAX_DISAPPEARED)
       {
         ++objects.start_index;
@@ -631,13 +649,14 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
       }
     }
 
-    // loop back index if necessary
+    /* loop back index if necessary */
     objects.start_index %= TRACKABLE_OBJECT_MAX_SIZE;
   }
+  /* otherwise there were more input centroids than there were tracked objects, which means that they are new objects */
   else
   {
-    // Register centroids
-    // TODO optimise this double loop
+    /* Register centroids */
+    /* TODO optimise this double loop */
     for (int i = 0; i < rects_count; ++i)
     {
       for (int j = 0; j < objects.length; ++j)
@@ -648,13 +667,13 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
         }
       }
 
-      objects.object[objects.next_id % TRACKABLE_OBJECT_MAX_SIZE] = (ip_object) {objects.next_id, input_centroids[i], 0};
+      objects.object[objects.next_id % TRACKABLE_OBJECT_MAX_SIZE] = (ip_object){objects.next_id, input_centroids[i], 0};
 
       ++objects.length;
       ++objects.next_id;
     }
   }
-
+  /* calculate the count variation and return the correct direction and count */
   int8_t delta_people_count = total_up - total_down;
   if (delta_people_count < 0)
   {
@@ -695,8 +714,8 @@ void bubbleSort(ip_closest_centroid *array, uint8_t length)
       if (array[j].distance > array[j + 1].distance)
       {
         ip_closest_centroid temp = array[j];
-        array[j] = array[j+1];
-        array[j+1] = temp;
+        array[j] = array[j + 1];
+        array[j + 1] = temp;
       }
     }
   }
@@ -732,50 +751,47 @@ More details: http://vitiy.info/stackblur-algorithm-multi-threaded-blur-for-cpp
 */
 
 static uint16_t const stackblur_mul[255] =
-{
-		512,512,456,512,328,456,335,512,405,328,271,456,388,335,292,512,
-		454,405,364,328,298,271,496,456,420,388,360,335,312,292,273,512,
-		482,454,428,405,383,364,345,328,312,298,284,271,259,496,475,456,
-		437,420,404,388,374,360,347,335,323,312,302,292,282,273,265,512,
-		497,482,468,454,441,428,417,405,394,383,373,364,354,345,337,328,
-		320,312,305,298,291,284,278,271,265,259,507,496,485,475,465,456,
-		446,437,428,420,412,404,396,388,381,374,367,360,354,347,341,335,
-		329,323,318,312,307,302,297,292,287,282,278,273,269,265,261,512,
-		505,497,489,482,475,468,461,454,447,441,435,428,422,417,411,405,
-		399,394,389,383,378,373,368,364,359,354,350,345,341,337,332,328,
-		324,320,316,312,309,305,301,298,294,291,287,284,281,278,274,271,
-		268,265,262,259,257,507,501,496,491,485,480,475,470,465,460,456,
-		451,446,442,437,433,428,424,420,416,412,408,404,400,396,392,388,
-		385,381,377,374,370,367,363,360,357,354,350,347,344,341,338,335,
-		332,329,326,323,320,318,315,312,310,307,304,302,299,297,294,292,
-		289,287,285,282,280,278,275,273,271,269,267,265,263,261,259
-};
+    {
+        512, 512, 456, 512, 328, 456, 335, 512, 405, 328, 271, 456, 388, 335, 292, 512,
+        454, 405, 364, 328, 298, 271, 496, 456, 420, 388, 360, 335, 312, 292, 273, 512,
+        482, 454, 428, 405, 383, 364, 345, 328, 312, 298, 284, 271, 259, 496, 475, 456,
+        437, 420, 404, 388, 374, 360, 347, 335, 323, 312, 302, 292, 282, 273, 265, 512,
+        497, 482, 468, 454, 441, 428, 417, 405, 394, 383, 373, 364, 354, 345, 337, 328,
+        320, 312, 305, 298, 291, 284, 278, 271, 265, 259, 507, 496, 485, 475, 465, 456,
+        446, 437, 428, 420, 412, 404, 396, 388, 381, 374, 367, 360, 354, 347, 341, 335,
+        329, 323, 318, 312, 307, 302, 297, 292, 287, 282, 278, 273, 269, 265, 261, 512,
+        505, 497, 489, 482, 475, 468, 461, 454, 447, 441, 435, 428, 422, 417, 411, 405,
+        399, 394, 389, 383, 378, 373, 368, 364, 359, 354, 350, 345, 341, 337, 332, 328,
+        324, 320, 316, 312, 309, 305, 301, 298, 294, 291, 287, 284, 281, 278, 274, 271,
+        268, 265, 262, 259, 257, 507, 501, 496, 491, 485, 480, 475, 470, 465, 460, 456,
+        451, 446, 442, 437, 433, 428, 424, 420, 416, 412, 408, 404, 400, 396, 392, 388,
+        385, 381, 377, 374, 370, 367, 363, 360, 357, 354, 350, 347, 344, 341, 338, 335,
+        332, 329, 326, 323, 320, 318, 315, 312, 310, 307, 304, 302, 299, 297, 294, 292,
+        289, 287, 285, 282, 280, 278, 275, 273, 271, 269, 267, 265, 263, 261, 259};
 
 static uint8_t const stackblur_shr[255] =
-{
-		9, 11, 12, 13, 13, 14, 14, 15, 15, 15, 15, 16, 16, 16, 16, 17,
-		17, 17, 17, 17, 17, 17, 18, 18, 18, 18, 18, 18, 18, 18, 18, 19,
-		19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 20, 20, 20,
-		20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 21,
-		21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-		21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 22, 22, 22, 22, 22, 22,
-		22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
-		22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 23,
-		23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
-		23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
-		23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
-		23, 23, 23, 23, 23, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
-		24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
-		24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
-		24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
-		24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24
-};
-
+    {
+        9, 11, 12, 13, 13, 14, 14, 15, 15, 15, 15, 16, 16, 16, 16, 17,
+        17, 17, 17, 17, 17, 17, 18, 18, 18, 18, 18, 18, 18, 18, 18, 19,
+        19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 20, 20, 20,
+        20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 21,
+        21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+        21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 22, 22, 22, 22, 22, 22,
+        22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+        22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 23,
+        23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+        23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+        23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+        23, 23, 23, 23, 23, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
+        24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
+        24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
+        24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
+        24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24};
 
 void stackBlur(uint8_t *src, uint8_t radius)
 {
   /* skip blur if blur is < 1*/
-  if(radius < 1)
+  if (radius < 1)
   {
     return;
   }
@@ -834,9 +850,9 @@ void stackBlur(uint8_t *src, uint8_t radius)
     if (xp > wm)
     {
       xp = wm;
-    } 
-    src_ptr = src + (xp + y * SENSOR_IMAGE_WIDTH);  // img.pix_ptr(xp, y);
-    dst_ptr = src + y * SENSOR_IMAGE_WIDTH;         // img.pix_ptr(0, y);
+    }
+    src_ptr = src + (xp + y * SENSOR_IMAGE_WIDTH); // img.pix_ptr(xp, y);
+    dst_ptr = src + y * SENSOR_IMAGE_WIDTH;        // img.pix_ptr(0, y);
     for (x = 0; x < SENSOR_IMAGE_WIDTH; x++)
     {
       dst_ptr[0] = (sum_a * mul_sum) >> shr_sum;
@@ -848,7 +864,7 @@ void stackBlur(uint8_t *src, uint8_t radius)
       if (stack_start >= div)
         stack_start -= div;
       stack_ptr = &stack[stack_start];
-      
+
       sum_out_a -= stack_ptr[0];
 
       if (xp < wm)
@@ -951,12 +967,11 @@ void stackBlur(uint8_t *src, uint8_t radius)
 
 #ifdef __TESTING_HARNESS
 // reads instructions
-inline
-uint64_t readTSC() {
-    // _mm_lfence();  // optionally wait for earlier insns to retire before reading the clock
-    uint64_t tsc = __rdtsc();
-    // _mm_lfence();  // optionally block later instructions until rdtsc retires
-    return tsc;
+inline uint64_t readTSC()
+{
+  // _mm_lfence();  // optionally wait for earlier insns to retire before reading the clock
+  uint64_t tsc = __rdtsc();
+  // _mm_lfence();  // optionally block later instructions until rdtsc retires
+  return tsc;
 }
 #endif
-
