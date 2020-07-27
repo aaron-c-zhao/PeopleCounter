@@ -137,6 +137,9 @@ extern "C"
 
   void gaussianBlur(ip_mat *, uint8_t);
 
+  void stackBlur(uint8_t *, uint8_t);
+
+
   /* PEOPLE TRACKER */
 
   ip_count updateObjects(ip_rect *, uint8_t);
