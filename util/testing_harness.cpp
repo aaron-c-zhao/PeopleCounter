@@ -30,7 +30,7 @@ static int step = 0;
 static double **frames_ptr;
 
 /* path to the configuration file */
-static char *config_path = "../harness_config.json";
+static char *config_path = "harness_config.json";
 
 /* image pointer which indicates which image should be processed next */
 static unsigned long img_ptr = 0;

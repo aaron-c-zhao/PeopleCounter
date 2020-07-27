@@ -13,26 +13,27 @@
 extern "C"
 {
 #endif
+
 #include <stdint.h>
 #include "testing_harness.h"
 
 // CT = Centroid Tracker
 #define CT_MAX_DISAPPEARED @CT_MAX_DISAPPEARED@
-#define CT_MAX_DISTANCE @CT_MAX_DISTANCE@
+#define CT_MAX_DISTANCE    @CT_MAX_DISTANCE@
 
 // Array max sizes
-#define RECTS_MAX_SIZE @RECTS_MAX_SIZE@
+#define RECTS_MAX_SIZE            @RECTS_MAX_SIZE@
 // TODO consider a power 2 size for optimization sake. See: https://stackoverflow.com/questions/11040646/faster-modulus-in-c-c
 #define TRACKABLE_OBJECT_MAX_SIZE @TRACKABLE_OBJECT_MAX_SIZE@
 
 // Image size
-#define SENSOR_IMAGE_WIDTH @SENSOR_IMAGE_WIDTH@
+#define SENSOR_IMAGE_WIDTH  @SENSOR_IMAGE_WIDTH@
 #define SENSOR_IMAGE_HEIGHT @SENSOR_IMAGE_HEIGHT@
 
 /* Sensor frame rate */
 #define FRAME_RATE @FRAME_RATE@
 // Directions
-#define DIRECTION_UP 0x00
+#define DIRECTION_UP   0x00
 #define DIRECTION_DOWN 0x01
 
 /* *******************************************************************************
@@ -156,7 +157,9 @@ void IpInit();
 #ifdef __TESTING_HARNESS
 uint64_t readTSC();
 #endif
+
 #ifdef __cplusplus
 }
 #endif
+
 #endif
