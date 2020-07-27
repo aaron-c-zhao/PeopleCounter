@@ -38,6 +38,7 @@ add_definitions(
 	-DRECTS_MAX_SIZE=${RECTS_MAX_SIZE}
 	-DTRACKABLE_OBJECT_MAX_SIZE=${TRACKABLE_OBJECT_MAX_SIZE}
 	-DFRAME_RATE=${FRAME_RATE}
+	-DLOG_KERNEL_SIZE=${LOG_KERNEL_SIZE}
 	)
 
 message ( 
@@ -48,6 +49,7 @@ message (
 	"${Green}CT max distance:${Red}${CT_MAX_DISTANCE}${ColourReset}\n"
 	"${Green}Rects max amount:${Red}${RECTS_MAX_SIZE}${ColourReset}\n"
 	"${Green}Trackable object max amount:${Red}${TRACKABLE_OBJECT_MAX_SIZE}${ColourReset}\n"
+	"${Green}Log kernel size:${Red}${LOG_KERNEL_SIZE}${ColorReset}\n"
 	"${Green}Frame rate:${Red}${FRAME_RATE}${ColouerReset}\n"
 	"${Red}-----------------------------------------------------------------------------------------${ColourReset}\n"
 	)

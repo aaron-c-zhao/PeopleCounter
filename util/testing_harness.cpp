@@ -47,12 +47,7 @@ ip_count count = {0, 0};
 /* configuration of the pipeline */
 ip_config config = {
 	.kernel_1 = 5,
-	.kernel_2 = 1,
-	.kernel_3 = 1,
 	.threshold = 32,
-	.blob_width_min = 0,
-	.blob_height_min = 0,
-	.updated_threshold = 84, 
 	.max_area = 18
 };
 
@@ -78,7 +73,6 @@ static void read_config(json_value* ,int);
 static void frame_convert(uint8_t*);
 static void draw_rect(Mat *);
 static void create_trackbar(const char*, void*);
-static void hist_euqalize(Mat *);
 void rec_areaCallback(int, void*);
 void kernel_1Callback(int, void*);
 void kernel_2Callback(int, void*);
@@ -87,6 +81,7 @@ void threshold_Callback(int, void*);
 void updated_thresholdCallback(int, void*);
 void blob_width_minCallback(int, void*);
 void blob_height_minCallback(int, void*);
+void get_LoG_kernel(double, int, int8_t**);
 /*---------------------------------------------------------------------------------------------*/
 
 /* hash function that will map string to an int */
@@ -95,6 +90,32 @@ constexpr unsigned int str2int(const char* str, int h = 0)
     return !str[h] ? 5381 : (str2int(str, h+1) * 33) ^ str[h];
 }
 
+void get_LoG_kernel(double sigma, int ksize, int8_t** result) {
+        if (!(ksize % 2)) {
+                fprintf(stderr, "Invalid kernel size %d\n, should be an odd number", ksize);
+                exit(1);
+        }   
+        double kernel[ksize][ksize];
+        int mean = ksize / 2;
+        for (int i = 0; i < ksize; ++i) {
+                for (int j = 0; j < ksize; ++j) {
+                        double temp  = ( -0.5 * (pow((i - mean)/sigma, 2.0) + pow((j - mean)/sigma, 2.0)));
+                        kernel[i][j] = (1 + temp) * exp(temp) / (-M_PI * pow(sigma, 4.0)); 
+			/*double temp = ((i - mean) * (i - mean) + (j - mean) * (j - mean)) / (sigma * sigma);
+			kernel[i][j] = (temp - 2) * exp(-0.5 * temp);*/
+                }   
+        }   
+
+
+        for (int i = 0; i < ksize; ++i) {
+                for (int j = 0; j < ksize; ++j) {
+                        result[i][j] = (int8_t)(kernel[i][j]* 500);
+			printf("%d " , result[i][j]);
+                }   
+		printf("\n");
+        }   
+
+}
 
 int main(int argc, char *argv[]) {
 	parse_json(config_path, read_config);
@@ -137,6 +158,13 @@ int main(int argc, char *argv[]) {
 	resizeWindow(threshold_window, 500, 500); 
 	create_trackbar(thermal_window, NULL);
 
+	int8_t **log_kernel;
+	log_kernel = (int8_t**)malloc(LOG_KSIZE * sizeof(int8_t*));
+	for (int i = 0; i < LOG_KSIZE; ++i) {
+		log_kernel[i] = (int8_t *)malloc(LOG_KSIZE * sizeof(int8_t));
+	}
+	printf("sigma is %f\n", LOG_SIGMA);
+	get_LoG_kernel(LOG_SIGMA, LOG_KSIZE, log_kernel);
 	while (img_ptr < frame_count) {
 		/* first convert the raw thermal data into processable and displayable format, namely frame and Mat */
 		frame_convert(cur_frame);
@@ -145,11 +173,11 @@ int main(int argc, char *argv[]) {
 		ip_mat mat = {.data = cur_frame};
 		/* get the background TODO: should be done by the pipeline */
 		get_background(cur_frame, img_ptr);
-		ip_status status = IpProcess((void *)&mat, (void *)&mat_background, (void *)&count);
+		ip_status status = IpProcess((void *)&mat, (void *)&mat_background, (void *)&count, (void *)log_kernel);
 		/* the show_image should be called after the IpProcess to correctly display the rectangles 
 		 * found by pipeline */
 		show_image(buf_frame, thermal_window, draw_rect);
-		show_image(buf_frame, threshold_window, hist_euqalize);
+		show_image(th_frame, threshold_window, NULL);
 			
 		waitKey(0);
 		if (status == IP_EMPTY) {
@@ -177,6 +205,10 @@ int main(int argc, char *argv[]) {
 		free(frames_ptr[i]);
 	}
 	free(frames_ptr);
+	for (int i = 0; i < LOG_KSIZE; i++) {
+		free(log_kernel[i]);
+	}
+	free(log_kernel);
 
 }
 
@@ -194,30 +226,10 @@ static void create_trackbar(const char *window, void* data) {
 	const char *kernel_1 = "kernel_1";
 	int ikernel_1 = config.kernel_1;
 	createTrackbar(kernel_1, window, &ikernel_1, 24, kernel_1Callback, data);
-	/* slide bar to adjust the kernel 2 */
-	const char *kernel_2 = "kernel_2";
-	int ikernel_2 = config.kernel_2;
-	createTrackbar(kernel_2, window, &ikernel_2, 24, kernel_2Callback, data);
-	/* slide bar to adjust the kernel 3 */
-	const char *kernel_3 = "kernel_3";
-	int ikernel_3 = config.kernel_3;
-	createTrackbar(kernel_3, window, &ikernel_3, 24, kernel_3Callback, data);
 	/* slide bar to adjust the threshold*/
 	const char *threshold = "threshold";
 	int ithreshold= config.threshold;
-	createTrackbar(threshold, window, &ithreshold, 255, threshold_Callback, data);
-	/* slide bar to adjust the updated threshold*/
-	const char *updated_threshold = "updated threshold";
-	int iupdated_threshold= config.updated_threshold;
-	createTrackbar(updated_threshold, window, &iupdated_threshold, 255, updated_thresholdCallback, data);
-	/* slide bar to adjust the blob width min*/
-	const char *blob_width_min = "blob_width_min";
-	int iblob_width_min= config.blob_width_min;
-	createTrackbar(blob_width_min, window, &iblob_width_min, 32, blob_width_minCallback, data);
-	/* slide bar to adjust the blob height min*/
-	const char *blob_height_min = "blob_height_min";
-	int iblob_height_min= config.blob_height_min;
-	createTrackbar(blob_height_min, window, &iblob_height_min, 32, blob_height_minCallback, data);
+	createTrackbar(threshold, window, &ithreshold, 20000, threshold_Callback, data);
 }
 
 void rec_areaCallback(int value, void* data) {
@@ -228,28 +240,8 @@ void kernel_1Callback(int value, void* data) {
 	config.kernel_1 = (uint8_t)value;
 }
 
-void kernel_2Callback(int value, void* data) {
-	config.kernel_2 = (uint8_t)value;
-}
-
-void kernel_3Callback(int value, void* data) {
-	config.kernel_3 = (uint8_t)value;
-}
-
 void threshold_Callback(int value, void* data) {
-	config.threshold = (uint8_t)value;
-}
-
-void updated_thresholdCallback(int value, void* data) {
-	config.updated_threshold = (uint8_t)value;
-}
-
-void blob_width_minCallback(int value, void* data) {
-	config.blob_width_min = (uint8_t)value;
-}
-
-void blob_height_minCallback(int value, void* data) {
-	config.blob_height_min = (uint8_t)value;
+	config.threshold = (int16_t)value;
 }
 
 /**
@@ -413,12 +405,6 @@ static void draw_rect(Mat *image) {
 	}
 }
 
-static void hist_euqalize(Mat* src) {
-	GaussianBlur(*src, *src, Size(3, 3), 0, 0);
-	equalizeHist(*src, *src);
-	
-}
-
 
 
 /**
@@ -449,17 +435,7 @@ static void read_config(json_value* value, int depth) {
 		switch (str2int(value->u.object.values[i].name)) {	
 			case str2int("kernel_1"): config.kernel_1 = temp_value;
 			break;
-			case str2int("kernel_2"): config.kernel_2 = temp_value; 
-			break;
-			case str2int("kernel_3"): config.kernel_3 = temp_value;
-			break;
 			case str2int("threshold"): config.threshold = temp_value;
-			break;
-			case str2int("blob_width_min"): config.blob_width_min = temp_value;
-			break;
-			case str2int("blob_height_min"): config.blob_height_min = temp_value;
-			break;
-			case str2int("updated_threshold"): config.updated_threshold = temp_value;
 			break;
 			case str2int("max_area"): config.max_area = temp_value;	  
 			break;

@@ -30,6 +30,10 @@ extern "C"
 #define SENSOR_IMAGE_WIDTH 	32
 #define SENSOR_IMAGE_HEIGHT 	24 
 
+/* Kernel size of the LoG */
+#define LOG_KSIZE 	5
+#define LOG_SIGMA	1.5
+
 /* Sensor frame rate */
 #define FRAME_RATE	8
 // Directions
@@ -97,12 +101,7 @@ extern "C"
   typedef struct config
   {
     uint8_t kernel_1;
-    uint8_t kernel_2;
-    uint8_t kernel_3;
-    uint8_t threshold;
-    uint8_t blob_width_min;
-    uint8_t blob_height_min;
-    uint8_t updated_threshold;
+    int16_t threshold;
     uint8_t max_area;
   } ip_config;
 
@@ -115,7 +114,7 @@ extern "C"
 
   /* Function prototypes -------------------------------------------------------- */
 
-  ip_status IpProcess(void *, void *, void *);
+  ip_status IpProcess(void *, void *, void *, void *);
 
   /* PEOPLE DETECTOR */
 
