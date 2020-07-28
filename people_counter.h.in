@@ -84,6 +84,8 @@ extern "C"
     uint16_t next_id;
     ip_object object[TRACKABLE_OBJECT_MAX_SIZE];
     uint8_t start_index;
+    uint8_t skip_index_list[TRACKABLE_OBJECT_MAX_SIZE];
+    uint8_t skip_index_list_index;
     uint8_t length;
   } ip_object_list;
 

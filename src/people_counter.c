@@ -459,7 +459,7 @@ void gaussianBlur(ip_mat *frame, uint8_t kernel_size)
 
 ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
 {
-  static ip_object_list objects = {0, {}, 0, 0};
+  static ip_object_list objects = {0, {}, 0, {}, 0, 0};
 
   // TODO find a way to properly return these values.
   uint8_t total_up = 0, total_down = 0;
@@ -560,6 +560,14 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
 
   ip_closest_centroid closest_centroids[objects.length];
 
+  int8_t taken_rects[rects_count];
+  for(int i = 0; i < rects_count; ++i)
+  {
+     taken_rects[i] = -1;
+  }
+
+  uint8_t taken_index = 0;
+
   for (uint8_t i = 0; i < objects.length; ++i)
   {
     // set minimum to largest uint16_t value by converting complement 2 -1 int to unsigned int
@@ -570,8 +578,29 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
     {
       if (distance_vector[i * rects_count + j] < minimum)
       {
+
+        uint8_t taken = 0;
+
+        for(int q = 0; q < taken_index; ++q)
+        {
+           if(taken_rects[q] == j)
+           {
+              printf("already taken, go to next one\n");
+              taken = 1;
+              break;
+           }
+        }
+
+        if(taken == 1)
+        {
+           continue;
+        }
+        
         minimum = distance_vector[i * rects_count + j];
         temp_index = j;
+
+        taken_rects[taken_index] = temp_index;
+        taken_index++;
       }
     }
 
@@ -598,6 +627,7 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
     }
 
     ++used_count;
+
     uint8_t object_id = closest_centroids[i].object_index;
 
     if (input_centroids[closest_centroids[i].rect_index].y < SENSOR_IMAGE_HEIGHT / 2 && objects.object[object_id].centroid.y >= SENSOR_IMAGE_HEIGHT / 2)
@@ -643,18 +673,27 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
       printf("disappeared count:[%i]\n", objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].disappeared_frames_count);
 
       // shift forward the starting index to "remove" old objects
-      if (objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].disappeared_frames_count > CT_MAX_DISAPPEARED)
+      if (objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].disappeared_frames_count > CT_MAX_DISAPPEARED && (i % TRACKABLE_OBJECT_MAX_SIZE) == objects.start_index)
       {
         ++objects.start_index;
         --objects.length;
 
         printf("updated start_index [%i]\n", objects.start_index);
-
       }
-      else
+      
+      else if (objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].disappeared_frames_count > CT_MAX_DISAPPEARED && (i % TRACKABLE_OBJECT_MAX_SIZE) != objects.start_index)
+      {
+        printf("skip index: [%i]\n", i % TRACKABLE_OBJECT_MAX_SIZE);
+
+        objects.skip_index_list[objects.skip_index_list_index] = i % TRACKABLE_OBJECT_MAX_SIZE;
+
+        objects.skip_index_list_index++;
+      }
+
+     /* else
       {
         break;
-      }
+      } */
     }
 
     // loop back index if necessary
@@ -694,6 +733,24 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
 
   for(int i = objects.start_index; i < objects.start_index + objects.length; ++i)
   {
+    uint8_t skipped = 0;
+
+    for(int j = 0; j < objects.skip_index_list_index; ++j){
+
+       printf("skip_index_list[j]:[%i]\n", objects.skip_index_list[j]);
+
+       if(objects.skip_index_list[j] == i){
+           printf("skip!\n");
+           skipped = 1;
+           break;
+       }
+    }
+
+    if(skipped == 1)
+    {
+       continue;
+    }
+
     printf("id:[%i]\n", objects.object[i].id);
     printf("centroidx:[%i]\n", objects.object[i].centroid.x);
     printf("centroidy:[%i]\n", objects.object[i].centroid.y);

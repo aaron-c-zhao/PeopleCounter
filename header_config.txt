@@ -1,6 +1,6 @@
 set(SENSOR_IMAGE_WIDTH 32 CACHE STRING "sensor image width in pixels")
 set(SENSOR_IMAGE_HEIGHT 24 CACHE STRING "sensor image height in pixels")
-set(CT_MAX_DISAPPEARED 2 CACHE STRING "the max disappearing frames for any blob")
+set(CT_MAX_DISAPPEARED 1 CACHE STRING "the max disappearing frames for any blob")
 set(CT_MAX_DISTANCE 10 CACHE STRING "the max distance between two blobs")
 set(RECTS_MAX_SIZE 28 CACHE STRING "the maximum size of a blob")
 set(TRACKABLE_OBJECT_MAX_SIZE 18 CACHE STRING "the maximum amount of blobs that can be tracked")
