@@ -258,11 +258,11 @@ uint8_t findCountours(ip_mat *frame, ip_rect *rects)
         }
 
         //  Find neighbours (left, right, up, down)
-        uint16_t neighbours[4];
+        uint16_t neighbours[8];
         uint8_t neighbours_length = 0;
         // TODO put into declare or something  like that
-        static int8_t directions[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
-        for (int d = 0; d < 4; ++d)
+        static int8_t directions[8][2] = {{-1, 0}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1}, {1, 0}, {0, -1}, {0, 1}};
+        for (int d = 0; d < 8; ++d)
         {
           int8_t new_x = pixel_x + directions[d][0];
           int8_t new_y = pixel_y + directions[d][1];
@@ -511,6 +511,10 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
     //use the bounding box coordinates to derive the centroid
     input_centroids[i] = (ip_point) {(uint8_t)(rects[i].x + (uint8_t)(rects[i].width / 2)),
                           (uint8_t)(rects[i].y + (uint8_t)(rects[i].height / 2))};
+
+    printf("rectsx:[%d]\n", input_centroids[i].x);
+    printf("rectsy:[%d]\n", input_centroids[i].y);
+
   }
 
   if (objects.length == 0)
@@ -571,6 +575,10 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
       }
     }
 
+    printf("minimum:[%i]\n", minimum);
+    printf("objects.start_index:[%i]\n", objects.start_index + i);
+    printf("temp_index:[%i]\n", temp_index);
+
     closest_centroids[i] = (ip_closest_centroid) {minimum, (objects.start_index + i) % TRACKABLE_OBJECT_MAX_SIZE, temp_index};
   }
 
@@ -585,6 +593,7 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
     if (isCentroidUsed(closest_centroids, i) ||
         closest_centroids[i].distance > CT_MAX_DISTANCE * CT_MAX_DISTANCE)
     {
+      printf("centroid is used\n");
       continue;
     }
 
@@ -600,6 +609,8 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
       ++total_down;
     }
 
+    printf("update rectangle:[%d]\n", object_id);
+
     // update the object id centroid location to the closest input centroid
     objects.object[object_id].centroid = input_centroids[closest_centroids[i].rect_index];
 
@@ -613,17 +624,32 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
     {
       uint8_t object_id = closest_centroids[i].object_index;
       ++objects.object[object_id].disappeared_frames_count;
+
+      printf("[%i] object disappear\n", object_id);
+      printf("disappeared frames count:[%i]\n", objects.object[object_id].disappeared_frames_count);
+
     }
 
     // TODO duplicate code as at the start of function, refactor?
     // Deregister old objects
-    for (int i = objects.start_index; i < objects.start_index + objects.length; ++i)
+    printf("start_index:[%i]\n", objects.start_index);
+
+    printf("object length:[%i]\n", objects.start_index + objects.length);
+
+    for (int i = objects.start_index; i < objects.start_index + objects.length; i++)
     {
+      printf("object id:[%i]\n", objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].id);
+
+      printf("disappeared count:[%i]\n", objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].disappeared_frames_count);
+
       // shift forward the starting index to "remove" old objects
       if (objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].disappeared_frames_count > CT_MAX_DISAPPEARED)
       {
         ++objects.start_index;
         --objects.length;
+
+        printf("updated start_index [%i]\n", objects.start_index);
+
       }
       else
       {
@@ -632,7 +658,7 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
     }
 
     // loop back index if necessary
-    objects.start_index %= TRACKABLE_OBJECT_MAX_SIZE;
+    // objects.start_index %= TRACKABLE_OBJECT_MAX_SIZE;
   }
   else
   {
@@ -640,19 +666,37 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
     // TODO optimise this double loop
     for (int i = 0; i < rects_count; ++i)
     {
+
+      uint8_t checked = 0;
+
       for (int j = 0; j < objects.length; ++j)
       {
         if (closest_centroids[j].rect_index == i)
         {
-          continue;
+          checked = 1;
+          break;
         }
       }
+
+      if(checked == 1)
+      {
+         continue;
+      }
+
+      printf("register new rectangle\n");
 
       objects.object[objects.next_id % TRACKABLE_OBJECT_MAX_SIZE] = (ip_object) {objects.next_id, input_centroids[i], 0};
 
       ++objects.length;
       ++objects.next_id;
     }
+  }
+
+  for(int i = objects.start_index; i < objects.start_index + objects.length; ++i)
+  {
+    printf("id:[%i]\n", objects.object[i].id);
+    printf("centroidx:[%i]\n", objects.object[i].centroid.x);
+    printf("centroidy:[%i]\n", objects.object[i].centroid.y);
   }
 
   int8_t delta_people_count = total_up - total_down;
@@ -673,10 +717,13 @@ uint8_t isCentroidUsed(ip_closest_centroid *closest_centroids, uint8_t current_r
 {
   uint8_t index_to_find = closest_centroids[current_reached_index].rect_index;
 
+  printf("index to find:[%i]\n", index_to_find);
+
   for (uint8_t i = 0; i < current_reached_index; ++i)
   {
     if (closest_centroids[i].rect_index == index_to_find)
     {
+      printf("found\n");
       return (1);
     }
   }
