@@ -96,6 +96,7 @@ extern "C"
     uint8_t rect_index;
   } ip_closest_centroid;
 
+
   typedef struct config
   {
     uint8_t kernel_1;

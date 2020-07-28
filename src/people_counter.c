@@ -508,12 +508,12 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
   // TODO check if it's necessary to reverse order (as c++ code)
   for (int i = 0; i < rects_count; ++i)
   {
-    //use the bounding box coordinates to derive the centroid
+    // use the bounding box coordinates to derive the centroid
     input_centroids[i] = (ip_point) {(uint8_t)(rects[i].x + (uint8_t)(rects[i].width / 2)),
                           (uint8_t)(rects[i].y + (uint8_t)(rects[i].height / 2))};
 
-    printf("rectsx:[%d]\n", input_centroids[i].x);
-    printf("rectsy:[%d]\n", input_centroids[i].y);
+    // printf("rectsx:[%d]\n", input_centroids[i].x);
+    // printf("rectsy:[%d]\n", input_centroids[i].y);
 
   }
 
@@ -535,6 +535,10 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
 
   uint16_t distance_vector[objects.length * rects_count];
 
+  ip_closest_centroid pairs[objects.length * rects_count];
+
+  uint8_t pair_index = 0;
+
   //object_centroids is a list of centroids we already have, input_centroids is the new centroid
   for (uint8_t i = 0; i < objects.length; ++i)
   {
@@ -548,7 +552,98 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
       uint16_t distance = delta_x * delta_x + delta_y * delta_y;
 
       distance_vector[i * rects_count + j] = distance;
+
+      // printf("pair index:[%i]\n", pair_index);
+
+      // printf("distance vector:[%i]\n", distance);
+
+      pairs[pair_index] = (ip_closest_centroid){distance, i, j};
+
+      pair_index++;
     }
+  }
+
+  ip_closest_centroid closest_centroids[objects.length];
+
+  uint8_t closest_centroids_index = 0;
+
+  int8_t covered_objects[objects.length];
+
+  uint8_t covered_objects_index = 0;
+
+  //initialize the covered_objects with -1
+
+  for(int i = 0; i < objects.length; ++i)
+  {
+     covered_objects[i] = -1;
+  }
+   
+  int8_t covered_rects[rects_count];
+
+  uint8_t covered_rects_index = 0;
+
+  //initialize the covered_rects with -1
+
+  for(int i = 0; i < rects_count; ++i)
+  {
+     covered_rects[i] = -1;
+  }
+
+  //sort the pairs starting from pairs with smallest distance
+
+  bubbleSort(pairs, objects.length * rects_count);
+
+  // build closest centroids based on the pairs found
+
+  for(uint8_t i = 0; i < objects.length * rects_count; ++i)
+  {
+      uint8_t object_covered = 0;
+
+      uint8_t rects_covered = 0;
+
+      //check whether the object or the rectangle has already been covered
+
+      for (uint8_t j = 0; j < covered_objects_index; ++j)
+      {
+          if(pairs[i].object_index == covered_objects[j]){
+             // printf("[%i], object covered\n", j);
+             object_covered = 1;
+             break;
+          } 
+      }
+
+      for (uint8_t j = 0; j < covered_rects_index; ++j)
+      {
+          if(pairs[i].rect_index == covered_rects[j]){
+             // printf("[%i], rects covered\n", j);
+             rects_covered = 1;
+             break;
+          } 
+      }
+
+      if (object_covered == 1 || rects_covered == 1)
+      {
+          continue;
+      }
+
+      /*printf("distance:[%i]\n", pairs[i].distance);
+
+      printf("object_index:[%i]\n", pairs[i].object_index);
+
+      printf("rect_index:[%i]\n", pairs[i].rect_index);*/
+
+      closest_centroids[closest_centroids_index] = (ip_closest_centroid) {pairs[i].distance, objects.start_index + pairs[i].object_index, pairs[i].rect_index};
+
+      closest_centroids_index++;
+
+      covered_objects[covered_objects_index] = pairs[i].object_index;
+
+      covered_objects_index++;
+
+      covered_rects[covered_rects_index] = pairs[i].rect_index;
+
+      covered_rects_index++;
+      
   }
 
   /*in order to perform this matching we must(1) find the
@@ -558,75 +653,18 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
 
   // temporary struct to make algorithm easier
 
-  ip_closest_centroid closest_centroids[objects.length];
+  
+  // associate newly found rectangles with tracked objects
 
-  int8_t taken_rects[rects_count];
-  for(int i = 0; i < rects_count; ++i)
+  for (uint8_t i = 0; i < closest_centroids_index; ++i)
   {
-     taken_rects[i] = -1;
-  }
 
-  uint8_t taken_index = 0;
-
-  for (uint8_t i = 0; i < objects.length; ++i)
-  {
-    // set minimum to largest uint16_t value by converting complement 2 -1 int to unsigned int
-    uint16_t minimum = -1;
-    uint8_t temp_index = 0;
-
-    for (uint8_t j = 0; j < rects_count; ++j)
+    if (closest_centroids[i].distance > CT_MAX_DISTANCE * CT_MAX_DISTANCE)
     {
-      if (distance_vector[i * rects_count + j] < minimum)
-      {
-
-        uint8_t taken = 0;
-
-        for(int q = 0; q < taken_index; ++q)
-        {
-           if(taken_rects[q] == j)
-           {
-              printf("already taken, go to next one\n");
-              taken = 1;
-              break;
-           }
-        }
-
-        if(taken == 1)
-        {
-           continue;
-        }
-        
-        minimum = distance_vector[i * rects_count + j];
-        temp_index = j;
-
-        taken_rects[taken_index] = temp_index;
-        taken_index++;
-      }
-    }
-
-    printf("minimum:[%i]\n", minimum);
-    printf("objects.start_index:[%i]\n", objects.start_index + i);
-    printf("temp_index:[%i]\n", temp_index);
-
-    closest_centroids[i] = (ip_closest_centroid) {minimum, (objects.start_index + i) % TRACKABLE_OBJECT_MAX_SIZE, temp_index};
-  }
-
-  // sort based on length
-  bubbleSort(closest_centroids, objects.length);
-
-  uint8_t used_count = 0;
-
-  for (uint8_t i = 0; i < ((objects.length < rects_count) ? objects.length : rects_count); ++i)
-  {
-
-    if (isCentroidUsed(closest_centroids, i) ||
-        closest_centroids[i].distance > CT_MAX_DISTANCE * CT_MAX_DISTANCE)
-    {
-      printf("centroid is used\n");
+      // printf("over maximum distance\n");
       continue;
     }
 
-    ++used_count;
 
     uint8_t object_id = closest_centroids[i].object_index;
 
@@ -639,7 +677,7 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
       ++total_down;
     }
 
-    printf("update rectangle:[%d]\n", object_id);
+    // printf("update rectangle:[%d]\n", object_id);
 
     // update the object id centroid location to the closest input centroid
     objects.object[object_id].centroid = input_centroids[closest_centroids[i].rect_index];
@@ -650,53 +688,64 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
 
   if (objects.length >= rects_count)
   {
-    for (uint8_t i = used_count; i < objects.length; ++i)
+   
+    uint8_t start = objects.start_index;
+
+    uint8_t end = objects.start_index + objects.length;
+
+
+    // check whether the tracked object has already finds its rectangle in the next frame to deregister old objects
+    for (uint8_t i = start; i < end; i++)
     {
-      uint8_t object_id = closest_centroids[i].object_index;
-      ++objects.object[object_id].disappeared_frames_count;
 
-      printf("[%i] object disappear\n", object_id);
-      printf("disappeared frames count:[%i]\n", objects.object[object_id].disappeared_frames_count);
+       printf("i:[%i]\n", i);
 
-    }
+       uint8_t covered = 0;
 
-    // TODO duplicate code as at the start of function, refactor?
-    // Deregister old objects
-    printf("start_index:[%i]\n", objects.start_index);
+       for (uint8_t j = 0; j < covered_objects_index;++j) 
+       {
+           if (covered_objects[j] == i - start)
+           {
+              covered = 1;
+              break;
+           }
+       }
 
-    printf("object length:[%i]\n", objects.start_index + objects.length);
+       if (covered == 0)
+       {
+           uint8_t object_id = i;
+           ++objects.object[object_id].disappeared_frames_count;
 
-    for (int i = objects.start_index; i < objects.start_index + objects.length; i++)
-    {
-      printf("object id:[%i]\n", objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].id);
+           // printf("[%i] object disappear\n", object_id);
+           // printf("disappeared frames count:[%i]\n", objects.object[object_id].disappeared_frames_count);
+       }
 
-      printf("disappeared count:[%i]\n", objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].disappeared_frames_count);
+       // printf("object id:[%i]\n", objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].id);
 
-      // shift forward the starting index to "remove" old objects
-      if (objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].disappeared_frames_count > CT_MAX_DISAPPEARED && (i % TRACKABLE_OBJECT_MAX_SIZE) == objects.start_index)
-      {
-        ++objects.start_index;
-        --objects.length;
+       // printf("disappeared count:[%i]\n", objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].disappeared_frames_count); 
 
-        printf("updated start_index [%i]\n", objects.start_index);
-      }
+      // if the object to be removed is the first element in the list, shift forward the starting index to "remove" old objects
+       if (objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].disappeared_frames_count > CT_MAX_DISAPPEARED && (i % TRACKABLE_OBJECT_MAX_SIZE) == objects.start_index)
+       {
+         ++objects.start_index;
+         --objects.length;
+
+         //printf("updated start_index [%i]\n", objects.start_index);
+       }
       
-      else if (objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].disappeared_frames_count > CT_MAX_DISAPPEARED && (i % TRACKABLE_OBJECT_MAX_SIZE) != objects.start_index)
-      {
-        printf("skip index: [%i]\n", i % TRACKABLE_OBJECT_MAX_SIZE);
+       // if the object to b removed is not the first element in the list, add it to the skip list
+       else if (objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].disappeared_frames_count > CT_MAX_DISAPPEARED && (i % TRACKABLE_OBJECT_MAX_SIZE) != objects.start_index)
+       {
+         //printf("skip index: [%i]\n", i % TRACKABLE_OBJECT_MAX_SIZE);
 
-        objects.skip_index_list[objects.skip_index_list_index] = i % TRACKABLE_OBJECT_MAX_SIZE;
+         objects.skip_index_list[objects.skip_index_list_index] = i % TRACKABLE_OBJECT_MAX_SIZE;
 
-        objects.skip_index_list_index++;
-      }
+         objects.skip_index_list_index++;
+       }
 
-     /* else
-      {
-        break;
-      } */
     }
 
-    // loop back index if necessary
+    // loop back index if necessary, do we still need that?
     // objects.start_index %= TRACKABLE_OBJECT_MAX_SIZE;
   }
   else
@@ -706,6 +755,7 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
     for (int i = 0; i < rects_count; ++i)
     {
 
+      //check whether the rectangle has already been associated to certain object
       uint8_t checked = 0;
 
       for (int j = 0; j < objects.length; ++j)
@@ -722,7 +772,7 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
          continue;
       }
 
-      printf("register new rectangle\n");
+      //printf("register new rectangle\n");
 
       objects.object[objects.next_id % TRACKABLE_OBJECT_MAX_SIZE] = (ip_object) {objects.next_id, input_centroids[i], 0};
 
@@ -731,16 +781,17 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
     }
   }
 
+//output the result, skip the missing id
   for(int i = objects.start_index; i < objects.start_index + objects.length; ++i)
   {
     uint8_t skipped = 0;
 
     for(int j = 0; j < objects.skip_index_list_index; ++j){
 
-       printf("skip_index_list[j]:[%i]\n", objects.skip_index_list[j]);
+       //printf("skip_index_list[j]:[%i]\n", objects.skip_index_list[j]);
 
        if(objects.skip_index_list[j] == i){
-           printf("skip!\n");
+           //printf("skip!\n");
            skipped = 1;
            break;
        }
@@ -770,7 +821,8 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
 /*
  * Checks whether the current centroid has already been assigned before
  */
-uint8_t isCentroidUsed(ip_closest_centroid *closest_centroids, uint8_t current_reached_index)
+
+/*uint8_t isCentroidUsed(ip_closest_centroid *closest_centroids, uint8_t current_reached_index)
 {
   uint8_t index_to_find = closest_centroids[current_reached_index].rect_index;
 
@@ -785,7 +837,7 @@ uint8_t isCentroidUsed(ip_closest_centroid *closest_centroids, uint8_t current_r
     }
   }
   return (0);
-}
+}*/
 
 // A function to implement bubble sort
 void bubbleSort(ip_closest_centroid *array, uint8_t length)
