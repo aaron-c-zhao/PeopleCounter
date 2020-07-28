@@ -468,13 +468,13 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
   if (rects_count == 0)
   {
     // increase disappered count of every object
-    for (int i = objects.start_index; i < objects.start_index + objects.length; ++i)
+    for (uint8_t i = objects.start_index; i < objects.start_index + objects.length; ++i)
     {
       ++objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].disappeared_frames_count;
     }
 
     // shift forward the starting index by "removing" old objects
-    for (int i = objects.start_index; i < objects.start_index + objects.length; ++i)
+    for (uint8_t i = objects.start_index; i < objects.start_index + objects.length; ++i)
     {
       if (objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].disappeared_frames_count > CT_MAX_DISAPPEARED)
       {
@@ -506,7 +506,7 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
 
   // loop over the bounding box rectangles
   // TODO check if it's necessary to reverse order (as c++ code)
-  for (int i = 0; i < rects_count; ++i)
+  for (uint8_t i = 0; i < rects_count; ++i)
   {
     // use the bounding box coordinates to derive the centroid
     input_centroids[i] = (ip_point) {(uint8_t)(rects[i].x + (uint8_t)(rects[i].width / 2)),
@@ -698,7 +698,7 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
     for (uint8_t i = start; i < end; i++)
     {
 
-       printf("i:[%i]\n", i);
+       // printf("i:[%i]\n", i);
 
        uint8_t covered = 0;
 
@@ -752,13 +752,13 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
   {
     // Register centroids
     // TODO optimise this double loop
-    for (int i = 0; i < rects_count; ++i)
+    for (uint8_t i = 0; i < rects_count; ++i)
     {
 
       //check whether the rectangle has already been associated to certain object
       uint8_t checked = 0;
 
-      for (int j = 0; j < objects.length; ++j)
+      for (uint8_t j = 0; j < objects.length; ++j)
       {
         if (closest_centroids[j].rect_index == i)
         {
@@ -782,11 +782,11 @@ ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
   }
 
 //output the result, skip the missing id
-  for(int i = objects.start_index; i < objects.start_index + objects.length; ++i)
+  for(uint8_t i = objects.start_index; i < objects.start_index + objects.length; ++i)
   {
     uint8_t skipped = 0;
 
-    for(int j = 0; j < objects.skip_index_list_index; ++j){
+    for(uint8_t j = 0; j < objects.skip_index_list_index; ++j){
 
        //printf("skip_index_list[j]:[%i]\n", objects.skip_index_list[j]);
 
