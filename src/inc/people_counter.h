@@ -33,7 +33,7 @@ extern "C"
 /* Kernel size of the LoG */
 #define LOG_KSIZE 	5
 #define LOG_SIGMA	1.5
-
+#define QUEUE_SIZE	100
 /* Sensor frame rate */
 #define FRAME_RATE	8
 // Directions
@@ -47,104 +47,68 @@ extern "C"
  *
  *******************************************************************************/
 
-  /* IMAGE STRUCT */
-  typedef struct mat
-  {
-    uint8_t *data;
-  } ip_mat;
+/* IMAGE STRUCT */
+typedef struct mat
+{
+uint8_t *data;
+} ip_mat;
 
 
-  /* PEOPLE COUNT STRUCT */
-  typedef struct count
-  {
-    uint8_t direc;
-    int8_t num;
-  } ip_count;
+/* PEOPLE COUNT STRUCT */
+typedef struct count
+{
+uint8_t direc;
+int8_t num;
+} ip_count;
 
-  /* RECTANGLE STRUCT */
-  typedef struct rect
-  {
-    uint8_t x, y;
-    uint8_t width, height;
-  } ip_rect;
 
-  /* POINT STRUCT */
-  typedef struct point
-  {
-    uint8_t x, y;
-  } ip_point;
+typedef struct config
+{
+uint8_t kernel_1;
+int16_t threshold;
+uint8_t max_area;
+} ip_config;
 
-  /* IMAGE STRUCT */
 
-  typedef struct object
-  {
-    uint16_t id;
-    ip_point centroid;
-    uint8_t disappeared_frames_count;
-  } ip_object;
+typedef struct pixel {
+	/* coordinates of the pixel */
+	uint8_t x;
+	uint8_t y;
+} pixel;
 
-  typedef struct object_list
-  {
-    uint16_t next_id;
-    ip_object object[TRACKABLE_OBJECT_MAX_SIZE];
-    uint8_t start_index;
-    uint8_t length;
-  } ip_object_list;
+typedef struct queue {
+	uint8_t count;
+	uint8_t top;
+	uint8_t bottom;
+	pixel pixels[QUEUE_SIZE];
+} queue;
 
-  typedef struct closest_centroid
-  {
-    uint16_t distance;
-    uint8_t object_index;
-    uint8_t rect_index;
-  } ip_closest_centroid;
+typedef struct rec {
+	uint8_t min_x;
+	uint8_t min_y;
+	uint8_t max_x;
+	uint8_t max_y;
+	uint8_t rid;
+	uint16_t area;
+} rec;
 
-  typedef struct config
-  {
-    uint8_t kernel_1;
-    int16_t threshold;
-    uint8_t max_area;
-  } ip_config;
+typedef struct recs {
+	uint8_t count;
+	rec nodes[RECTS_MAX_SIZE];
+} recs;
 
-  typedef enum
-  {
-    IP_UPDATE,
-    IP_STILL,
-    IP_EMPTY
-  } ip_status;
+typedef enum ip_status {
+	IP_EMPTY,
+	IP_STILL,
+	IP_UPDATE
+} ip_status;
+	
 
-  /* Function prototypes -------------------------------------------------------- */
 
+/* -------------------------------------------------------function prototype----------------------------------------------------*/
   ip_status IpProcess(void *, void *, void *, void *);
 
-  /* PEOPLE DETECTOR */
 
-  // Returns the number of rectangles
-  uint8_t detectPeople(ip_mat *, ip_mat *, ip_rect *);
-
-  uint8_t updatedDetection(ip_mat *, ip_rect *, ip_rect *);
-
-  // Returns the number of rectangles
-  uint8_t findCountours(ip_mat *, ip_rect *);
-
-  int16_t findValueIndex(uint16_t *, uint16_t, uint16_t);
-
-  void threshold(ip_mat *, uint8_t);
-
-  void absDiff(ip_mat *, ip_mat *);
-
-  void blur(ip_mat *, uint8_t);
-
-  void gaussianBlur(ip_mat *, uint8_t);
-
-  /* PEOPLE TRACKER */
-
-  ip_count updateObjects(ip_rect *, uint8_t);
-
-  uint8_t isCentroidUsed(ip_closest_centroid *, uint8_t);
-
-  void bubbleSort(ip_closest_centroid *, uint8_t);
-
-  void IpInit();
 
 #ifdef __cplusplus
 }

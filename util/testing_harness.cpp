@@ -55,7 +55,7 @@ ip_config config = {
 uint8_t rec_num = 0; 
 
 /* rectangles find by the pipeline */
-ip_rect hrects[RECTS_MAX_SIZE] = {{0,0,0,0}};
+rec hrects[RECTS_MAX_SIZE] = {{0, 0, 0, 0}};
 
 /* Intermedia result 1: image after thresholding */
 uint8_t* th_frame;
@@ -394,14 +394,15 @@ static void show_image(uint8_t *frame, const char *window, void (*process_mat)(M
 static void draw_rect(Mat *image) {
 	/* draw rectangles found by the pipeline */
 	for (int i = 0; i < rec_num; i++) {
-		ip_rect temp = hrects[i];
+		rec temp = hrects[i];
 		Point pt_min;
-		pt_min.x = temp.x;
-		pt_min.y = temp.y;
+		pt_min.x = temp.min_x;
+		pt_min.y = temp.min_y;
 		Point pt_max;
-		pt_max.x = temp.x + temp.width;
-		pt_max.y = temp.y + temp.height;
+		pt_max.x = temp.max_x; 
+		pt_max.y = temp.max_y; 
 		rectangle(*image, pt_min, pt_max, Scalar(255));
+		printf("rid: %d, area: %d\n", temp.rid, temp.area);
 	}
 }
 

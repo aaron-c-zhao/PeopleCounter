@@ -1,7 +1,7 @@
 {
 	"parameters": {
 		"kernel_1": 5,
-		"threshold": 8200,
+		"threshold": 4700,
 		"max_area": 38
 	},
 	"harness_setup": {
