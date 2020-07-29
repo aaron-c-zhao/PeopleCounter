@@ -45,6 +45,7 @@ ip_status IpProcess(void *frame, void *background_image, void *count, void *log_
 {	
   #ifdef __TESTING_HARNESS
     uint64_t start_tsc = readTSC();
+    static uint64_t max_tsc = 0;
   #endif
 
 	uint8_t log_frame[SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT] = {0};
@@ -67,7 +68,11 @@ ip_status IpProcess(void *frame, void *background_image, void *count, void *log_
   uint64_t end_tsc = readTSC();
   uint64_t total_tsc = end_tsc - start_tsc;
   uint64_t without_blob_tsc = before_blob_tsc - start_tsc;
-  printf("total instructions: %lu\nwithout blobfilter: %lu\n", total_tsc, without_blob_tsc);
+  if (max_tsc < total_tsc) {
+    max_tsc = total_tsc;
+  }
+  printf("total instructions: %lu\nwithout blobfilter: %lu\
+  \nmax: %lu\n", total_tsc, without_blob_tsc, max_tsc);
 
 	memcpy(th_frame, log_frame, SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT * sizeof(uint8_t));
 	rec_num = blobs.count;
