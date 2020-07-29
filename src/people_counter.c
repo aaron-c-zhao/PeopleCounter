@@ -7,7 +7,6 @@
 
 #include "people_counter.h"
 #include "string.h"
-#include <stdio.h>
 
 #define WHITE 255
 /* the start number of the rid */
@@ -17,6 +16,11 @@
 extern ip_config config;
 
 #ifdef __TESTING_HARNESS
+// include for printf
+#include <stdio.h>
+// include for getting amount of instructions
+#include <x86intrin.h>
+
 /* the number of the blobs found by the pipeline */
 extern uint8_t rec_num;
 /* an array of rectangles, used to showcase the bounding boxes */
@@ -37,21 +41,41 @@ void area_adjust(uint8_t *, rec *, recs *, uint8_t);
 void erosion(uint8_t *, rec *);
 
 ip_status IpProcess(void *frame, void *background_image, void *count, void *log_kernel)
-{
-  uint8_t log_frame[SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT] = {0};
-  ip_mat log_mat = {.data = log_frame};
-  ip_mat *frame_mat = (ip_mat *)frame;
-  ip_mat *frame_bak = (ip_mat *)background_image;
-  int8_t **kernel = (int8_t **)log_kernel;
-  background_substraction(SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT, background_image, frame, frame);
-  LoG(LOG_KSIZE, kernel, frame_mat, &log_mat);
-  static recs blobs = {0, {}};
-  find_blob(log_frame, &blobs, 0, RID, WHITE);
-  blob_filter(log_frame, &blobs, REC_MAX_AREA, REC_MIN_AREA);
+{	
+  #ifdef __TESTING_HARNESS
+    uint64_t start_tsc = readTSC();
+    static uint64_t max_tsc = 0;
+  #endif
+
+	uint8_t log_frame[SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT] = {0};
+	ip_mat log_mat = {.data = log_frame };
+	ip_mat* frame_mat = (ip_mat *)frame;
+	ip_mat* frame_bak = (ip_mat *)background_image;
+	int8_t **kernel = (int8_t **)log_kernel;
+	background_substraction(SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT, background_image, frame, frame);
+	LoG(LOG_KSIZE, kernel, frame_mat, &log_mat); 
+	static recs blobs = {0, {}};
+
+  #ifdef __TESTING_HARNESS
+    uint64_t before_blob_tsc = readTSC();
+  #endif
+
+	find_blob(log_frame, &blobs, 0, RID, WHITE); 
+	blob_filter(log_frame, &blobs, REC_MAX_AREA, REC_MIN_AREA); 
+  
 #ifdef __TESTING_HARNESS
-  memcpy(th_frame, log_frame, SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT * sizeof(uint8_t));
-  rec_num = blobs.count;
-  memcpy(hrects, blobs.nodes, RECTS_MAX_SIZE * sizeof(rec));
+  uint64_t end_tsc = readTSC();
+  uint64_t total_tsc = end_tsc - start_tsc;
+  uint64_t without_blob_tsc = before_blob_tsc - start_tsc;
+  if (max_tsc < total_tsc) {
+    max_tsc = total_tsc;
+  }
+  printf("total instructions: %lu\nwithout blobfilter: %lu\
+  \nmax: %lu\n", total_tsc, without_blob_tsc, max_tsc);
+
+	memcpy(th_frame, log_frame, SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT * sizeof(uint8_t));
+	rec_num = blobs.count;
+	memcpy(hrects, blobs.nodes, RECTS_MAX_SIZE * sizeof(rec));	
 #endif
   return IP_EMPTY;
 }
@@ -397,3 +421,14 @@ void erosion(uint8_t *frame, rec *blob)
     blob->area--;
   }
 }
+
+#ifdef __TESTING_HARNESS
+// reads instructions
+inline
+uint64_t readTSC() {
+    // _mm_lfence();  // optionally wait for earlier insns to retire before reading the clock
+    uint64_t tsc = __rdtsc();
+    // _mm_lfence();  // optionally block later instructions until rdtsc retires
+    return tsc;
+}
+#endif

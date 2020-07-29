@@ -109,7 +109,10 @@ typedef enum
   IP_STILL,  /* count of people is unchanged, but there are still people in frame */
   IP_EMPTY   /* no people are being tracked and no people detected in frame */
 } ip_status;
-
+	
+#ifdef __TESTING_HARNESS
+  uint64_t readTSC();
+#endif
 
 /* -------------------------------------------------------function prototype----------------------------------------------------*/
   ip_status IpProcess(void *, void *, void *, void *);
