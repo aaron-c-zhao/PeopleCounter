@@ -133,25 +133,25 @@ void LoG(uint8_t ksize,  int8_t **kernel, ip_mat *src, ip_mat *dst) {
 	uint8_t pad_length = ksize / 2;
 	uint8_t *sframe = src->data;
 	uint8_t *dframe = dst->data;
-	printf("  ");
+	/*printf("  ");
 	for (uint8_t i = 0; i < SENSOR_IMAGE_WIDTH; ++i) printf("%5d", i);
-	printf("\n");
+	printf("\n");*/
 	uint8_t count = 0;
 	for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i) {
-		printf("%2d " , count++);
+		/*printf("%2d " , count++);*/
 		for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j) {
 			/* convolve the kernel with each pixel of the image */
 			int16_t c = convolve(ksize, kernel, sframe, i, j, pad_length);
 			/* binarization */
 			dframe[i * SENSOR_IMAGE_WIDTH + j] = (c < -config.threshold)? 255 : 0;
-			if ( c < -config.threshold ) 
+			/*if ( c < -config.threshold ) 
 				printf("\033[1;31m%5d\033[0m", c);
 			else 
-				printf("%5d", c);
+				printf("%5d", c);*/
 		}
-		printf("\n");
+		/*printf("\n");*/
 	}
-	printf("-------------------------------------------------------------------\n");
+	/*printf("-------------------------------------------------------------------\n");*/
 }
 
 
