@@ -178,8 +178,7 @@ int main(int argc, char *argv[])
 		/* get the background TODO: should be done by the pipeline */
 		get_background(cur_frame, img_ptr);
 
-		// ip_status status = 
-		IpProcess((void *)&mat, (void *)&mat_background, (void *)&count, (void *)log_kernel);
+		ip_result result = IpProcess((void *)&mat, (void *)&mat_background, (void *)&count, (void *)log_kernel);
 		
 		/* the show_image should be called after the IpProcess to correctly display the rectangles 
 		 * found by pipeline */
@@ -189,6 +188,7 @@ int main(int argc, char *argv[])
 		resizeWindow(threshold_window, 320, 240);
 			
 		waitKey(0);
+		//TODO print info about the returned ip_result
 		// if (status == IP_EMPTY) {
 		// 	printf("\033[1;31m");	
 		// 	printf("Frame[%ld] is empty", img_ptr);
