@@ -108,7 +108,9 @@ typedef enum ip_status {
 	IP_UPDATE
 } ip_status;
 	
-
+#ifdef __TESTING_HARNESS
+  uint64_t readTSC();
+#endif
 
 /* -------------------------------------------------------function prototype----------------------------------------------------*/
   ip_status IpProcess(void *, void *, void *, void *);
