@@ -33,21 +33,19 @@ add_library(JSON STATIC
 add_definitions( 
 	-DSENSOR_IMAGE_WIDTH=${SENSOR_IMAGE_WIDTH} 
 	-DSENSOR_IMAGE_HEIGHT=${SENSOR_IMAGE_HEIGHT}
-	-DCT_MAX_DISAPPEARED=${CT_MAX_DISAPPEARED}
-	-DCT_MAX_DISTANCE=${CT_MAX_DISTANCE}
 	-DRECTS_MAX_SIZE=${RECTS_MAX_SIZE}
-	-DTRACKABLE_OBJECT_MAX_SIZE=${TRACKABLE_OBJECT_MAX_SIZE}
 	-DFRAME_RATE=${FRAME_RATE}
+	-DLOG_KERNEL_SIZE=${LOG_KERNEL_SIZE}
+	-DQUEUE_SIZE=${QUEUE_SIZE}
+	-DERO_KSIZE=${ERO_KSIZE}
 	)
 
 message ( 
 	"${Red}-----------------------------------------------------------------------------------------${ColorRest}\n"
 	"${Green}Image width:${Red}${SENSOR_IMAGE_WIDTH}${ColourReset}\n" 
 	"${Green}Image height:${Red}${SENSOR_IMAGE_HEIGHT}${ColourReset}\n"
-	"${Green}CT max disappera:${Red}${CT_MAX_DISAPPEARED}${ColourReset}\n"
-	"${Green}CT max distance:${Red}${CT_MAX_DISTANCE}${ColourReset}\n"
 	"${Green}Rects max amount:${Red}${RECTS_MAX_SIZE}${ColourReset}\n"
-	"${Green}Trackable object max amount:${Red}${TRACKABLE_OBJECT_MAX_SIZE}${ColourReset}\n"
+	"${Green}Log kernel size:${Red}${LOG_KERNEL_SIZE}${ColorReset}\n"
 	"${Green}Frame rate:${Red}${FRAME_RATE}${ColouerReset}\n"
 	"${Red}-----------------------------------------------------------------------------------------${ColourReset}\n"
 	)

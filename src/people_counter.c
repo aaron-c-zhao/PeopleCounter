@@ -7,971 +7,395 @@
 
 #include "people_counter.h"
 #include "string.h"
+#ifdef __TESTING_HARNESS
+#include <stdio.h>
+#endif
 
+#define WHITE 255
+/* the start number of the rid */
+#define RID 42
+
+/* struct that keeps the information of configurations */
 extern ip_config config;
 
 #ifdef __TESTING_HARNESS
-// include for printf
-#include <stdio.h>
-// include for getting amount of instructions
-#include <x86intrin.h>
-
-// store amount of instructions excecuted at each part of the pipeline
-uint64_t min_IpProcess = -1;
-uint64_t max_IpProcess = 0;
-uint64_t min_detectPeople = -1;
-uint64_t max_detectPeople = 0;
-uint64_t min_updateObjects = -1;
-uint64_t max_updateObjects = 0;
-uint64_t min_findCountours = -1;
-uint64_t max_findCountours = 0;
-
+/* the number of the blobs found by the pipeline */
 extern uint8_t rec_num;
-extern ip_rect hrects[RECTS_MAX_SIZE];
+/* an array of rectangles, used to showcase the bounding boxes */
+extern rec hrects[RECTS_MAX_SIZE];
+/* a copy of the image which is going to be displayed in the threshold iamge window */
 extern uint8_t *th_frame;
 #endif
 
-ip_status IpProcess(void *frame, void *background_image, void *count)
+void background_substraction(uint16_t, ip_mat *, ip_mat *, ip_mat *);
+void nthreshold(uint16_t, uint8_t, ip_mat *, ip_mat *);
+void LoG(uint8_t, int8_t **, ip_mat *, ip_mat *);
+void find_blob(uint8_t *src, recs *, uint8_t, uint8_t, uint8_t);
+void enqueue(queue *, pixel);
+pixel dequeue(queue *);
+rec bfs(uint8_t *, queue *, uint8_t, uint8_t);
+void blob_filter(uint8_t *, recs *, uint8_t, uint8_t);
+void area_adjust(uint8_t *, rec *, recs *, uint8_t);
+void erosion(uint8_t *, rec *);
+
+ip_status IpProcess(void *frame, void *background_image, void *count, void *log_kernel)
 {
-// get amount of instructions at the start
+  uint8_t log_frame[SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT] = {0};
+  ip_mat log_mat = {.data = log_frame};
+  ip_mat *frame_mat = (ip_mat *)frame;
+  ip_mat *frame_bak = (ip_mat *)background_image;
+  int8_t **kernel = (int8_t **)log_kernel;
+  background_substraction(SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT, background_image, frame, frame);
+  LoG(LOG_KSIZE, kernel, frame_mat, &log_mat);
+  static recs blobs = {0, {}};
+  find_blob(log_frame, &blobs, 0, RID, WHITE);
+  blob_filter(log_frame, &blobs, REC_MAX_AREA, REC_MIN_AREA);
 #ifdef __TESTING_HARNESS
-  uint64_t ipProcess_tsc = readTSC();
+  memcpy(th_frame, log_frame, SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT * sizeof(uint8_t));
+  rec_num = blobs.count;
+  memcpy(hrects, blobs.nodes, RECTS_MAX_SIZE * sizeof(rec));
 #endif
+  return IP_EMPTY;
+}
 
-  // stores all the bounding rectangles in the frame
-  ip_rect rects[RECTS_MAX_SIZE];
-  /* detect people in the frame */
-  uint8_t rects_count = detectPeople((ip_mat *)frame, (ip_mat *)background_image, rects);
+/**
+ * @brief substract the background from the current image, absolute different is used.
+ * @param resolution the number of pixels in the image
+ * @param background the background image
+ * @param src the source image
+ * @param dst the destination image
+ */
+void background_substraction(uint16_t resolution, ip_mat *background, ip_mat *src, ip_mat *dst)
+{
+  uint8_t *bframe = background->data;
+  uint8_t *sframe = src->data;
+  uint8_t *dframe = dst->data;
 
-/* output the number of rectangles in the frame */
-#ifdef __TESTING_HARNESS
-  // get amount of instructions after people detection
-  uint64_t detectPeople_tsc = readTSC();
-
-  rec_num = rects_count;
-  memcpy(hrects, rects, RECTS_MAX_SIZE * sizeof(ip_rect));
-
-  //get amount of instructions before update objects
-  uint64_t start_updateObjects_tsc = readTSC();
-#endif
-
-  /* update centroids location */
-  ip_count count_update = updateObjects(rects, rects_count);
-
-// get instructions after update Objects
-#ifdef __TESTING_HARNESS
-  uint64_t updateObjects_tsc = readTSC();
-#endif
-
-  ip_count *result = (ip_count *)count;
-
-  result->direc = count_update.direc;
-  result->num = count_update.num < 0 ? 0 : count_update.num;
-
-#ifdef __TESTING_HARNESS
-  // get amount of instructions after the entire pipeline
-  uint64_t Final_tsc = readTSC();
-
-  // calculate the amount of instructions executed in detectpeople
-  uint64_t detectPeople_instructions = detectPeople_tsc - ipProcess_tsc;
-  if (detectPeople_instructions > max_detectPeople)
+  for (uint16_t i = 0; i < resolution; i++)
   {
-    max_detectPeople = detectPeople_instructions;
-  }
-  if (detectPeople_instructions < min_detectPeople)
-  {
-    min_detectPeople = detectPeople_instructions;
-  }
-
-  // calculate the amount of instructions executed in updateObjects
-  uint64_t updateObjects_instructions = updateObjects_tsc - start_updateObjects_tsc;
-  if (updateObjects_instructions > max_updateObjects)
-  {
-    max_updateObjects = updateObjects_instructions;
-  }
-  if (updateObjects_instructions < min_updateObjects)
-  {
-    min_updateObjects = updateObjects_instructions;
-  }
-
-  // calculate the amount of instructions executed for whole pipeline
-  uint64_t total_instructions = detectPeople_instructions + Final_tsc - start_updateObjects_tsc;
-  if (total_instructions > max_IpProcess)
-  {
-    max_IpProcess = total_instructions;
-  }
-  if (total_instructions < min_IpProcess)
-  {
-    min_IpProcess = total_instructions;
-  }
-
-  printf("[IpProcess]\tmin:%lu\tmax:%lu\
-    \n[detectPeople]\tmin:%lu\tmax:%lu\
-    \n[updateObjects]\tmin:%lu \tmax:%lu\
-    \n[findcountours]\tmin:%lu\tmax:%lu\n",
-         min_IpProcess, max_IpProcess, min_detectPeople, max_detectPeople, min_updateObjects, max_updateObjects, min_findCountours, max_findCountours);
-#endif
-
-  switch (count_update.num)
-  {
-  case -1:
-    return (IP_EMPTY);
-  case 0:
-    return (IP_STILL);
-  default:
-    return (IP_UPDATE);
+    int8_t temp = sframe[i] - bframe[i];
+    dframe[i] = (temp > 0) ? temp : -temp;
   }
 }
 
-/* PEOPLE DETECTOR */
-
-uint8_t detectPeople(ip_mat *frame, ip_mat *background_image, ip_rect *rects)
+/**
+ * @brief function for normal threshold(deprecated)
+ * @param resolution the number of pixels in the image
+ * @param thre threshold according to which to binarize the image
+ * @param src source image
+ * @param dst destination image
+ */
+void nthreshold(uint16_t resolution, uint8_t thre, ip_mat *src, ip_mat *dst)
 {
-  // Don't do this, this will blur the background image every cycle.
-  // If we use eigen background we don't need this step.
-  // Otherwise we need to make sure that we blur the background only once.
-  // Blur(background_image, KERNEL_1);
+  uint8_t *sframe = src->data;
+  uint8_t *dframe = src->data;
 
-  stackBlur(frame->data, config.kernel_1);
-
-#ifdef __TESTING_HARNESS
-  memcpy(th_frame, frame->data, SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT * sizeof(uint8_t));
-#endif
-
-  absDiff(frame, background_image);
-  gaussianBlur(frame, config.kernel_3);
-  // copy blurred image in case we need to re-apply the threshold.
-  uint8_t data[SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT];
-  ip_mat blurred_image = {.data = data};
-  for (int i = 0; i < SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT; ++i)
+  for (uint16_t i = 0; i < resolution; i++)
   {
-    data[i] = frame->data[i];
+    dframe[i] = (sframe[i] > thre) ? 255 : 0;
   }
-  threshold(frame, config.threshold);
-  /*
-#ifdef __TESTING_HARNESS
-  memcpy(th_frame, frame->data, SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT *sizeof(uint8_t));
-#endif 
-*/
-  /* Blur(frame, config.kernel_4); */
-  ip_rect temp_rects[RECTS_MAX_SIZE];
-
-#ifdef __TESTING_HARNESS
-  uint64_t start_findCountours_tsc = readTSC();
-#endif
-
-  uint8_t n_rects = findCountours(frame, temp_rects);
-
-#ifdef __TESTING_HARNESS
-  uint64_t end_findCountours_tsc = readTSC();
-  uint64_t findCountours_tsc = end_findCountours_tsc - start_findCountours_tsc;
-
-  // calculate the amount of instructions executed in findcontours
-  if (findCountours_tsc > max_findCountours)
-  {
-    max_findCountours = findCountours_tsc;
-  }
-  if (findCountours_tsc < min_findCountours)
-  {
-    min_findCountours = findCountours_tsc;
-  }
-#endif
-
-  uint8_t final_n_rects = 0;
-
-  // filter blobs
-  for (uint8_t i = 0; i < n_rects; ++i)
-  {
-    if (temp_rects[i].width < config.blob_width_min || temp_rects[i].height < config.blob_height_min)
-    {
-      continue;
-    }
-    if (temp_rects[i].width * temp_rects[i].height > config.max_area)
-    {
-      return (updatedDetection(&blurred_image, temp_rects, rects));
-    }
-    rects[final_n_rects++] = temp_rects[i];
-  }
-
-  return (final_n_rects);
 }
 
-uint8_t updatedDetection(ip_mat *frame, ip_rect *temp_rects, ip_rect *rects)
+/**
+ * @brief convolution 
+ * @param ksize the size of the kernel of the convolution
+ * @param kernel the kernel of the convolution
+ * @param m the data matrix e.g. the pixels
+ * @param x the x coordinate of the pixel to be convolved 
+ * @param y the y coordinate of the pixel to be convolved
+ * @param padding the padding length
+ * @return the convolution result
+ */
+static inline int16_t convolve(uint8_t ksize, int8_t **kernel, uint8_t *m, uint8_t x, uint8_t y, uint8_t padding)
 {
-  threshold(frame, config.updated_threshold);
-  uint8_t n_rects = findCountours(frame, temp_rects);
-
-  uint8_t final_n_rects = 0;
-
-  // filter blobs
-  for (uint8_t i = 0; i < n_rects; ++i)
+  /* decide whether padding will be applied at location (x, y) */
+  uint8_t p_x = (x - padding < 0) ? padding - x : 0;
+  uint8_t p_y = (y - padding < 0) ? padding - y : 0;
+  uint8_t i_y, i_x;
+  /* the result of the convolution */
+  int16_t sum = 0;
+  /* the calculation should ignore the padding pixels and stop when exceed the boundary */
+  for (uint8_t k_x = p_x, i_x = x; k_x < ksize && i_x < SENSOR_IMAGE_HEIGHT; ++k_x)
   {
-    if (temp_rects[i].width < config.blob_width_min || temp_rects[i].height < config.blob_height_min)
+    for (uint8_t k_y = p_y, i_y = y; k_y < ksize && i_y < SENSOR_IMAGE_WIDTH; ++k_y)
     {
-      continue;
+      sum += m[i_x * SENSOR_IMAGE_WIDTH + i_y] * kernel[k_x][k_y];
+      i_y++;
     }
-
-    rects[final_n_rects++] = temp_rects[i];
+    i_x++;
   }
-
-  return (final_n_rects);
+  return sum;
 }
 
-uint8_t findCountours(ip_mat *frame, ip_rect *rects)
+/**
+ * @brief apply the laplacian of gaussian operator on the image for blob detection
+ * @param ksize the kernel size of the LOG operator
+ * @param kernel the kernel of the convolution of the LOG operator
+ * @param src the source image
+ * @param dst the destination that will hold the binarized image
+ */
+void LoG(uint8_t ksize, int8_t **kernel, ip_mat *src, ip_mat *dst)
 {
-  uint8_t result_rects_length = 0;
-
-  uint16_t found_pixels_indexes[SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT];
-  uint16_t found_pixels_count = 0;
-
-  for (int i = 0; i < (SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT); ++i)
+  /* decide the length of padding on each side of the image */
+  uint8_t pad_length = ksize / 2;
+  uint8_t *sframe = src->data;
+  uint8_t *dframe = dst->data;
+  /*printf("  ");
+	for (uint8_t i = 0; i < SENSOR_IMAGE_WIDTH; ++i) printf("%5d", i);
+	printf("\n");*/
+  uint8_t count = 0;
+  for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i)
   {
-    if (frame->data[i] == 255)
+    /*printf("%2d " , count++);*/
+    for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j)
     {
-      if (findValueIndex(found_pixels_indexes, found_pixels_count, i) != -1)
+      /* convolve the kernel with each pixel of the image */
+      int16_t c = convolve(ksize, kernel, sframe, i, j, pad_length);
+      /* binarization */
+      dframe[i * SENSOR_IMAGE_WIDTH + j] = (c < -config.threshold) ? 255 : 0;
+      /*if ( c < -config.threshold ) 
+				printf("\033[1;31m%5d\033[0m", c);
+			else 
+				printf("%5d", c);*/
+    }
+    /*printf("\n");*/
+  }
+  /*printf("-------------------------------------------------------------------\n");*/
+}
+
+/**
+ * @brief This function will find all the blobs in the thresholded image and mark the pixels
+ *        that belong to different blobs with a unique rid
+ * @pram src the source image
+ * @param blobs the struct that holds the result blobs
+ * @param start_i the start index of the blob_counter
+ * @param rid the start point of the rid
+ * @param tvalue target value of which the BFS will searh for
+ */
+void find_blob(uint8_t *src, recs *blobs, uint8_t start_i, uint8_t rid, uint8_t tvalue)
+{
+  uint8_t *sframe = src;
+  uint8_t blob_counter = start_i;
+  queue pqueue = {0, 0, 0, {{0, 0}}};
+  /* initialize the rid to be a unique number other than 0 and 255 */
+  for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i)
+  {
+    for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j)
+    {
+      /* when the pixel has not been visited by bfs(otherwise it will be marked as a rid */
+      if (sframe[i * SENSOR_IMAGE_WIDTH + j] == tvalue)
       {
-        continue;
-      }
-      uint16_t blob_queue[SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT];
-      uint16_t blob_queue_start = 0;
-      uint16_t blob_queue_end = 0;
-      blob_queue[blob_queue_end++] = i;
-      found_pixels_indexes[found_pixels_count++] = i;
-
-      uint8_t min_x = SENSOR_IMAGE_WIDTH + 1, max_x = 0;
-      uint8_t min_y = SENSOR_IMAGE_HEIGHT + 1, max_y = 0;
-
-      while (blob_queue_start < blob_queue_end)
-      {
-        uint16_t pixel = blob_queue[blob_queue_start++];
-
-        uint8_t pixel_x = pixel % SENSOR_IMAGE_WIDTH;
-        uint8_t pixel_y = (uint8_t)(pixel / SENSOR_IMAGE_WIDTH);
-
-        if (pixel_x < min_x)
-        {
-          min_x = pixel_x;
-        }
-        if (pixel_x > max_x)
-        {
-          max_x = pixel_x;
-        }
-        if (pixel_y < min_y)
-        {
-          min_y = pixel_y;
-        }
-        if (pixel_y > max_y)
-        {
-          max_y = pixel_y;
-        }
-
-        //  Find neighbours (left, right, up, down)
-        uint16_t neighbours[4];
-        uint8_t neighbours_length = 0;
-        // TODO put into declare or something  like that
-        static int8_t directions[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
-        for (int d = 0; d < 4; ++d)
-        {
-          int8_t new_x = pixel_x + directions[d][0];
-          int8_t new_y = pixel_y + directions[d][1];
-
-          if (new_x < 0 || new_x > SENSOR_IMAGE_WIDTH - 1 || new_y < 0 || new_y > SENSOR_IMAGE_HEIGHT - 1)
-          {
-            continue;
-          }
-
-          neighbours[neighbours_length++] = pixel + directions[d][0] + directions[d][1] * SENSOR_IMAGE_WIDTH;
-        }
-
-        // add neighbour to queue if it's white
-        for (uint8_t n_idx = 0; n_idx < neighbours_length; ++n_idx)
-        {
-          if (frame->data[neighbours[n_idx]] != 255 ||
-              findValueIndex(found_pixels_indexes, found_pixels_count, neighbours[n_idx]) != -1)
-          {
-            continue;
-          }
-          blob_queue[blob_queue_end++] = neighbours[n_idx];
-          found_pixels_indexes[found_pixels_count++] = neighbours[n_idx];
-        }
-      }
-      rects[result_rects_length++] = (ip_rect){min_x, min_y, max_x - min_x + 1, max_y - min_y + 1};
-    }
-  }
-  return (result_rects_length);
-}
-
-int16_t findValueIndex(uint16_t *array, uint16_t length, uint16_t value)
-{
-  for (int i = 0; i < length; ++i)
-  {
-    if (array[i] == value)
-    {
-      return (i);
-    }
-  }
-  return (-1);
-}
-
-void threshold(ip_mat *frame, uint8_t threshold)
-{
-
-  for (int y = 0; y < SENSOR_IMAGE_HEIGHT; ++y)
-  {
-    for (int x = 0; x < SENSOR_IMAGE_WIDTH; ++x)
-    {
-      uint8_t *pixel = frame->data + (SENSOR_IMAGE_WIDTH * y + x);
-      if (*pixel > threshold)
-      {
-        *pixel = 255;
-      }
-      else
-      {
-        *pixel = 0;
+        /* j is the x coordinate and i is the y coordinate */
+        pixel temp = {.x = j, .y = i};
+        enqueue(&pqueue, temp);
+        /* the first pixel of the blob should be marked to prevent infinite loop */
+        sframe[i * SENSOR_IMAGE_WIDTH + j] = rid;
+        /* do the BFS */
+        blobs->nodes[blob_counter++] = bfs(sframe, &pqueue, rid++, tvalue);
       }
     }
   }
+  blobs->count = blob_counter;
 }
 
-void absDiff(ip_mat *frame, ip_mat *background)
+/**
+ * @brief data structure operation, enqueue
+ * @param q the queue to be operate on
+ * @prarm p the pixel to be put in the back of the queue
+ */
+void enqueue(queue *q, pixel p)
 {
-  for (int i = 0; i < SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT; ++i)
-  {
-    if (frame->data[i] > background->data[i])
-    {
-      frame->data[i] = frame->data[i] - background->data[i];
-    }
-    else
-    {
-      frame->data[i] = background->data[i] - frame->data[i];
-    }
-  }
-}
-
-void blur(ip_mat *frame, uint8_t kernel_size)
-{
-  uint8_t radius = kernel_size >> 1;
-
-  //get the target pixel
-  for (int y = 0; y < SENSOR_IMAGE_WIDTH; y++)
-  {
-    for (int x = 0; x < SENSOR_IMAGE_HEIGHT; x++)
-    {
-      uint16_t sum = 0;
-      uint8_t count = 0;
-
-      //loop through all directions of that pixel
-      for (int d_y = -radius; d_y <= radius; ++d_y)
-      {
-        for (int d_x = -radius; d_x <= radius; ++d_x)
-        {
-          if (y + d_y > -1 && y + d_y < SENSOR_IMAGE_HEIGHT && x + d_x > -1 && x + d_x < SENSOR_IMAGE_WIDTH)
-          {
-            sum += frame->data[SENSOR_IMAGE_WIDTH * (y + d_y) + (x + d_x)];
-            ++count;
-          }
-        }
-      }
-      /* TODO: fake code */
-      count = (!count) ? 1 : count;
-      frame->data[SENSOR_IMAGE_WIDTH * y + x] = (uint8_t)(sum / count);
-    }
-  }
-}
-
-void gaussianBlur(ip_mat *frame, uint8_t kernel_size)
-{
-  static const uint8_t kernel_3[3][3] = {{1, 2, 1},
-                                         {2, 4, 2},
-                                         {1, 2, 1}};
-
-  static const uint8_t kernel_5[5][5] = {{1, 4, 7, 4, 1},
-                                         {4, 16, 26, 16, 4},
-                                         {7, 26, 41, 26, 7},
-                                         {4, 16, 26, 16, 4},
-                                         {1, 4, 7, 4, 1}};
-
-  // don't apply blur if kernel is not 3 or 5
-  //  if(kernel_size == 1 || kernel_size % 2 == 0 || (kernel_size != 3 && kernel_size != 5))
-  if (kernel_size != 3 && kernel_size != 5)
+  if (q->count >= QUEUE_SIZE)
   {
     return;
   }
-
-  uint8_t radius = kernel_size >> 1;
-  uint8_t result[SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT] = {};
-
-  if (kernel_size == 3)
-  {
-    //get the target pixel
-    for (uint8_t y = 0; y < SENSOR_IMAGE_HEIGHT; ++y)
-    {
-      for (uint8_t x = 0; x < SENSOR_IMAGE_WIDTH; ++x)
-      {
-        uint32_t sum = 0;
-        uint16_t count = 0;
-
-        //loop through all directions of that pixel
-        for (int8_t d_y = -radius; d_y <= radius; ++d_y)
-        {
-          for (int8_t d_x = -radius; d_x <= radius; ++d_x)
-          {
-            if (y + d_y > -1 && y + d_y < SENSOR_IMAGE_HEIGHT && x + d_x > -1 && x + d_x < SENSOR_IMAGE_WIDTH)
-            {
-              sum += frame->data[SENSOR_IMAGE_WIDTH * (y + d_y) + (x + d_x)] * kernel_3[radius + d_y][radius + d_x];
-              count += kernel_3[radius + d_y][radius + d_x];
-            }
-          }
-        }
-
-        result[SENSOR_IMAGE_WIDTH * y + x] = (count == 0) ? 0 : (uint8_t)(sum / count);
-      }
-    }
-  }
-
-  // duplicate code, find better way to optimise this
-  else if (kernel_size == 5)
-  {
-    for (uint8_t y = 0; y < SENSOR_IMAGE_HEIGHT; ++y)
-    {
-      for (uint8_t x = 0; x < SENSOR_IMAGE_WIDTH; ++x)
-      {
-        uint32_t sum = 0;
-        uint16_t count = 0;
-
-        //loop through all directions of that pixel
-        for (int8_t d_y = -radius; d_y <= radius; ++d_y)
-        {
-          for (int8_t d_x = -radius; d_x <= radius; ++d_x)
-          {
-            if (y + d_y > -1 && y + d_y < SENSOR_IMAGE_HEIGHT && x + d_x > -1 && x + d_x < SENSOR_IMAGE_WIDTH)
-            {
-              sum += frame->data[SENSOR_IMAGE_WIDTH * (y + d_y) + (x + d_x)] * kernel_5[radius + d_y][radius + d_x];
-              count += kernel_5[radius + d_y][radius + d_x];
-            }
-          }
-        }
-
-        result[SENSOR_IMAGE_WIDTH * y + x] = (count == 0) ? 0 : (uint8_t)(sum / count);
-      }
-    }
-  }
-
-  // TODO optimise this?
-  for (uint16_t i = 0; i < SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT; ++i)
-  {
-    frame->data[i] = result[i];
-  }
+  q->count++;
+  q->pixels[q->top] = p;
+  /* circular queue */
+  q->top = (q->top + 1) % QUEUE_SIZE;
 }
 
-/* PEOPLE TRACKER */
-
-ip_count updateObjects(ip_rect *rects, uint8_t rects_count)
+/**
+ * @brief data structure operation, dqueue
+ * @param q the queue to be operate on
+ * TODO: add a error handling to deal with empty queue
+ */
+pixel dequeue(queue *q)
 {
-  /* TODO assign the ip_object array to the memory address given as parameter instead of an empty array. */
-  static ip_object_list objects = {0, 0, 0, {}};
-
-  /* TODO return this in a struct */
-  uint8_t total_up = 0, total_down = 0;
-
-  /* if there are no blobs in the frame, then increase the count of disappeared frames of every object */
-  if (rects_count == 0)
+  q->count--;
+  pixel p = q->pixels[q->bottom];
+  /* circular queue */
+  q->bottom = (q->bottom + 1) % QUEUE_SIZE;
+  return p;
+}
+/**
+ * @brief conduct a breath first search on the image
+ * @param frame the image to be searched
+ * @param q the queue data structure used by BFS algorithm
+ * @param rid the rid of the newly found blob
+ * @param white the value of which is considered to be "white" i.e. that target of the searching
+ */
+rec bfs(uint8_t *frame, queue *q, uint8_t rid, uint8_t white)
+{
+  uint8_t min_x, min_y, max_x, max_y;
+  /* initialize the min x and min y to be the number larger than the max coordinate(31)*/
+  min_x = min_y = 33;
+  max_x = max_y = 0;
+  /* initialize the area of the blob to be 1, since there's at least 1 pixel in the blob */
+  uint16_t area = 1;
+  /* BFS */
+  while (q->count)
   {
-    /* increase disappered count of every object */
-    for (int i = objects.start_index; i < objects.start_index + objects.length; ++i)
+    pixel p = dequeue(q);
+    /* extract the coordinate of the bounding box */
+    min_x = (min_x < p.x) ? min_x : p.x;
+    min_y = (min_y < p.y) ? min_y : p.y;
+    max_x = (max_x > p.x) ? max_x : p.x;
+    max_y = (max_y > p.y) ? max_y : p.y;
+    /* loop over all of the 8 neighbours of a pixel*/
+    for (int8_t k = -1; k < 2; ++k)
     {
-      ++objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].disappeared_frames_count;
-    }
-
-    /* shift forward the starting index by "removing" objects that have disappeared for more than CT_MAX_DISAPPEARED.
-    stops as soon as an object that should not be deleted is met */
-    for (int i = objects.start_index; i < objects.start_index + objects.length; ++i)
-    {
-      if (objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].disappeared_frames_count > CT_MAX_DISAPPEARED)
+      for (int8_t l = -1; l < 2; l++)
       {
-        ++objects.start_index;
-        --objects.length;
-      }
-      else
-      {
-        break;
-      }
-    }
-
-    /* loop back index if necessary */
-    objects.start_index %= TRACKABLE_OBJECT_MAX_SIZE;
-
-    /* if no more objects are being tracked, return -1 (IP_EMPTY). The direction does not matter*/
-    if (objects.length == 0)
-    {
-      return ((ip_count){DIRECTION_UP, -1});
-    }
-    /* otherwise there are still some objects that are being tracked, therefore return 0 (IP_STILL), */
-    return ((ip_count){DIRECTION_UP, 0});
-  }
-
-  /* convert bounding boxes to their centroid points */
-  ip_point input_centroids[rects_count];
-
-  for (int i = 0; i < rects_count; ++i)
-  {
-    /* use the bounding box coordinates to derive the centroid */
-    input_centroids[i] = (ip_point){(uint8_t)(rects[i].x + (uint8_t)(rects[i].width >> 1)),
-                                    (uint8_t)(rects[i].y + (uint8_t)(rects[i].height >> 1))};
-  }
-
-  /* if no objects are being tracked, then the new centroids are all new objects */
-  if (objects.length == 0)
-  {
-    /* register centroids as new objects */
-    for (int i = 0; i < rects_count; ++i)
-    {
-      objects.object[objects.next_id % TRACKABLE_OBJECT_MAX_SIZE] = (ip_object){objects.next_id, input_centroids[i], 0};
-
-      ++objects.length;
-      ++objects.next_id;
-    }
-
-    /* return 0 (IP_STILL) since nobody can have crossed the middle line if no people were being tracked before */
-    return ((ip_count){DIRECTION_UP, 0});
-  }
-
-  /* create an object to new centroids map (matrix) as a 1D array */
-  uint16_t distance_vector[objects.length * rects_count];
-
-  /* object_centroids is a list of centroids we already have, input_centroids is the list of new centroids.
-  calculate the squared distance between each object and new centroids.
-  x axis = input centroids
-  y axis = object centroids
-  */
-  for (uint8_t i = 0; i < objects.length; ++i)
-  {
-    for (uint8_t j = 0; j < rects_count; ++j)
-    {
-      uint8_t object_index = (objects.start_index + i) % TRACKABLE_OBJECT_MAX_SIZE;
-      int8_t delta_x = objects.object[object_index].centroid.x - input_centroids[j].x;
-      int8_t delta_y = objects.object[object_index].centroid.y - input_centroids[j].y;
-
-      /* calculate squared euclidean distance (skip the square root, because we just need to sort based on it) */
-      uint16_t distance = delta_x * delta_x + delta_y * delta_y;
-
-      distance_vector[i * rects_count + j] = distance;
-    }
-  }
-
-  /* in order to perform this matching we must
-    (1) find the smallest value in each row and then
-    (2) sort the row indexes based on their minimum values so that the row
-		with the smallest value as at the* front* of the index list */
-  /* find the closest input centroid for each object centroid. */
-  /* use helper struct to make algorithm easier */
-  ip_closest_centroid closest_centroids[objects.length];
-
-  for (uint8_t i = 0; i < objects.length; ++i)
-  {
-    /* initialize minimum distance to largest uint16_t value by converting complement 2 -1 int to unsigned int */
-    uint16_t minimum = -1;
-    uint8_t temp_index = 0;
-
-    for (uint8_t j = 0; j < rects_count; ++j)
-    {
-      if (distance_vector[i * rects_count + j] < minimum)
-      {
-        /* keep track of both the distance and the index of the closest input centroid */
-        minimum = distance_vector[i * rects_count + j];
-        temp_index = j;
-      }
-    }
-
-    closest_centroids[i] = (ip_closest_centroid){minimum, (objects.start_index + i) % TRACKABLE_OBJECT_MAX_SIZE, temp_index};
-  }
-
-  /* sort the object-input centroid pairings based on their distance */
-  bubbleSort(closest_centroids, objects.length);
-
-  /* use a counter to not have to loop over closest_centroids */
-  uint8_t used_count = 0;
-
-  /* iterate at most max(#objects, #input_centroids) times */
-  for (uint8_t i = 0; i < ((objects.length < rects_count) ? objects.length : rects_count); ++i)
-  {
-    /* if the input centroids has already been assigned to a previous object, then skip this object */
-    if (isCentroidUsed(closest_centroids, i) ||
-        closest_centroids[i].distance > CT_MAX_DISTANCE * CT_MAX_DISTANCE)
-    {
-      continue;
-    }
-
-    ++used_count;
-    uint8_t object_id = closest_centroids[i].object_index;
-
-    /* check if this object has crossed the middle line, if so increase the count depending on the direction */
-    if (input_centroids[closest_centroids[i].rect_index].y < SENSOR_IMAGE_HEIGHT / 2 && objects.object[object_id].centroid.y >= SENSOR_IMAGE_HEIGHT / 2)
-    {
-      ++total_up;
-    }
-    else if (input_centroids[closest_centroids[i].rect_index].y >= SENSOR_IMAGE_HEIGHT / 2 && objects.object[object_id].centroid.y < SENSOR_IMAGE_HEIGHT / 2)
-    {
-      ++total_down;
-    }
-
-    /* update the object centroid to the assigned closest input centroid */
-    objects.object[object_id].centroid = input_centroids[closest_centroids[i].rect_index];
-
-    /* reset the disapperead counter of that object */
-    objects.object[object_id].disappeared_frames_count = 0;
-  }
-
-  /* after assigning the input centroids, if there were more tracked objects than centroids in the current frame then 
-    some of the objects were not assigned a new centroid, therefore its disappeared count has to be updated and
-    the object deleted if necessary */
-  if (objects.length >= rects_count)
-  {
-    /* increase the object disappeared count after used_count */
-    for (uint8_t i = used_count; i < objects.length; ++i)
-    {
-      uint8_t object_id = closest_centroids[i].object_index;
-      ++objects.object[object_id].disappeared_frames_count;
-    }
-
-    // TODO duplicate code as at the start of function, refactor?
-    /* Deregister old objects, same as before */
-    for (int i = objects.start_index; i < objects.start_index + objects.length; ++i)
-    {
-      if (objects.object[i % TRACKABLE_OBJECT_MAX_SIZE].disappeared_frames_count > CT_MAX_DISAPPEARED)
-      {
-        ++objects.start_index;
-        --objects.length;
-      }
-      else
-      {
-        break;
-      }
-    }
-
-    /* loop back index if necessary */
-    objects.start_index %= TRACKABLE_OBJECT_MAX_SIZE;
-  }
-  /* otherwise there were more input centroids than there were tracked objects, which means that they are new objects */
-  else
-  {
-    /* Register centroids */
-    /* TODO optimise this double loop */
-    for (int i = 0; i < rects_count; ++i)
-    {
-      for (int j = 0; j < objects.length; ++j)
-      {
-        if (closest_centroids[j].rect_index == i)
+        uint8_t x = p.x + k;
+        uint8_t y = p.y + l;
+        /* skip the pixel itself and when it goes out of bound */
+        if ((l == 0 && k == 0) || x < 0 || y < 0 || x >= SENSOR_IMAGE_WIDTH || y >= SENSOR_IMAGE_HEIGHT)
         {
           continue;
         }
+        if (frame[y * SENSOR_IMAGE_WIDTH + x] == white)
+        {
+          pixel temp = {p.x + k, p.y + l};
+          enqueue(q, temp);
+          /* mark the pixel that has been visited with the rid of the blob to prevent the algorithm from infinite looping */
+          frame[y * SENSOR_IMAGE_WIDTH + x] = rid;
+          area++;
+        }
       }
-
-      objects.object[objects.next_id % TRACKABLE_OBJECT_MAX_SIZE] = (ip_object){objects.next_id, input_centroids[i], 0};
-
-      ++objects.length;
-      ++objects.next_id;
     }
   }
-  /* calculate the count variation and return the correct direction and count */
-  int8_t delta_people_count = total_up - total_down;
-  if (delta_people_count < 0)
-  {
-    return ((ip_count){DIRECTION_DOWN, -delta_people_count});
-  }
-  else
-  {
-    return ((ip_count){DIRECTION_UP, delta_people_count});
-  }
+  rec result = {min_x, min_y, max_x, max_y, rid, area};
+  return result;
 }
 
-/*
- * Checks whether the current centroid has already been assigned before
+/**
+ * @brief This function filters the blobs according to their area, erosion and dilation will be conducte
+ * 	  to adjust the blobs whose area is between amin and amax
+ * @param frame thresholded image with each blob marked by different rids
+ * @param blobs the struct that holds the rectangles
+ * @param amax the maximum area that a single blob can be
+ * @param amin the minimum area that a single blob can be 
  */
-uint8_t isCentroidUsed(ip_closest_centroid *closest_centroids, uint8_t current_reached_index)
+void blob_filter(uint8_t *frame, recs *blobs, uint8_t amax, uint8_t amin)
 {
-  uint8_t index_to_find = closest_centroids[current_reached_index].rect_index;
-
-  for (uint8_t i = 0; i < current_reached_index; ++i)
+  uint8_t num = blobs->count;
+  for (uint8_t i = 0; i < num; ++i)
   {
-    if (closest_centroids[i].rect_index == index_to_find)
+    rec *temp = &blobs->nodes[i];
+    /* filter out tiny blobs */
+    if (temp->area < amin)
     {
-      return (1);
+      temp->rid = REC_IGNORE;
+      continue;
     }
-  }
-  return (0);
-}
-
-// A function to implement bubble sort
-void bubbleSort(ip_closest_centroid *array, uint8_t length)
-{
-  uint8_t i, j;
-  for (i = 0; i < length - 1; ++i)
-  {
-    // Last i elements are already in place
-    for (j = 0; j < length - i - 1; ++j)
+    if (temp->area > amax)
     {
-      if (array[j].distance > array[j + 1].distance)
-      {
-        ip_closest_centroid temp = array[j];
-        array[j] = array[j + 1];
-        array[j + 1] = temp;
-      }
+      area_adjust(frame, temp, blobs, amax);
     }
   }
 }
 
-/* The Stack Blur Algorithm was invented by Mario Klingemann, 
-mario@quasimondo.com and described here:
-http://incubator.quasimondo.com/processing/fast_blur_deluxe.php
-
-Copyright (c) 2010 Mario Klingemann
-Permission is hereby granted, free of charge, to any person
-obtaining a copy of this software and associated documentation
-files (the "Software"), to deal in the Software without
-restriction, including without limitation the rights to use,
-copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following
-conditions:
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
-
-This is the C monochrome (8 bit grayscale) single threaded version
-Based heavily on http://vitiy.info/Code/stackblur.cpp by Victor Laskin (victor.laskin@gmail.com)
-More details: http://vitiy.info/stackblur-algorithm-multi-threaded-blur-for-cpp
-*/
-
-static uint16_t const stackblur_mul[255] =
-    {
-        512, 512, 456, 512, 328, 456, 335, 512, 405, 328, 271, 456, 388, 335, 292, 512,
-        454, 405, 364, 328, 298, 271, 496, 456, 420, 388, 360, 335, 312, 292, 273, 512,
-        482, 454, 428, 405, 383, 364, 345, 328, 312, 298, 284, 271, 259, 496, 475, 456,
-        437, 420, 404, 388, 374, 360, 347, 335, 323, 312, 302, 292, 282, 273, 265, 512,
-        497, 482, 468, 454, 441, 428, 417, 405, 394, 383, 373, 364, 354, 345, 337, 328,
-        320, 312, 305, 298, 291, 284, 278, 271, 265, 259, 507, 496, 485, 475, 465, 456,
-        446, 437, 428, 420, 412, 404, 396, 388, 381, 374, 367, 360, 354, 347, 341, 335,
-        329, 323, 318, 312, 307, 302, 297, 292, 287, 282, 278, 273, 269, 265, 261, 512,
-        505, 497, 489, 482, 475, 468, 461, 454, 447, 441, 435, 428, 422, 417, 411, 405,
-        399, 394, 389, 383, 378, 373, 368, 364, 359, 354, 350, 345, 341, 337, 332, 328,
-        324, 320, 316, 312, 309, 305, 301, 298, 294, 291, 287, 284, 281, 278, 274, 271,
-        268, 265, 262, 259, 257, 507, 501, 496, 491, 485, 480, 475, 470, 465, 460, 456,
-        451, 446, 442, 437, 433, 428, 424, 420, 416, 412, 408, 404, 400, 396, 392, 388,
-        385, 381, 377, 374, 370, 367, 363, 360, 357, 354, 350, 347, 344, 341, 338, 335,
-        332, 329, 326, 323, 320, 318, 315, 312, 310, 307, 304, 302, 299, 297, 294, 292,
-        289, 287, 285, 282, 280, 278, 275, 273, 271, 269, 267, 265, 263, 261, 259};
-
-static uint8_t const stackblur_shr[255] =
-    {
-        9, 11, 12, 13, 13, 14, 14, 15, 15, 15, 15, 16, 16, 16, 16, 17,
-        17, 17, 17, 17, 17, 17, 18, 18, 18, 18, 18, 18, 18, 18, 18, 19,
-        19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 20, 20, 20,
-        20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 21,
-        21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
-        21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 22, 22, 22, 22, 22, 22,
-        22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
-        22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 23,
-        23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
-        23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
-        23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
-        23, 23, 23, 23, 23, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
-        24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
-        24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
-        24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
-        24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24};
-
-void stackBlur(uint8_t *src, uint8_t radius)
+/**
+ * @brief adjust the area of the blob for the sake of seprating oversized blobs
+ * @param frame the bninarized image where the blobs resides
+ * @param blob the blob to be adjusted
+ * @param blobs the data structure that holds the blobs
+ * @param amax the maximum area that a single blob could have
+ */
+void area_adjust(uint8_t *frame, rec *blob, recs *blobs, uint8_t amax)
 {
-  /* skip blur if blur is < 1*/
-  if (radius < 1)
+  while (blob->area > amax)
   {
-    return;
+    erosion(frame, blob);
   }
+  /* find the newly borned blobs after erosion */
+  find_blob(frame, blobs, blobs->count, RID + blobs->count, blob->rid);
+  /* set the old blob to be ignored */
+  blob->rid = REC_IGNORE;
+};
 
-  uint16_t x, y, xp, yp, i;
-
-  uint8_t stack[radius * (radius + 2) + 1];
-  uint16_t sp;
-  uint16_t stack_start;
-  uint8_t *stack_ptr;
-
-  uint8_t *src_ptr;
-  uint8_t *dst_ptr;
-
-  uint32_t sum_a;
-  uint32_t sum_in_a;
-  uint32_t sum_out_a;
-
-  uint8_t wm = SENSOR_IMAGE_WIDTH - 1;
-  uint8_t hm = SENSOR_IMAGE_HEIGHT - 1;
-
-  uint16_t div = (radius * 2) + 1;
-  uint16_t mul_sum = stackblur_mul[radius];
-  uint8_t shr_sum = stackblur_shr[radius];
-
-  /* step 1*/
-
-  for (y = 0; y < SENSOR_IMAGE_HEIGHT; ++y)
+static inline uint8_t fit(uint8_t *frame, uint8_t rid, uint8_t x, uint8_t y, uint8_t kernel[ERO_KSIZE][ERO_KSIZE])
+{
+  uint8_t radius = ERO_KSIZE / 2;
+  for (uint8_t i = 0; i < ERO_KSIZE; ++i)
   {
-    sum_a = sum_in_a = sum_out_a = 0;
-
-    src_ptr = src + SENSOR_IMAGE_WIDTH * y; // start of line (0,y)
-
-    for (i = 0; i <= radius; i++)
+    for (uint8_t j = 0; j < ERO_KSIZE; ++j)
     {
-      stack_ptr = &stack[i];
-      stack_ptr[0] = src_ptr[0];
-      sum_a += src_ptr[0] * (i + 1);
-      sum_out_a += src_ptr[0];
-    }
-
-    for (i = 1; i <= radius; i++)
-    {
-      if (i <= wm)
+      /* position the centroid of the kernel to the pixel to be examined */
+      uint8_t i_x = x + (i - radius);
+      uint8_t i_y = y + (j - radius);
+      /* if it fits then continue, otherwise it does not fit */
+      if (i_x >= 0 && i_y >= 0 && kernel[i][j] && frame[i_y * SENSOR_IMAGE_WIDTH + i_x] == rid)
       {
-        ++src_ptr;
+        continue;
       }
-      stack_ptr = &stack[(i + radius)];
-      stack_ptr[0] = src_ptr[0];
-      sum_a += src_ptr[0] * (radius + 1 - i);
-      sum_in_a += src_ptr[0];
-    }
-
-    sp = radius;
-    xp = radius;
-    if (xp > wm)
-    {
-      xp = wm;
-    }
-    src_ptr = src + (xp + y * SENSOR_IMAGE_WIDTH); // img.pix_ptr(xp, y);
-    dst_ptr = src + y * SENSOR_IMAGE_WIDTH;        // img.pix_ptr(0, y);
-    for (x = 0; x < SENSOR_IMAGE_WIDTH; x++)
-    {
-      dst_ptr[0] = (sum_a * mul_sum) >> shr_sum;
-      ++dst_ptr;
-
-      sum_a -= sum_out_a;
-
-      stack_start = sp + div - radius;
-      if (stack_start >= div)
-        stack_start -= div;
-      stack_ptr = &stack[stack_start];
-
-      sum_out_a -= stack_ptr[0];
-
-      if (xp < wm)
+      else
       {
-        ++src_ptr;
-        ++xp;
+        return 0;
       }
-
-      stack_ptr[0] = src_ptr[0];
-
-      sum_in_a += src_ptr[0];
-      sum_a += sum_in_a;
-
-      ++sp;
-      if (sp >= div)
-      {
-        sp = 0;
-      }
-      stack_ptr = &stack[sp];
-
-      sum_out_a += stack_ptr[0];
-      sum_in_a -= stack_ptr[0];
     }
   }
-
-  /* step 2 */
-
-  for (x = 0; x < SENSOR_IMAGE_WIDTH; ++x)
-  {
-    sum_a = sum_in_a = sum_out_a = 0;
-
-    src_ptr = src + x; // x,0
-    for (i = 0; i <= radius; i++)
-    {
-      stack_ptr = &stack[i];
-      stack_ptr[0] = src_ptr[0];
-      sum_a += src_ptr[0] * (i + 1);
-      sum_out_a += src_ptr[0];
-    }
-    for (i = 1; i <= radius; i++)
-    {
-      if (i <= hm)
-      {
-        src_ptr += SENSOR_IMAGE_WIDTH; // +stride
-      }
-
-      stack_ptr = &stack[(i + radius)];
-      stack_ptr[0] = src_ptr[0];
-      sum_a += src_ptr[0] * (radius + 1 - i);
-      sum_in_a += src_ptr[0];
-    }
-
-    sp = radius;
-    yp = radius;
-    if (yp > hm)
-    {
-      yp = hm;
-    }
-    src_ptr = src + (x + yp * SENSOR_IMAGE_WIDTH); // img.pix_ptr(x, yp);
-    dst_ptr = src + x;                             // img.pix_ptr(x, 0);
-    for (y = 0; y < SENSOR_IMAGE_HEIGHT; y++)
-    {
-      dst_ptr[0] = (sum_a * mul_sum) >> shr_sum;
-      dst_ptr += SENSOR_IMAGE_WIDTH;
-
-      sum_a -= sum_out_a;
-
-      stack_start = sp + div - radius;
-      if (stack_start >= div)
-      {
-        stack_start -= div;
-      }
-      stack_ptr = &stack[stack_start];
-
-      sum_out_a -= stack_ptr[0];
-
-      if (yp < hm)
-      {
-        src_ptr += SENSOR_IMAGE_WIDTH; // stride
-        ++yp;
-      }
-
-      stack_ptr[0] = src_ptr[0];
-
-      sum_in_a += src_ptr[0];
-      sum_a += sum_in_a;
-
-      ++sp;
-      if (sp >= div)
-      {
-        sp = 0;
-      }
-      stack_ptr = &stack[sp];
-
-      sum_out_a += stack_ptr[0];
-      sum_in_a -= stack_ptr[0];
-    }
-  }
+  /* the pixels fits if the kernel matches the pixels around it */
+  return 1;
 }
 
-#ifdef __TESTING_HARNESS
-// reads instructions
-inline uint64_t readTSC()
+/**
+ * @brief conduct erosion on the a specific blob
+ * @param frame the binarized frame where the blobs resides 
+ * @param blob the blob to be eroded
+ */
+void erosion(uint8_t *frame, rec *blob)
 {
-  // _mm_lfence();  // optionally wait for earlier insns to retire before reading the clock
-  uint64_t tsc = __rdtsc();
-  // _mm_lfence();  // optionally block later instructions until rdtsc retires
-  return tsc;
+  /* initialize the kernel , TODO: choose a better kernel, could be hardcoded in the final product to reduce computation*/
+  uint8_t kernel[ERO_KSIZE][ERO_KSIZE];
+  for (uint8_t i = 0; i < ERO_KSIZE; ++i)
+  {
+    for (uint8_t j = 0; j < ERO_KSIZE; ++j)
+    {
+      kernel[i][j] = 1;
+    }
+  }
+
+  uint16_t buf[blob->area];
+  /* a counter for the pixels that does not fit */
+  uint16_t ufcount = 0;
+  for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i)
+  {
+    for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j)
+    {
+      if (frame[i * SENSOR_IMAGE_WIDTH + j] != blob->rid)
+      {
+        continue;
+      }
+      /* determine whether the pixel fits */
+      uint8_t f = fit(frame, blob->rid, j, i, kernel);
+      /* if the pixel does not fit, then save the coordinate of the pixel */
+      uint16_t temp = (uint16_t)j << 8 | i;
+      if (!f)
+      {
+        buf[ufcount++] = temp;
+      }
+    }
+  }
+  /* set all pixels that does not fit to 0 */
+  for (uint16_t i = 0; i < ufcount; ++i)
+  {
+    uint16_t temp = buf[i];
+    uint8_t y = (uint8_t)temp;
+    uint8_t x = temp >> 8 | 0;
+    frame[y * SENSOR_IMAGE_WIDTH + x] = 0;
+    /* update the area of the blob which is the criteria of when to stop the area adjustment */
+    blob->area--;
+  }
 }
-#endif
