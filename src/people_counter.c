@@ -40,7 +40,7 @@ void blob_filter(uint8_t *, recs *, uint8_t, uint8_t);
 void area_adjust(uint8_t *, rec *, recs *, uint8_t);
 void erosion(uint8_t *, rec *);
 
-ip_status IpProcess(void *frame, void *background_image, void *count, void *log_kernel)
+ip_result IpProcess(void *frame, void *background_image, void *count, void *log_kernel)
 {	
   #ifdef __TESTING_HARNESS
     uint64_t start_tsc = readTSC();
@@ -77,7 +77,10 @@ ip_status IpProcess(void *frame, void *background_image, void *count, void *log_
 	rec_num = blobs.count;
 	memcpy(hrects, blobs.nodes, RECTS_MAX_SIZE * sizeof(rec));	
 #endif
-  return IP_EMPTY;
+
+  //TODO get the correct values to return when the tracking gets implemented
+  ip_result return_result = {0, 0, 0};
+  return return_result;
 }
 
 /**

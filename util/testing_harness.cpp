@@ -177,7 +177,10 @@ int main(int argc, char *argv[])
 		ip_mat mat = {.data = cur_frame};
 		/* get the background TODO: should be done by the pipeline */
 		get_background(cur_frame, img_ptr);
-		ip_status status = IpProcess((void *)&mat, (void *)&mat_background, (void *)&count, (void *)log_kernel);
+
+		// ip_status status = 
+		IpProcess((void *)&mat, (void *)&mat_background, (void *)&count, (void *)log_kernel);
+		
 		/* the show_image should be called after the IpProcess to correctly display the rectangles 
 		 * found by pipeline */
 		show_image(buf_frame, thermal_window, draw_rect);
@@ -186,20 +189,20 @@ int main(int argc, char *argv[])
 		resizeWindow(threshold_window, 320, 240);
 			
 		waitKey(0);
-		if (status == IP_EMPTY) {
-			printf("\033[1;31m");	
-			printf("Frame[%ld] is empty", img_ptr);
-		}
-		else if (status == IP_STILL)
-		{
-			printf("\033[1;33m");
-			printf("Frame[%ld] is still", img_ptr);
-		}
-		else
-		{
-			printf("\033[1;32m");
-			printf("Frame[%ld], Dir: %s, Count: %d", img_ptr, (count.direc == DIRECTION_UP) ? "UP" : "DOWN", count.num);
-		}
+		// if (status == IP_EMPTY) {
+		// 	printf("\033[1;31m");	
+		// 	printf("Frame[%ld] is empty", img_ptr);
+		// }
+		// else if (status == IP_STILL)
+		// {
+		// 	printf("\033[1;33m");
+		// 	printf("Frame[%ld] is still", img_ptr);
+		// }
+		// else
+		// {
+		// 	printf("\033[1;32m");
+		// 	printf("Frame[%ld], Dir: %s, Count: %d", img_ptr, (count.direc == DIRECTION_UP) ? "UP" : "DOWN", count.num);
+		// }
 		printf(", [%d] rects detected\n", rec_num);
 		printf("\033[0m");
 		

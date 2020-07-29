@@ -102,6 +102,13 @@ typedef struct recs {
 	rec nodes[RECTS_MAX_SIZE];
 } recs;
 
+typedef struct result
+  {
+    uint8_t objects_length;
+    uint8_t up;
+    uint8_t down;
+  } ip_result;
+
 /* RESULT STATUS ENUM */
 typedef enum
 {
@@ -115,7 +122,7 @@ typedef enum
 #endif
 
 /* -------------------------------------------------------function prototype----------------------------------------------------*/
-  ip_status IpProcess(void *, void *, void *, void *);
+  ip_result IpProcess(void *, void *, void *, void *);
 
 #ifdef __cplusplus
 }
