@@ -9,12 +9,19 @@
 #include "string.h"
 #include <stdio.h>
 
+#define WHITE	255
+/* the start number of the rid */
+#define RID	42
+
 /* struct that keeps the information of configurations */
 extern ip_config config;
 
 #ifdef __TESTING_HARNESS
+/* the number of the blobs found by the pipeline */
 extern uint8_t rec_num;
+/* an array of rectangles, used to showcase the bounding boxes */
 extern rec hrects[RECTS_MAX_SIZE];
+/* a copy of the image which is going to be displayed in the threshold iamge window */
 extern uint8_t *th_frame;
 #endif
 
@@ -22,11 +29,13 @@ extern uint8_t *th_frame;
 void background_substraction(uint16_t, ip_mat*, ip_mat*, ip_mat*);
 void nthreshold(uint16_t, uint8_t, ip_mat*, ip_mat*);
 void LoG(uint8_t, int8_t**, ip_mat*, ip_mat*);
-uint8_t find_blob(ip_mat* src, recs*);
+void find_blob(uint8_t* src, recs*, uint8_t, uint8_t, uint8_t);
 void enqueue(queue*, pixel); 
 pixel dequeue(queue*);
-rec bfs(uint8_t*, queue*, uint8_t);
-void blob_filter(ip_mat*, recs*, uint8_t, uint8_t);
+rec bfs(uint8_t*, queue*, uint8_t, uint8_t);
+void blob_filter(uint8_t*, recs*, uint8_t, uint8_t);
+void area_adjust(uint8_t*, rec*, recs*, uint8_t);
+void erosion(uint8_t*, rec*);
 
 ip_status IpProcess(void *frame, void *background_image, void *count, void *log_kernel)
 {	
@@ -38,17 +47,24 @@ ip_status IpProcess(void *frame, void *background_image, void *count, void *log_
 	background_substraction(SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT, background_image, frame, frame);
 	LoG(LOG_KSIZE, kernel, frame_mat, &log_mat); 
 	static recs blobs = {0, {}};
-	uint8_t blob_num = find_blob(&log_mat, &blobs); 
+	find_blob(log_frame, &blobs, 0, RID, WHITE); 
+	blob_filter(log_frame, &blobs, REC_MAX_AREA, REC_MIN_AREA); 
 #ifdef __TESTING_HARNESS
 	memcpy(th_frame, log_frame, SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT * sizeof(uint8_t));
-	rec_num = blob_num;
+	rec_num = blobs.count;
 	memcpy(hrects, blobs.nodes, RECTS_MAX_SIZE * sizeof(rec));	
 #endif
 	return IP_EMPTY;
 
 }
 
-
+/**
+ * @brief substract the background from the current image, absolute different is used.
+ * @param resolution the number of pixels in the image
+ * @param background the background image
+ * @param src the source image
+ * @param dst the destination image
+ */
 void background_substraction(uint16_t resolution, ip_mat* background, ip_mat* src, ip_mat* dst) {
 	uint8_t *bframe = background->data;
 	uint8_t *sframe = src->data;
@@ -77,14 +93,24 @@ void nthreshold(uint16_t resolution, uint8_t thre, ip_mat* src, ip_mat* dst) {
 	}
 }
 
-
-static inline int convolve(uint8_t ksize,  int8_t **kernel, uint8_t *m, uint8_t x, uint8_t y, uint8_t padding) {
+/**
+ * @brief convolution 
+ * @param ksize the size of the kernel of the convolution
+ * @param kernel the kernel of the convolution
+ * @param m the data matrix e.g. the pixels
+ * @param x the x coordinate of the pixel to be convolved 
+ * @param y the y coordinate of the pixel to be convolved
+ * @param padding the padding length
+ * @return the convolution result
+ */
+static inline int16_t convolve(uint8_t ksize,  int8_t **kernel, uint8_t *m, uint8_t x, uint8_t y, uint8_t padding) {
 	/* decide whether padding will be applied at location (x, y) */
 	uint8_t p_x = (x - padding < 0)? padding - x : 0;
 	uint8_t p_y = (y - padding < 0)? padding - y : 0;
 	uint8_t	i_y, i_x; 
-	
+	/* the result of the convolution */	
 	int16_t sum = 0;
+	/* the calculation should ignore the padding pixels and stop when exceed the boundary */
 	for (uint8_t k_x = p_x, i_x = x; k_x < ksize && i_x < SENSOR_IMAGE_HEIGHT; ++k_x) {
 		for (uint8_t k_y = p_y, i_y = y; k_y < ksize && i_y < SENSOR_IMAGE_WIDTH; ++k_y) {
 			sum += m[i_x * SENSOR_IMAGE_WIDTH + i_y] * kernel[k_x][k_y]; 
@@ -95,7 +121,15 @@ static inline int convolve(uint8_t ksize,  int8_t **kernel, uint8_t *m, uint8_t 
 	return sum;
 }
 
+/**
+ * @brief apply the laplacian of gaussian operator on the image for blob detection
+ * @param ksize the kernel size of the LOG operator
+ * @param kernel the kernel of the convolution of the LOG operator
+ * @param src the source image
+ * @param dst the destination that will hold the binarized image
+ */
 void LoG(uint8_t ksize,  int8_t **kernel, ip_mat *src, ip_mat *dst) {
+	/* decide the length of padding on each side of the image */
 	uint8_t pad_length = ksize / 2;
 	uint8_t *sframe = src->data;
 	uint8_t *dframe = dst->data;
@@ -106,7 +140,9 @@ void LoG(uint8_t ksize,  int8_t **kernel, ip_mat *src, ip_mat *dst) {
 	for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i) {
 		printf("%2d " , count++);
 		for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j) {
+			/* convolve the kernel with each pixel of the image */
 			int16_t c = convolve(ksize, kernel, sframe, i, j, pad_length);
+			/* binarization */
 			dframe[i * SENSOR_IMAGE_WIDTH + j] = (c < -config.threshold)? 255 : 0;
 			if ( c < -config.threshold ) 
 				printf("\033[1;31m%5d\033[0m", c);
@@ -125,29 +161,30 @@ void LoG(uint8_t ksize,  int8_t **kernel, ip_mat *src, ip_mat *dst) {
  *        that belong to different blobs with a unique rid
  * @pram src the source image
  * @param blobs the struct that holds the result blobs
- * @return the number of blobs found in the image
+ * @param start_i the start index of the blob_counter
+ * @param rid the start point of the rid
+ * @param tvalue target value of which the BFS will searh for
  */
-uint8_t find_blob(ip_mat* src, recs* blobs) {
-	uint8_t *sframe = src->data;
-	uint8_t blob_counter = 0;
+void find_blob(uint8_t* src, recs* blobs, uint8_t start_i, uint8_t rid, uint8_t tvalue) {
+	uint8_t *sframe = src;
+	uint8_t blob_counter = start_i;
 	queue pqueue = {0, 0, 0, {{0, 0}}};
 	/* initialize the rid to be a unique number other than 0 and 255 */
-	uint8_t rid = 42;
 	for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i) { 
 		for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j) {
 			/* when the pixel has not been visited by bfs(otherwise it will be marked as a rid */
-			if (sframe[i * SENSOR_IMAGE_WIDTH + j] == 255) {
+			if (sframe[i * SENSOR_IMAGE_WIDTH + j] == tvalue) {
 					/* j is the x coordinate and i is the y coordinate */
 					pixel temp = {.x = j, .y = i};
 					enqueue(&pqueue, temp);		
 					/* the first pixel of the blob should be marked to prevent infinite loop */
 					sframe[i * SENSOR_IMAGE_WIDTH + j] = rid;
 					/* do the BFS */
-					blobs->nodes[blob_counter++] = bfs(sframe, &pqueue, rid++);
+					blobs->nodes[blob_counter++] = bfs(sframe, &pqueue, rid++, tvalue);
 			}
 		}
 	}
-	return blob_counter;
+	blobs->count = blob_counter;
 }
 
 
@@ -181,8 +218,10 @@ pixel dequeue(queue *q) {
  * @brief conduct a breath first search on the image
  * @param frame the image to be searched
  * @param q the queue data structure used by BFS algorithm
+ * @param rid the rid of the newly found blob
+ * @param white the value of which is considered to be "white" i.e. that target of the searching
  */
-rec bfs(uint8_t *frame, queue* q, uint8_t rid) {
+rec bfs(uint8_t *frame, queue* q, uint8_t rid, uint8_t white) {
 	uint8_t min_x, min_y, max_x, max_y;
 	/* initialize the min x and min y to be the number larger than the max coordinate(31)*/
 	min_x = min_y = 33;
@@ -204,10 +243,10 @@ rec bfs(uint8_t *frame, queue* q, uint8_t rid) {
 				uint8_t y = p.y + l;
 				/* skip the pixel itself and when it goes out of bound */
 				if ((l == 0 && k == 0) || x < 0 || y < 0 || x >= SENSOR_IMAGE_WIDTH || y >= SENSOR_IMAGE_HEIGHT) continue; 
-				if (frame[y * SENSOR_IMAGE_WIDTH + x] == 255) {
+				if (frame[y * SENSOR_IMAGE_WIDTH + x] == white) {
 					pixel temp = {p.x + k, p.y + l};
 					enqueue(q, temp);
-					/* mark the pixel that has been visited to prevent the algorithm from infinite looping */
+					/* mark the pixel that has been visited with the rid of the blob to prevent the algorithm from infinite looping */
 					frame[y * SENSOR_IMAGE_WIDTH + x] = rid;	
 					area++;
 				}
@@ -228,23 +267,94 @@ rec bfs(uint8_t *frame, queue* q, uint8_t rid) {
  * @param amax the maximum area that a single blob can be
  * @param amin the minimum area that a single blob can be 
  */
-void blob_filter(ip_mat *frame, recs *blobs, uint8_t amax, uint8_t amin) {
-		
+void blob_filter(uint8_t *frame, recs *blobs, uint8_t amax, uint8_t amin) {
+	uint8_t num = blobs->count;
+	for (uint8_t i = 0; i < num; ++i) {
+		rec *temp = &blobs->nodes[i];
+		/* filter out tiny blobs */
+		if (temp->area < amin) {
+			temp->rid = REC_IGNORE;
+			continue;
+		}
+		if (temp->area > amax) {
+			area_adjust(frame, temp, blobs, amax);
+		}
+	}					
 }
 
 
-void erosion(ip_mat *frame, uint8_t rid, uint8_t ksize) {
+/**
+ * @brief adjust the area of the blob for the sake of seprating oversized blobs
+ * @param frame the bninarized image where the blobs resides
+ * @param blob the blob to be adjusted
+ * @param blobs the data structure that holds the blobs
+ * @param amax the maximum area that a single blob could have
+ */
+void area_adjust(uint8_t* frame, rec *blob, recs *blobs, uint8_t amax) {
+	while(blob->area > amax)	 {
+		erosion(frame, blob);
+	}
+	/* find the newly borned blobs after erosion */
+	find_blob(frame, blobs, blobs->count, RID + blobs->count, blob->rid); 	
+	/* set the old blob to be ignored */
+	blob->rid = REC_IGNORE;
+};
+
+
+static inline uint8_t fit(uint8_t *frame, uint8_t rid, uint8_t x, uint8_t y, uint8_t kernel[ERO_KSIZE][ERO_KSIZE]) {
+	uint8_t radius = ERO_KSIZE / 2;
+	for (uint8_t i = 0; i < ERO_KSIZE; ++i) {
+		 for (uint8_t j = 0; j < ERO_KSIZE; ++j) {
+			/* position the centroid of the kernel to the pixel to be examined */
+			uint8_t i_x = x + (i - radius);
+			uint8_t i_y = y + (j - radius);
+			/* if it fits then continue, otherwise it does not fit */
+			if (i_x >= 0 && i_y >= 0 && kernel[i][j] && frame[i_y * SENSOR_IMAGE_WIDTH + i_x] == rid) continue;
+			else return 0;
+		}
+	}
+	/* the pixels fits if the kernel matches the pixels around it */
+	return 1;
+}
+
+
+/**
+ * @brief conduct erosion on the a specific blob
+ * @param frame the binarized frame where the blobs resides 
+ * @param blob the blob to be eroded
+ */
+void erosion(uint8_t *frame, rec *blob) {
+	/* initialize the kernel , TODO: choose a better kernel, could be hardcoded in the final product to reduce computation*/
+	uint8_t kernel[ERO_KSIZE][ERO_KSIZE];
+	for (uint8_t i =0; i < ERO_KSIZE; ++i) {
+		for (uint8_t j = 0; j < ERO_KSIZE; ++j) {
+			kernel[i][j] = 1;
+		}
+	}
+
+	uint16_t buf[blob->area];
+	/* a counter for the pixels that does not fit */
+	uint16_t ufcount = 0;
+	for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i) {
+		for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j) {
+			if (frame [i * SENSOR_IMAGE_WIDTH + j] != blob->rid) continue;
+			/* determine whether the pixel fits */
+			uint8_t f = fit(frame, blob->rid, j, i, kernel);
+			/* if the pixel does not fit, then save the coordinate of the pixel */
+			uint16_t temp = (uint16_t)j << 8 | i;
+			if (!f) buf[ufcount++] = temp;
+		}
+	}
+	/* set all pixels that does not fit to 0 */
+	for (uint16_t i = 0; i < ufcount; ++i) {
+		uint16_t temp = buf[i];
+		uint8_t y = (uint8_t)temp; 
+		uint8_t x = temp >> 8 | 0;
+		frame[y * SENSOR_IMAGE_WIDTH + x] = 0;
+		/* update the area of the blob which is the criteria of when to stop the area adjustment */
+		blob->area--;
+	}
 } 
-
-
-
-
-
-
-
-
-
-
 
 
 

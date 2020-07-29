@@ -37,8 +37,10 @@ extern "C"
 #define REC_MAX_AREA	@REC_MAX_AREA@
 /* Min area that a single blob can be */
 #define REC_MIN_AREA	@REC_MIN_AREA@
+/* erosion kernel size */
+#define ERO_KSIZE	@ERO_KSIZE@
 
-
+#define REC_IGNORE 	13
 // Directions
 #define DIRECTION_UP 	0x00
 #define DIRECTION_DOWN 	0x01

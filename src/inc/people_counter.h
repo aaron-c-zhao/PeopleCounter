@@ -17,14 +17,9 @@ extern "C"
 #include <stdint.h>
 #include "testing_harness.h"
 
-// CT = Centroid Tracker
-#define CT_MAX_DISAPPEARED 	2
-#define CT_MAX_DISTANCE 	8
 
 // Array max sizes
 #define RECTS_MAX_SIZE 		28
-// TODO consider a power 2 size for optimization sake. See: https://stackoverflow.com/questions/11040646/faster-modulus-in-c-c
-#define TRACKABLE_OBJECT_MAX_SIZE 18
 
 // Image size
 #define SENSOR_IMAGE_WIDTH 	32
@@ -32,10 +27,20 @@ extern "C"
 
 /* Kernel size of the LoG */
 #define LOG_KSIZE 	5
+/* Sigma from the gaussian kernel */
 #define LOG_SIGMA	1.5
+/* how many pixels can the queue hold */
 #define QUEUE_SIZE	100
 /* Sensor frame rate */
 #define FRAME_RATE	8
+/* Max area that a single blob can be */
+#define REC_MAX_AREA	70
+/* Min area that a single blob can be */
+#define REC_MIN_AREA	4
+/* erosion kernel size */
+#define ERO_KSIZE	3
+
+#define REC_IGNORE 	13
 // Directions
 #define DIRECTION_UP 	0x00
 #define DIRECTION_DOWN 	0x01

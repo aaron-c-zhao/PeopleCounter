@@ -395,6 +395,7 @@ static void draw_rect(Mat *image) {
 	/* draw rectangles found by the pipeline */
 	for (int i = 0; i < rec_num; i++) {
 		rec temp = hrects[i];
+		if (temp.rid == REC_IGNORE) continue;
 		Point pt_min;
 		pt_min.x = temp.min_x;
 		pt_min.y = temp.min_y;
