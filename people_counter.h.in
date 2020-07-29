@@ -65,56 +65,63 @@ extern "C"
     -1 = no people are being tracked and no people detected in frame (IP_EMPTY)
     0 = no people crossed the middle line, but there are still people in frame (IP_STILL)
     n = n people went in the direction direc (IP_UPDATE) */
-  } ip_count;
+} ip_count;
 
-  typedef struct config
-  {
-    uint8_t kernel_1;
-    int16_t threshold;
-    uint8_t max_area;
-  } ip_config;
+typedef struct config
+{
+uint8_t kernel_1;
+int16_t threshold;
+uint8_t max_area;
+} ip_config;
 
-  typedef struct pixel
-  {
-    /* coordinates of the pixel */
-    uint8_t x;
-    uint8_t y;
-  } pixel;
+typedef struct pixel {
+	/* coordinates of the pixel */
+	uint8_t x;
+	uint8_t y;
+} pixel;
 
-  typedef struct queue
-  {
-    uint8_t count;
-    uint8_t top;
-    uint8_t bottom;
-    pixel pixels[QUEUE_SIZE];
-  } queue;
+typedef struct queue {
+	uint8_t count;
+	uint8_t top;
+	uint8_t bottom;
+	pixel pixels[QUEUE_SIZE];
+} queue;
 
-  typedef struct rec
-  {
-    uint8_t min_x;
-    uint8_t min_y;
-    uint8_t max_x;
-    uint8_t max_y;
-    uint8_t rid;
-    uint16_t area;
-  } rec;
+typedef struct rec {
+	uint8_t min_x;
+	uint8_t min_y;
+	uint8_t max_x;
+	uint8_t max_y;
+	uint8_t rid;
+	uint16_t area;
+} rec;
 
-  typedef struct recs
-  {
-    uint8_t count;
-    rec nodes[RECTS_MAX_SIZE];
-  } recs;
+typedef struct recs {
+	uint8_t count;
+	rec nodes[RECTS_MAX_SIZE];
+} recs;
 
-  /* RESULT STATUS ENUM */
-  typedef enum
+typedef struct result
   {
-    IP_UPDATE, /* count of people is changed */
-    IP_STILL,  /* count of people is unchanged, but there are still people in frame */
-    IP_EMPTY   /* no people are being tracked and no people detected in frame */
-  } ip_status;
+    uint8_t objects_length;
+    uint8_t up;
+    uint8_t down;
+  } ip_result;
+
+/* RESULT STATUS ENUM */
+typedef enum
+{
+  IP_UPDATE, /* count of people is changed */
+  IP_STILL,  /* count of people is unchanged, but there are still people in frame */
+  IP_EMPTY   /* no people are being tracked and no people detected in frame */
+} ip_status;
+	
+#ifdef __TESTING_HARNESS
+  uint64_t readTSC();
+#endif
 
 /* -------------------------------------------------------function prototype----------------------------------------------------*/
-  ip_status IpProcess(void *, void *, void *, void *);
+  ip_result IpProcess(void *, void *, void *, void *);
 
 #ifdef __cplusplus
 }
