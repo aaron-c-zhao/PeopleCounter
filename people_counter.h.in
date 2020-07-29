@@ -17,30 +17,29 @@ extern "C"
 #include <stdint.h>
 #include "testing_harness.h"
 
-
 // Array max sizes
-#define RECTS_MAX_SIZE 		@RECTS_MAX_SIZE@
+#define RECTS_MAX_SIZE @RECTS_MAX_SIZE@
 
 // Image size
 #define SENSOR_IMAGE_WIDTH  @SENSOR_IMAGE_WIDTH@
 #define SENSOR_IMAGE_HEIGHT @SENSOR_IMAGE_HEIGHT@
 
 /* Kernel size of the LoG */
-#define LOG_KSIZE 	@LOG_KSIZE@
+#define LOG_KSIZE @LOG_KSIZE@
 /* Sigma from the gaussian kernel */
-#define LOG_SIGMA	@LOG_SIGMA@
+#define LOG_SIGMA @LOG_SIGMA@
 /* how many pixels can the queue hold */
-#define QUEUE_SIZE	@QUEUE_SIZE@
+#define QUEUE_SIZE @QUEUE_SIZE@
 /* Sensor frame rate */
-#define FRAME_RATE	@FRAME_RATE@
+#define FRAME_RATE @FRAME_RATE@
 /* Max area that a single blob can be */
-#define REC_MAX_AREA	@REC_MAX_AREA@
+#define REC_MAX_AREA @REC_MAX_AREA@
 /* Min area that a single blob can be */
-#define REC_MIN_AREA	@REC_MIN_AREA@
+#define REC_MIN_AREA @REC_MIN_AREA@
 /* erosion kernel size */
-#define ERO_KSIZE	@ERO_KSIZE@
+#define ERO_KSIZE @ERO_KSIZE@
 
-#define REC_IGNORE 	13
+#define REC_IGNORE 13
 // Directions
 #define DIRECTION_UP   0x00
 #define DIRECTION_DOWN 0x01
@@ -52,64 +51,67 @@ extern "C"
  *
  *******************************************************************************/
 
-/* IMAGE STRUCT */
-typedef struct mat
-{
-  uint8_t *data; /* pointer to array of grayscale 8bit pixels */
-} ip_mat;
+  /* IMAGE STRUCT */
+  typedef struct mat
+  {
+    uint8_t *data; /* pointer to array of grayscale 8bit pixels */
+  } ip_mat;
 
-/* PEOPLE COUNT STRUCT */
-typedef struct count
-{
-  uint8_t direc; /* direction of count update. Can be DIRECTION_UP or DIRECTION_DOWN */
-  int8_t num;    /* value of change in people count.
+  /* PEOPLE COUNT STRUCT */
+  typedef struct count
+  {
+    uint8_t direc; /* direction of count update. Can be DIRECTION_UP or DIRECTION_DOWN */
+    int8_t num;    /* value of change in people count.
     -1 = no people are being tracked and no people detected in frame (IP_EMPTY)
     0 = no people crossed the middle line, but there are still people in frame (IP_STILL)
     n = n people went in the direction direc (IP_UPDATE) */
-} ip_count;
+  } ip_count;
 
-typedef struct config
-{
-uint8_t kernel_1;
-int16_t threshold;
-uint8_t max_area;
-} ip_config;
+  typedef struct config
+  {
+    uint8_t kernel_1;
+    int16_t threshold;
+    uint8_t max_area;
+  } ip_config;
 
-typedef struct pixel {
-	/* coordinates of the pixel */
-	uint8_t x;
-	uint8_t y;
-} pixel;
+  typedef struct pixel
+  {
+    /* coordinates of the pixel */
+    uint8_t x;
+    uint8_t y;
+  } pixel;
 
-typedef struct queue {
-	uint8_t count;
-	uint8_t top;
-	uint8_t bottom;
-	pixel pixels[QUEUE_SIZE];
-} queue;
+  typedef struct queue
+  {
+    uint8_t count;
+    uint8_t top;
+    uint8_t bottom;
+    pixel pixels[QUEUE_SIZE];
+  } queue;
 
-typedef struct rec {
-	uint8_t min_x;
-	uint8_t min_y;
-	uint8_t max_x;
-	uint8_t max_y;
-	uint8_t rid;
-	uint16_t area;
-} rec;
+  typedef struct rec
+  {
+    uint8_t min_x;
+    uint8_t min_y;
+    uint8_t max_x;
+    uint8_t max_y;
+    uint8_t rid;
+    uint16_t area;
+  } rec;
 
-typedef struct recs {
-	uint8_t count;
-	rec nodes[RECTS_MAX_SIZE];
-} recs;
+  typedef struct recs
+  {
+    uint8_t count;
+    rec nodes[RECTS_MAX_SIZE];
+  } recs;
 
-/* RESULT STATUS ENUM */
-typedef enum
-{
-  IP_UPDATE, /* count of people is changed */
-  IP_STILL,  /* count of people is unchanged, but there are still people in frame */
-  IP_EMPTY   /* no people are being tracked and no people detected in frame */
-} ip_status;
-
+  /* RESULT STATUS ENUM */
+  typedef enum
+  {
+    IP_UPDATE, /* count of people is changed */
+    IP_STILL,  /* count of people is unchanged, but there are still people in frame */
+    IP_EMPTY   /* no people are being tracked and no people detected in frame */
+  } ip_status;
 
 /* -------------------------------------------------------function prototype----------------------------------------------------*/
   ip_status IpProcess(void *, void *, void *, void *);

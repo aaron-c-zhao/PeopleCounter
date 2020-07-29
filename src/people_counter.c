@@ -7,7 +7,9 @@
 
 #include "people_counter.h"
 #include "string.h"
+#ifdef __TESTING_HARNESS
 #include <stdio.h>
+#endif
 
 #define WHITE 255
 /* the start number of the rid */
