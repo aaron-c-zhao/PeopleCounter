@@ -73,7 +73,7 @@ uint8_t *th_frame;
 
 static void parse_json(const char *, void (*parse_value)(json_value *, int));
 static void parse_frame(json_value *, int);
-static uint8_t grey_map(int, int, double);
+static uint8_t gray_map(int, int, double);
 static void show_image(uint8_t *, const char *, void (*process_mat)(Mat *));
 static void get_background(uint8_t *, unsigned long);
 static void read_config(json_value *, int);
@@ -473,7 +473,7 @@ static void parse_eeData(json_value *value, int depth) {
  *  @param higher limit of the temperature range that mapped from
  *  @temp temperature read from the sensor
  *  */
-static uint8_t grey_map(int low, int high, double temp)
+static uint8_t gray_map(int low, int high, double temp)
 {
 	temp = (temp - low) * 255 / (high - low);
 	temp = (temp < 0) ? 0 : temp;
@@ -490,7 +490,7 @@ static void frame_convert(uint8_t *frame)
 {
 	for (int i = 0; i < RESOLUTION; i++)
 	{
-		frame[i] = grey_map(llimit, hlimit, frames_ptr[img_ptr][i]);
+		frame[i] = gray_map(llimit, hlimit, frames_ptr[img_ptr][i]);
 	}
 }
 
