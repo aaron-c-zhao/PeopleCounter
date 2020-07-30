@@ -158,7 +158,9 @@ int main(int argc, char *argv[])
 	namedWindow(thermal_window, WINDOW_NORMAL);
 	namedWindow(threshold_window, WINDOW_NORMAL);
 	moveWindow(thermal_window, 0, 0);
-	moveWindow(threshold_window, 320, 0);
+	moveWindow(threshold_window, 500, 0);
+	resizeWindow(thermal_window, 320, 240);
+	resizeWindow(threshold_window, 320, 240);
 	create_trackbar(thermal_window, NULL);
 
 	int8_t **log_kernel;
@@ -184,10 +186,7 @@ int main(int argc, char *argv[])
 		 * found by pipeline */
 		show_image(buf_frame, thermal_window, draw_rect);
 		show_image(th_frame, threshold_window, NULL);
-		resizeWindow(thermal_window, 320, 240);
-		resizeWindow(threshold_window, 320, 240);
 			
-		waitKey(0);
 		//TODO print info about the returned ip_result
 		// if (status == IP_EMPTY) {
 		// 	printf("\033[1;31m");	
