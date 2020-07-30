@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <opencv2/opencv.hpp>
+#include <libgen.h>
+#include <dirent.h>
+#include <regex.h>
+#include <unistd.h>
 
 #include "people_counter.h"
 #include "json.h"
@@ -28,6 +32,10 @@ static int step = 0;
 
 /* pointer to the frame array */
 static double **frames_ptr;
+/* pointer to the raw data of the frame array */
+static uint16_t **raw_frames_ptr;
+/* eeprom data from the sensor */
+static uint16_t *eeData;
 
 /* path to the configuration file */
 static const char *config_path = "harness_config.json";
@@ -72,6 +80,7 @@ static void read_config(json_value *, int);
 static void frame_convert(uint8_t *);
 static void draw_rect(Mat *);
 static void create_trackbar(const char*, void*);
+static void parse_eeData(json_value *, int);
 void rec_areaCallback(int, void*);
 void kernel_1Callback(int, void*);
 void kernel_2Callback(int, void*);
@@ -81,6 +90,7 @@ void updated_thresholdCallback(int, void*);
 void blob_width_minCallback(int, void*);
 void blob_height_minCallback(int, void*);
 void get_LoG_kernel(double, int, int8_t**);
+void extract_parameters(char*);
 /*---------------------------------------------------------------------------------------------*/
 
 /* hash function that will map string to an int */
@@ -134,8 +144,11 @@ int main(int argc, char *argv[])
 	}
 
 	char *file_name = argv[1];
-
+	/* parse the frame data including the raw data and the calculated data */
 	parse_json(file_name, parse_frame);
+	/* parse the eeprom data */
+	char *dir = dirname(file_name);
+	extract_parameters(dir);
 	printf("Total frame:  %ld, Pipeline frame rate: %d, video frame rate: %d\n", frame_count, FRAME_RATE, frame_rate);
 
 	/* check if the frame rate is valid, to be valid the frame_rate has to be smaller or equal to FRAME_RATE and to be a power of 2 as well */
@@ -158,7 +171,9 @@ int main(int argc, char *argv[])
 	namedWindow(thermal_window, WINDOW_NORMAL);
 	namedWindow(threshold_window, WINDOW_NORMAL);
 	moveWindow(thermal_window, 0, 0);
-	moveWindow(threshold_window, 320, 0);
+	moveWindow(threshold_window, 500, 0);
+	resizeWindow(thermal_window, 320, 240);
+	resizeWindow(threshold_window, 320, 240);
 	create_trackbar(thermal_window, NULL);
 
 	int8_t **log_kernel;
@@ -182,10 +197,7 @@ int main(int argc, char *argv[])
 		 * found by pipeline */
 		show_image(buf_frame, thermal_window, draw_rect);
 		show_image(th_frame, threshold_window, NULL);
-		resizeWindow(thermal_window, 320, 240);
-		resizeWindow(threshold_window, 320, 240);
-			
-		waitKey(0);
+
 		if (status == IP_EMPTY) {
 			printf("\033[1;31m");	
 			printf("Frame[%ld] is empty", img_ptr);
@@ -218,12 +230,55 @@ int main(int argc, char *argv[])
 	}
 	free(frames_ptr);
     
+	for (unsigned long i = 0; i < frame_count; i++)
+	{
+		free(raw_frames_ptr[i]);
+	}
+	free(raw_frames_ptr);
+
 	for (int i = 0; i < LOG_KSIZE; i++) {
 		free(log_kernel[i]);
 	}
 	free(log_kernel);
 
 }
+
+
+void extract_parameters(char* dir) {
+	char *file_name = NULL;
+	DIR *dp;
+	if ((dp = opendir(dir)) == NULL) {
+		fprintf (stderr, "Can not open directory: dir\n");
+		exit(1);
+	}
+	
+	struct dirent *entry;
+	regex_t regex;
+	int reti;
+	reti = regcomp(&regex, "eeprom*", REG_EXTENDED);
+	if (reti) {
+		fprintf(stderr, "Could not compile regex\n");
+		exit(1);
+	}
+	while ((entry = readdir(dp)) != NULL) {
+		if (entry->d_type == DT_REG && !regexec(&regex, entry->d_name, 0, NULL, 0)) {
+			file_name = entry->d_name;
+			break;
+		}
+	}
+
+	if (file_name == NULL) {
+		fprintf(stderr, "Can not find eeprom file\n");
+		exit(1);
+	}
+	char full_path[100];
+	snprintf(full_path, 100, "%s/%s", dir, file_name);
+	parse_json(full_path, parse_eeData);
+	closedir(dp);
+}
+
+
+
 
 /**
  * @brief Create trackbars on the window
@@ -332,10 +387,15 @@ static void parse_frame(json_value *value, int depth)
 	}
 
 	json_value *frames;
+	json_value *raw_frames;
 	for (unsigned int i = 0; i < value->u.object.length; i++)
 	{
+		/* select frame data to parse */
 		if (!strcmp(value->u.object.values[i].name, "frames"))
 			frames = value->u.object.values[i].value;
+		/* select the raw frame data to parse */
+		else if (!strcmp(value->u.object.values[i].name, "raw_frames"))
+			raw_frames = value->u.object.values[i].value;
 	}
 	if (frames->type != json_array)
 	{
@@ -345,19 +405,27 @@ static void parse_frame(json_value *value, int depth)
 
 	frame_count = frames->u.array.length;
 	frames_ptr = (double **)malloc(frame_count * sizeof(double *));
+	raw_frames_ptr = (uint16_t **)malloc(frame_count * sizeof(uint16_t *));
 
+	/* parse individual frames */
 	for (unsigned long i = 0; i < frame_count; i++)
 	{
 
 		double *frame_ptr = (double *)malloc(RESOLUTION * sizeof(double));
+		uint16_t *raw_frame_ptr = (uint16_t *)malloc(RAW_DATA_LENGTH * sizeof(uint16_t));
+
+		raw_frames_ptr[i] = raw_frame_ptr;
 		frames_ptr[i] = frame_ptr;
 
 		json_value *frame = frames->u.array.values[i];
-		if (frame->type != json_array)
+		json_value *raw_frame = raw_frames->u.array.values[i];
+
+		if (frame->type != json_array || raw_frame->type != json_array)
 		{
 			fprintf(stderr, "Invalid frame\n");
 			exit(1);
 		}
+		/* parse frame data */
 		for (unsigned int j = 0; j < frame->u.array.length; j++)
 		{
 			json_value *value_dbl = frame->u.array.values[j];
@@ -368,6 +436,34 @@ static void parse_frame(json_value *value, int depth)
 			}
 			frame_ptr[j] = value_dbl->u.dbl;
 		}
+		/* parse raw frame data */
+		for (unsigned int j = 0; j < raw_frame->u.array.length; j++)
+		{
+			json_value *value_integer = raw_frame->u.array.values[j];
+			if (value_integer->type != json_integer)
+			{
+				fprintf(stderr, "Invalid data format\n");
+				exit(1);
+			}
+			raw_frame_ptr[j] = (uint16_t)value_integer->u.integer;
+		}
+	}
+}
+
+
+/**
+ * @brief parse the eeprom data
+ * @value json_value
+ */
+static void parse_eeData(json_value *value, int depth) {
+	if (value->type != json_array) {
+		fprintf (stderr, "Invalid json file\n");
+		exit(1);
+	}
+	eeData = (uint16_t *)malloc(value->u.array.length * sizeof(uint16_t));
+	for (unsigned int j = 0; j < value->u.array.length; j++) {
+		json_value *value_integer = value->u.array.values[j];
+		eeData[j] = (uint16_t)value_integer->u.integer;
 	}
 }
 
