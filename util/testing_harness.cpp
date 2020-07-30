@@ -67,7 +67,6 @@ rec hrects[RECTS_MAX_SIZE] = {{0, 0, 0, 0}};
 
 /* Intermedia result 1: image after thresholding */
 uint8_t *th_frame;
-/*---------------------------------------------------------------------------------------------*/
 
 /*--------------------------------------------function prototypes------------------------------*/
 
@@ -99,6 +98,12 @@ constexpr unsigned int str2int(const char *str, int h = 0)
 	return !str[h] ? 5381 : (str2int(str, h + 1) * 33) ^ str[h];
 }
 
+/**
+ * @brief calculate the LoG kernel 
+ * @param sigma scale factor of the LoG kernel
+ * @param ksize kernel size, the kernel will be a ksize * ksize matrix
+ * @param result the array that will hold the result 
+ */
 void get_LoG_kernel(double sigma, int ksize, int8_t** result)
 {
         if (!(ksize % 2)) {
@@ -111,6 +116,7 @@ void get_LoG_kernel(double sigma, int ksize, int8_t** result)
                 for (int j = 0; j < ksize; ++j) {
                         double temp  = ( -0.5 * (pow((i - mean)/sigma, 2.0) + pow((j - mean)/sigma, 2.0)));
                         kernel[i][j] = (1 + temp) * exp(temp) / (-M_PI * pow(sigma, 4.0)); 
+			/* a simplified normalized version of LoG kernel */
 			/*double temp = ((i - mean) * (i - mean) + (j - mean) * (j - mean)) / (sigma * sigma);
 			kernel[i][j] = (temp - 2) * exp(-0.5 * temp);*/
                 }   
@@ -243,7 +249,11 @@ int main(int argc, char *argv[])
 
 }
 
-
+/**
+ * @brief extract the parameters from the "eeprom", this function will iterate the folder where the frame data 
+ *        was saved and try to locate the eeprom file automatically
+ * @param dir the dir where the eeprom file may resides
+ */
 void extract_parameters(char* dir) {
 	char *file_name = NULL;
 	DIR *dp;
@@ -255,6 +265,7 @@ void extract_parameters(char* dir) {
 	struct dirent *entry;
 	regex_t regex;
 	int reti;
+	/* create a regex that will match the format of the name of a eeprom file*/
 	reti = regcomp(&regex, "eeprom*", REG_EXTENDED);
 	if (reti) {
 		fprintf(stderr, "Could not compile regex\n");
@@ -272,6 +283,7 @@ void extract_parameters(char* dir) {
 		exit(1);
 	}
 	char full_path[100];
+	/* join the path */
 	snprintf(full_path, 100, "%s/%s", dir, file_name);
 	parse_json(full_path, parse_eeData);
 	closedir(dp);
