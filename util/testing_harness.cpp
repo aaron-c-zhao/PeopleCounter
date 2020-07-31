@@ -179,6 +179,8 @@ int main(int argc, char *argv[])
 		get_background(cur_frame, img_ptr);
 
 		ip_result result = IpProcess((void *)&mat, (void *)&mat_background, (void *)&count, (void *)log_kernel);
+
+		printf("%i Objects. %i up, %i down.\n", result.objects_length, result.up, result.down);
 		
 		/* the show_image should be called after the IpProcess to correctly display the rectangles 
 		 * found by pipeline */
@@ -203,8 +205,8 @@ int main(int argc, char *argv[])
 		// 	printf("\033[1;32m");
 		// 	printf("Frame[%ld], Dir: %s, Count: %d", img_ptr, (count.direc == DIRECTION_UP) ? "UP" : "DOWN", count.num);
 		// }
-		printf(", [%d] rects detected\n", rec_num);
-		printf("\033[0m");
+		// printf(", [%d] rects detected\n", rec_num);
+		// printf("\033[0m");
 		
 		/* wait for keyboard input to continue to next frame */
 		waitKey(0);
