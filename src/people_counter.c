@@ -46,7 +46,7 @@ void bubbleSort(object_rect_pair *, uint8_t);
 /* list of objects (people) used for people tracking */
 static object_list objects = {0, 0, {}};
 
-ip_result IpProcess(void *frame, void *background_image, void *count, void *log_kernel)
+ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
 {
 #ifdef __TESTING_HARNESS
     uint64_t start_tsc = readTSC();
@@ -443,12 +443,27 @@ void erosion(uint8_t *frame, rec *blob)
  * @param rects list of blobs' bounding boxes
  * @return the list of objects being tracked and the number of people that went up and down.
  */
-ip_result people_tracking(recs *rects)
+ip_result people_tracking(recs *original_rects)
 {
     uint8_t total_up = 0, total_down = 0;
 
+    uint8_t rec_length = 0;
+    rec rects[original_rects->count];
+    for(uint8_t i = 0; i < original_rects->count; ++i)
+    {
+        if(original_rects->nodes[i].rid != REC_IGNORE)
+        {
+            rects[rec_length++] = original_rects->nodes[i];
+        }
+    }
+
+    for (uint8_t i = 0; i < rec_length; ++i)
+    {
+        printf("Rect %i: [(%i, %i), (%i, %i)]\n", i, rects[i].min_x, rects[i].min_y, rects[i].max_x, rects[i].max_y);
+    }
+
     /* if there are no blobs in the frame, then increase the count of disappeared frames of every tracked object */
-    if (rects->count == 0)
+    if (rec_length == 0)
     {
         /* increase disappered count of every object */
         for (uint8_t i = 0; i < objects.length; ++i)
@@ -462,25 +477,25 @@ ip_result people_tracking(recs *rects)
     }
 
     /* convert bounding boxes to their centroid points */
-    pixel input_centroids[rects->count];
+    pixel input_centroids[rec_length];
 
-    for (uint8_t i = 0; i < rects->count; ++i)
+    for (uint8_t i = 0; i < rec_length; ++i)
     {
         /* use the bounding box coordinates to derive the centroid */
-        input_centroids[i] = (pixel){(uint8_t)((rects->nodes[i].min_x + rects->nodes[i].max_x) >> 1),
-                                     (uint8_t)((rects->nodes[i].min_y + rects->nodes[i].max_y) >> 1)};
+        input_centroids[i] = (pixel){(uint8_t)((rects[i].min_x + rects[i].max_x) >> 1),
+                                     (uint8_t)((rects[i].min_y + rects[i].max_y) >> 1)};
     }
 
-    for (uint8_t i = 0; i < rects->count; ++i)
+    for (uint8_t i = 0; i < rec_length; ++i)
     {
-        printf("Rect %i: (%i, %i)\n", i, input_centroids[i].x, input_centroids[i].y);
+        printf("Centroid %i: (%i, %i)\n", i, input_centroids[i].x, input_centroids[i].y);
     }
 
     /* if no objects are being tracked, then the new centroids are all new objects */
     if (objects.length == 0)
     {
         /* register all centroids as new objects */
-        for (uint8_t i = 0; i < rects->count; ++i)
+        for (uint8_t i = 0; i < rec_length; ++i)
         {
             objects.object[objects.length] = (object){objects.next_id, input_centroids[i], 0};
 
@@ -492,13 +507,13 @@ ip_result people_tracking(recs *rects)
     }
 
     /* create an object to new centroids map (matrix) as a 1D array */
-    uint8_t dv_length = objects.length * rects->count;
+    uint8_t dv_length = objects.length * rec_length;
     object_rect_pair distance_vector[dv_length];
 
     /* calculate the squared euclidean distance between each object and new centroid */
     for (uint8_t i = 0; i < objects.length; ++i)
     {
-        for (uint8_t j = 0; j < rects->count; ++j)
+        for (uint8_t j = 0; j < rec_length; ++j)
         {
             int8_t delta_x = objects.object[i].centroid.x - input_centroids[j].x;
             int8_t delta_y = objects.object[i].centroid.y - input_centroids[j].y;
@@ -585,10 +600,10 @@ ip_result people_tracking(recs *rects)
     }
 
     /* register all the unused rectangles as new objects. */
-    if (rects_used < (1 << rects->count) - 1)
+    if (rects_used < (1 << rec_length) - 1)
     {
         uint16_t temp = rects_used;
-        for (uint8_t i = 0; i < rects->count; ++i)
+        for (uint8_t i = 0; i < rec_length; ++i)
         {
             if (!(temp & 1))
             {

@@ -146,7 +146,7 @@ extern "C"
 #endif
 
 /* -------------------------------------------------------function prototype----------------------------------------------------*/
-    ip_result IpProcess(void *, void *, void *, void *);
+    ip_result IpProcess(void *, void *, void *);
 
     const object *getObjectsAddress();
 

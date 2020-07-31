@@ -41,9 +41,6 @@ static unsigned long frame_count = 0;
 /* background image that will be passed into pipeline */
 static uint8_t *background;
 
-/* counting result */
-ip_count count = {0, 0};
-
 /* configuration of the pipeline */
 ip_config config = {
 	.kernel_1 = 5,
@@ -178,7 +175,7 @@ int main(int argc, char *argv[])
 		/* get the background TODO: should be done by the pipeline */
 		get_background(cur_frame, img_ptr);
 
-		ip_result result = IpProcess((void *)&mat, (void *)&mat_background, (void *)&count, (void *)log_kernel);
+		ip_result result = IpProcess((void *)&mat, (void *)&mat_background, (void *)log_kernel);
 
 		printf("%i Objects. %i up, %i down.\n", result.objects_length, result.up, result.down);
 		
