@@ -154,8 +154,11 @@ int main(int argc, char *argv[])
 
 	namedWindow(thermal_window, WINDOW_NORMAL);
 	namedWindow(threshold_window, WINDOW_NORMAL);
+	uint8_t black_img[SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT] = {0};
 	moveWindow(thermal_window, 0, 0);
-	moveWindow(threshold_window, 500, 0);
+	moveWindow(threshold_window, 320, 0);
+	show_image(black_img, thermal_window, NULL);
+	show_image(black_img, threshold_window, NULL);
 	resizeWindow(thermal_window, 320, 240);
 	resizeWindow(threshold_window, 320, 240);
 	create_trackbar(thermal_window, NULL);

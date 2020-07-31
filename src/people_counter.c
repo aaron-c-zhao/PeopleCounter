@@ -266,6 +266,7 @@ pixel dequeue(queue *q)
     q->bottom = (q->bottom + 1) % QUEUE_SIZE;
     return p;
 }
+
 /**
  * @brief conduct a breath first search on the image
  * @param frame the image to be searched
