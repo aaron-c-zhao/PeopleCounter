@@ -64,14 +64,21 @@ ip_result IpProcess(void *frame, void *background_image, void *count, void *log_
 	blob_filter(log_frame, &blobs, REC_MAX_AREA, REC_MIN_AREA); 
 
 #ifdef __TESTING_HARNESS
+	uint64_t before_tracking_tsc = readTSC();
+#endif
+
+	//TODO put people tracking here!!
+
+#ifdef __TESTING_HARNESS
 	uint64_t end_tsc = readTSC();
 	uint64_t total_tsc = end_tsc - start_tsc;
-	uint64_t without_blob_tsc = before_blob_tsc - start_tsc;
+	uint64_t people_detection_without_blob_tsc = before_blob_tsc - start_tsc;
+	uint64_t tracking_tsc = end_tsc - before_tracking_tsc;
 	if (max_tsc < total_tsc) {
 		max_tsc = total_tsc;
 	}
-	printf("total instructions: %lu\nwithout blobfilter: %lu\
-			\nmax: %lu\n", total_tsc, without_blob_tsc, max_tsc);
+	printf("total instructions: %lu\nPeople detection without blobfilter: %lu\
+			\nmax: %lu\nPeople Tracking: %lu\n", total_tsc, people_detection_without_blob_tsc, max_tsc, tracking_tsc);
 
 	memcpy(th_frame, log_frame, SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT * sizeof(uint8_t));
 	rec_num = blobs.count;
