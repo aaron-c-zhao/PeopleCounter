@@ -1,9 +1,9 @@
 /**
-  ******************************************************************************
-  * @file           : people_counter.c
-  * @brief          : Implementation of the image processing pipeline
-  ******************************************************************************
-**/
+ ******************************************************************************
+ * @file           : people_counter.c
+ * @brief          : Implementation of the image processing pipeline
+ ******************************************************************************
+ **/
 
 #include "people_counter.h"
 #include "string.h"
@@ -105,15 +105,15 @@ ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
  */
 void background_substraction(uint16_t resolution, ip_mat *background, ip_mat *src, ip_mat *dst)
 {
-    uint8_t *bframe = background->data;
-    uint8_t *sframe = src->data;
-    uint8_t *dframe = dst->data;
+	uint8_t *bframe = background->data;
+	uint8_t *sframe = src->data;
+	uint8_t *dframe = dst->data;
 
-    for (uint16_t i = 0; i < resolution; i++)
-    {
-        int8_t temp = sframe[i] - bframe[i];
-        dframe[i] = (temp > 0) ? temp : -temp;
-    }
+	for (uint16_t i = 0; i < resolution; i++)
+	{
+		int8_t temp = sframe[i] - bframe[i];
+		dframe[i] = (temp > 0) ? temp : -temp;
+	}
 }
 
 /**
@@ -125,13 +125,13 @@ void background_substraction(uint16_t resolution, ip_mat *background, ip_mat *sr
  */
 void nthreshold(uint16_t resolution, uint8_t thre, ip_mat *src, ip_mat *dst)
 {
-    uint8_t *sframe = src->data;
-    uint8_t *dframe = src->data;
+	uint8_t *sframe = src->data;
+	uint8_t *dframe = src->data;
 
-    for (uint16_t i = 0; i < resolution; i++)
-    {
-        dframe[i] = (sframe[i] > thre) ? 255 : 0;
-    }
+	for (uint16_t i = 0; i < resolution; i++)
+	{
+		dframe[i] = (sframe[i] > thre) ? 255 : 0;
+	}
 }
 
 /**
@@ -146,23 +146,23 @@ void nthreshold(uint16_t resolution, uint8_t thre, ip_mat *src, ip_mat *dst)
  */
 static inline int16_t convolve(uint8_t ksize, int8_t **kernel, uint8_t *m, uint8_t x, uint8_t y, uint8_t padding)
 {
-    /* decide whether padding will be applied at location (x, y) */
-    uint8_t p_x = (x - padding < 0) ? padding - x : 0;
-    uint8_t p_y = (y - padding < 0) ? padding - y : 0;
-    uint8_t i_y, i_x;
-    /* the result of the convolution */
-    int16_t sum = 0;
-    /* the calculation should ignore the padding pixels and stop when exceed the boundary */
-    for (uint8_t k_x = p_x, i_x = x; k_x < ksize && i_x < SENSOR_IMAGE_HEIGHT; ++k_x)
-    {
-        for (uint8_t k_y = p_y, i_y = y; k_y < ksize && i_y < SENSOR_IMAGE_WIDTH; ++k_y)
-        {
-            sum += m[i_x * SENSOR_IMAGE_WIDTH + i_y] * kernel[k_x][k_y];
-            i_y++;
-        }
-        i_x++;
-    }
-    return sum;
+	/* decide whether padding will be applied at location (x, y) */
+	uint8_t p_x = (x - padding < 0) ? padding - x : 0;
+	uint8_t p_y = (y - padding < 0) ? padding - y : 0;
+	uint8_t i_y, i_x;
+	/* the result of the convolution */
+	int16_t sum = 0;
+	/* the calculation should ignore the padding pixels and stop when exceed the boundary */
+	for (uint8_t k_x = p_x, i_x = x; k_x < ksize && i_x < SENSOR_IMAGE_HEIGHT; ++k_x)
+	{
+		for (uint8_t k_y = p_y, i_y = y; k_y < ksize && i_y < SENSOR_IMAGE_WIDTH; ++k_y)
+		{
+			sum += m[i_x * SENSOR_IMAGE_WIDTH + i_y] * kernel[k_x][k_y];
+			i_y++;
+		}
+		i_x++;
+	}
+	return sum;
 }
 
 /**
@@ -212,28 +212,28 @@ void LoG(uint8_t ksize, int8_t **kernel, ip_mat *src, ip_mat *dst)
  */
 void find_blob(uint8_t *src, recs *blobs, uint8_t start_i, uint8_t rid, uint8_t tvalue)
 {
-    uint8_t *sframe = src;
-    uint8_t blob_counter = start_i;
-    queue pqueue = {0, 0, 0, {{0, 0}}};
-    /* initialize the rid to be a unique number other than 0 and 255 */
-    for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i)
-    {
-        for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j)
-        {
-            /* when the pixel has not been visited by bfs(otherwise it will be marked as a rid */
-            if (sframe[i * SENSOR_IMAGE_WIDTH + j] == tvalue)
-            {
-                /* j is the x coordinate and i is the y coordinate */
-                pixel temp = {.x = j, .y = i};
-                enqueue(&pqueue, temp);
-                /* the first pixel of the blob should be marked to prevent infinite loop */
-                sframe[i * SENSOR_IMAGE_WIDTH + j] = rid;
-                /* do the BFS */
-                blobs->nodes[blob_counter++] = bfs(sframe, &pqueue, rid++, tvalue);
-            }
-        }
-    }
-    blobs->count = blob_counter;
+	uint8_t *sframe = src;
+	uint8_t blob_counter = start_i;
+	queue pqueue = {0, 0, 0, {{0, 0}}};
+	/* initialize the rid to be a unique number other than 0 and 255 */
+	for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i)
+	{
+		for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j)
+		{
+			/* when the pixel has not been visited by bfs(otherwise it will be marked as a rid */
+			if (sframe[i * SENSOR_IMAGE_WIDTH + j] == tvalue)
+			{
+				/* j is the x coordinate and i is the y coordinate */
+				pixel temp = {.x = j, .y = i};
+				enqueue(&pqueue, temp);
+				/* the first pixel of the blob should be marked to prevent infinite loop */
+				sframe[i * SENSOR_IMAGE_WIDTH + j] = rid;
+				/* do the BFS */
+				blobs->nodes[blob_counter++] = bfs(sframe, &pqueue, rid++, tvalue);
+			}
+		}
+	}
+	blobs->count = blob_counter;
 }
 
 /**
@@ -243,14 +243,14 @@ void find_blob(uint8_t *src, recs *blobs, uint8_t start_i, uint8_t rid, uint8_t 
  */
 void enqueue(queue *q, pixel p)
 {
-    if (q->count >= QUEUE_SIZE)
-    {
-        return;
-    }
-    q->count++;
-    q->pixels[q->top] = p;
-    /* circular queue */
-    q->top = (q->top + 1) % QUEUE_SIZE;
+	if (q->count >= QUEUE_SIZE)
+	{
+		return;
+	}
+	q->count++;
+	q->pixels[q->top] = p;
+	/* circular queue */
+	q->top = (q->top + 1) % QUEUE_SIZE;
 }
 
 /**
@@ -260,11 +260,11 @@ void enqueue(queue *q, pixel p)
  */
 pixel dequeue(queue *q)
 {
-    q->count--;
-    pixel p = q->pixels[q->bottom];
-    /* circular queue */
-    q->bottom = (q->bottom + 1) % QUEUE_SIZE;
-    return p;
+	q->count--;
+	pixel p = q->pixels[q->bottom];
+	/* circular queue */
+	q->bottom = (q->bottom + 1) % QUEUE_SIZE;
+	return p;
 }
 
 /**
@@ -276,46 +276,46 @@ pixel dequeue(queue *q)
  */
 rec bfs(uint8_t *frame, queue *q, uint8_t rid, uint8_t white)
 {
-    uint8_t min_x, min_y, max_x, max_y;
-    /* initialize the min x and min y to be the number larger than the max coordinate(31)*/
-    min_x = min_y = 33;
-    max_x = max_y = 0;
-    /* initialize the area of the blob to be 1, since there's at least 1 pixel in the blob */
-    uint16_t area = 1;
-    /* BFS */
-    while (q->count)
-    {
-        pixel p = dequeue(q);
-        /* extract the coordinate of the bounding box */
-        min_x = (min_x < p.x) ? min_x : p.x;
-        min_y = (min_y < p.y) ? min_y : p.y;
-        max_x = (max_x > p.x) ? max_x : p.x;
-        max_y = (max_y > p.y) ? max_y : p.y;
-        /* loop over all of the 8 neighbours of a pixel*/
-        for (int8_t k = -1; k < 2; ++k)
-        {
-            for (int8_t l = -1; l < 2; l++)
-            {
-                uint8_t x = p.x + k;
-                uint8_t y = p.y + l;
-                /* skip the pixel itself and when it goes out of bound */
-                if ((l == 0 && k == 0) || x < 0 || y < 0 || x >= SENSOR_IMAGE_WIDTH || y >= SENSOR_IMAGE_HEIGHT)
-                {
-                    continue;
-                }
-                if (frame[y * SENSOR_IMAGE_WIDTH + x] == white)
-                {
-                    pixel temp = {p.x + k, p.y + l};
-                    enqueue(q, temp);
-                    /* mark the pixel that has been visited with the rid of the blob to prevent the algorithm from infinite looping */
-                    frame[y * SENSOR_IMAGE_WIDTH + x] = rid;
-                    area++;
-                }
-            }
-        }
-    }
-    rec result = {min_x, min_y, max_x, max_y, rid, area};
-    return result;
+	uint8_t min_x, min_y, max_x, max_y;
+	/* initialize the min x and min y to be the number larger than the max coordinate(31)*/
+	min_x = min_y = 33;
+	max_x = max_y = 0;
+	/* initialize the area of the blob to be 1, since there's at least 1 pixel in the blob */
+	uint16_t area = 1;
+	/* BFS */
+	while (q->count)
+	{
+		pixel p = dequeue(q);
+		/* extract the coordinate of the bounding box */
+		min_x = (min_x < p.x) ? min_x : p.x;
+		min_y = (min_y < p.y) ? min_y : p.y;
+		max_x = (max_x > p.x) ? max_x : p.x;
+		max_y = (max_y > p.y) ? max_y : p.y;
+		/* loop over all of the 8 neighbours of a pixel*/
+		for (int8_t k = -1; k < 2; ++k)
+		{
+			for (int8_t l = -1; l < 2; l++)
+			{
+				uint8_t x = p.x + k;
+				uint8_t y = p.y + l;
+				/* skip the pixel itself and when it goes out of bound */
+				if ((l == 0 && k == 0) || x < 0 || y < 0 || x >= SENSOR_IMAGE_WIDTH || y >= SENSOR_IMAGE_HEIGHT)
+				{
+					continue;
+				}
+				if (frame[y * SENSOR_IMAGE_WIDTH + x] == white)
+				{
+					pixel temp = {p.x + k, p.y + l};
+					enqueue(q, temp);
+					/* mark the pixel that has been visited with the rid of the blob to prevent the algorithm from infinite looping */
+					frame[y * SENSOR_IMAGE_WIDTH + x] = rid;
+					area++;
+				}
+			}
+		}
+	}
+	rec result = {min_x, min_y, max_x, max_y, rid, area};
+	return result;
 }
 
 /**
@@ -328,21 +328,21 @@ rec bfs(uint8_t *frame, queue *q, uint8_t rid, uint8_t white)
  */
 void blob_filter(uint8_t *frame, recs *blobs, uint8_t amax, uint8_t amin)
 {
-    uint8_t num = blobs->count;
-    for (uint8_t i = 0; i < num; ++i)
-    {
-        rec *temp = &blobs->nodes[i];
-        /* filter out tiny blobs */
-        if (temp->area < amin)
-        {
-            temp->rid = REC_IGNORE;
-            continue;
-        }
-        if (temp->area > amax)
-        {
-            area_adjust(frame, temp, blobs, amax);
-        }
-    }
+	uint8_t num = blobs->count;
+	for (uint8_t i = 0; i < num; ++i)
+	{
+		rec *temp = &blobs->nodes[i];
+		/* filter out tiny blobs */
+		if (temp->area < amin)
+		{
+			temp->rid = REC_IGNORE;
+			continue;
+		}
+		if (temp->area > amax)
+		{
+			area_adjust(frame, temp, blobs, amax);
+		}
+	}
 }
 
 /**
@@ -354,39 +354,39 @@ void blob_filter(uint8_t *frame, recs *blobs, uint8_t amax, uint8_t amin)
  */
 void area_adjust(uint8_t *frame, rec *blob, recs *blobs, uint8_t amax)
 {
-    while (blob->area > amax)
-    {
-        erosion(frame, blob);
-    }
-    /* find the newly borned blobs after erosion */
-    find_blob(frame, blobs, blobs->count, RID + blobs->count, blob->rid);
-    /* set the old blob to be ignored */
-    blob->rid = REC_IGNORE;
+	while (blob->area > amax)
+	{
+		erosion(frame, blob);
+	}
+	/* find the newly borned blobs after erosion */
+	find_blob(frame, blobs, blobs->count, RID + blobs->count, blob->rid);
+	/* set the old blob to be ignored */
+	blob->rid = REC_IGNORE;
 };
 
 static inline uint8_t fit(uint8_t *frame, uint8_t rid, uint8_t x, uint8_t y, uint8_t kernel[ERO_KSIZE][ERO_KSIZE])
 {
-    uint8_t radius = ERO_KSIZE / 2;
-    for (uint8_t i = 0; i < ERO_KSIZE; ++i)
-    {
-        for (uint8_t j = 0; j < ERO_KSIZE; ++j)
-        {
-            /* position the centroid of the kernel to the pixel to be examined */
-            uint8_t i_x = x + (i - radius);
-            uint8_t i_y = y + (j - radius);
-            /* if it fits then continue, otherwise it does not fit */
-            if (i_x >= 0 && i_y >= 0 && kernel[i][j] && frame[i_y * SENSOR_IMAGE_WIDTH + i_x] == rid)
-            {
-                continue;
-            }
-            else
-            {
-                return 0;
-            }
-        }
-    }
-    /* the pixels fits if the kernel matches the pixels around it */
-    return 1;
+	uint8_t radius = ERO_KSIZE / 2;
+	for (uint8_t i = 0; i < ERO_KSIZE; ++i)
+	{
+		for (uint8_t j = 0; j < ERO_KSIZE; ++j)
+		{
+			/* position the centroid of the kernel to the pixel to be examined */
+			int8_t i_x = x + (i - radius);
+			int8_t i_y = y + (j - radius);
+			/* if it fits then continue, otherwise it does not fit */
+			if ((i_x >= 0 && i_y >= 0) && ( !kernel[i][j] ||  (kernel[i][j] && frame[i_y * SENSOR_IMAGE_WIDTH + i_x] == rid)))
+			{
+				continue;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+	}
+	/* the pixels fits if the kernel matches the pixels around it */
+	return 1;
 }
 
 /**
@@ -396,47 +396,47 @@ static inline uint8_t fit(uint8_t *frame, uint8_t rid, uint8_t x, uint8_t y, uin
  */
 void erosion(uint8_t *frame, rec *blob)
 {
-    /* initialize the kernel , TODO: choose a better kernel, could be hardcoded in the final product to reduce computation*/
-    uint8_t kernel[ERO_KSIZE][ERO_KSIZE];
-    for (uint8_t i = 0; i < ERO_KSIZE; ++i)
-    {
-        for (uint8_t j = 0; j < ERO_KSIZE; ++j)
-        {
-            kernel[i][j] = 1;
-        }
-    }
+	/* initialize the kernel , TODO: choose a better kernel, could be hardcoded in the final product to reduce computation*/
+	uint8_t kernel[ERO_KSIZE][ERO_KSIZE];
+	for (uint8_t i = 0; i < ERO_KSIZE; ++i)
+	{
+		for (uint8_t j = 0; j < ERO_KSIZE; ++j)
+		{
+			kernel[i][j] = 1;
+		}
+	}
 
-    uint16_t buf[blob->area];
-    /* a counter for the pixels that does not fit */
-    uint16_t ufcount = 0;
-    for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i)
-    {
-        for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j)
-        {
-            if (frame[i * SENSOR_IMAGE_WIDTH + j] != blob->rid)
-            {
-                continue;
-            }
-            /* determine whether the pixel fits */
-            uint8_t f = fit(frame, blob->rid, j, i, kernel);
-            /* if the pixel does not fit, then save the coordinate of the pixel */
-            uint16_t temp = (uint16_t)j << 8 | i;
-            if (!f)
-            {
-                buf[ufcount++] = temp;
-            }
-        }
-    }
-    /* set all pixels that does not fit to 0 */
-    for (uint16_t i = 0; i < ufcount; ++i)
-    {
-        uint16_t temp = buf[i];
-        uint8_t y = (uint8_t)temp;
-        uint8_t x = temp >> 8 | 0;
-        frame[y * SENSOR_IMAGE_WIDTH + x] = 0;
-        /* update the area of the blob which is the criteria of when to stop the area adjustment */
-        blob->area--;
-    }
+	uint16_t buf[blob->area];
+	/* a counter for the pixels that does not fit */
+	uint16_t ufcount = 0;
+	for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i)
+	{
+		for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j)
+		{
+			if (frame[i * SENSOR_IMAGE_WIDTH + j] != blob->rid)
+			{
+				continue;
+			}
+			/* determine whether the pixel fits */
+			uint8_t f = fit(frame, blob->rid, j, i, kernel);
+			/* if the pixel does not fit, then save the coordinate of the pixel */
+			uint16_t temp = (uint16_t)j << 8 | i;
+			if (!f)
+			{
+				buf[ufcount++] = temp;
+			}
+		}
+	}
+	/* set all pixels that does not fit to 0 */
+	for (uint16_t i = 0; i < ufcount; ++i)
+	{
+		uint16_t temp = buf[i];
+		uint8_t y = (uint8_t)temp;
+		uint8_t x = temp >> 8 | 0;
+		frame[y * SENSOR_IMAGE_WIDTH + x] = 0;
+		/* update the area of the blob which is the criteria of when to stop the area adjustment */
+		blob->area--;
+	}
 }
 
 /**
@@ -680,11 +680,11 @@ const object *getObjectsAddress()
 
 #ifdef __TESTING_HARNESS
 // reads instructions
-inline uint64_t readTSC()
-{
-    // _mm_lfence();  // optionally wait for earlier insns to retire before reading the clock
-    uint64_t tsc = __rdtsc();
-    // _mm_lfence();  // optionally block later instructions until rdtsc retires
-    return tsc;
+inline
+uint64_t readTSC() {
+	// _mm_lfence();  // optionally wait for earlier insns to retire before reading the clock
+	uint64_t tsc = __rdtsc();
+	// _mm_lfence();  // optionally block later instructions until rdtsc retires
+	return tsc;
 }
 #endif
