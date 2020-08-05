@@ -87,9 +87,13 @@ ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
     //TODO get the correct values to return when the tracking gets implemented
     ip_result return_result = people_tracking(&blobs);
 
+    if(objects.length > 0)
+    {
+      printf("%-10s|%-10s|%-18s\n", "Object ID", "Position", "Disappeared count");
+    }
     for (uint8_t i = 0; i < objects.length; ++i)
     {
-        printf("Object %i: (%i, %i) [%i]\n", objects.object[i].id,
+        printf(" %-9i| (%2i, %2i) | %-18i\n", objects.object[i].id,
                objects.object[i].centroid.x, objects.object[i].centroid.y, objects.object[i].disappeared_frames_count);
     }
 
@@ -210,7 +214,7 @@ void LoG(uint8_t ksize, int8_t **kernel, ip_mat *src, ip_mat *dst)
 	}
 	if (count) {
 		gen_threshold = (int32_t)(gen_threshold / count);
-		printf("threshold is : %d\n", gen_threshold);
+		// printf("threshold is : %d\n", gen_threshold);
 
 		for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i) {
 			for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j) {
@@ -481,10 +485,10 @@ ip_result people_tracking(recs *original_rects)
         }
     }
 
-    for (uint8_t i = 0; i < rec_length; ++i)
+    /* for (uint8_t i = 0; i < rec_length; ++i)
     {
         printf("Rect %i: [(%i, %i), (%i, %i)]\n", i, rects[i].min_x, rects[i].min_y, rects[i].max_x, rects[i].max_y);
-    }
+    } */
 
     /* if there are no blobs in the frame, then increase the count of disappeared frames of every tracked object */
     if (rec_length == 0)
@@ -510,10 +514,10 @@ ip_result people_tracking(recs *original_rects)
                                      (uint8_t)((rects[i].min_y + rects[i].max_y) >> 1)};
     }
 
-    for (uint8_t i = 0; i < rec_length; ++i)
+    /* for (uint8_t i = 0; i < rec_length; ++i)
     {
         printf("Centroid %i: (%i, %i)\n", i, input_centroids[i].x, input_centroids[i].y);
-    }
+    } */
 
     /* if no objects are being tracked, then the new centroids are all new objects */
     if (objects.length == 0)

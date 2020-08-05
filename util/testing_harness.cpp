@@ -107,9 +107,9 @@ void get_LoG_kernel(double sigma, int ksize, int8_t** result)
         for (int i = 0; i < ksize; ++i) {
                 for (int j = 0; j < ksize; ++j) {
                         result[i][j] = (int8_t)(kernel[i][j]* 500);
-			printf("%d " , result[i][j]);
+			// printf("%d " , result[i][j]);
                 }   
-		printf("\n");
+		// printf("\n");
         }   
 
 }
@@ -168,8 +168,10 @@ int main(int argc, char *argv[])
 	for (int i = 0; i < LOG_KSIZE; ++i) {
 		log_kernel[i] = (int8_t *)malloc(LOG_KSIZE * sizeof(int8_t));
 	}
-	printf("sigma is %f\n", LOG_SIGMA);
+	// printf("sigma is %f\n", LOG_SIGMA);
 	get_LoG_kernel(LOG_SIGMA, LOG_KSIZE, log_kernel);
+
+	int8_t room_count = 0;
     
 	while (img_ptr < frame_count) {
 		/* first convert the raw thermal data into processable and displayable format, namely frame and Mat */
@@ -181,8 +183,27 @@ int main(int argc, char *argv[])
 		get_background(cur_frame, img_ptr);
 
 		ip_result result = IpProcess((void *)&mat, (void *)&mat_background, (void *)log_kernel);
-
-		printf("%i Objects. %i up, %i down.\n", result.objects_length, result.up, result.down);
+		
+		room_count += result.up - result.down;
+		printf("Frame %lu: ", img_ptr);
+		if(result.up)
+		{
+			printf("\033[1;32m");
+		}
+		printf("%i ", result.up);
+		printf("up\033[0m, ");
+		if(result.down)
+		{
+			printf("\033[1;32m");
+		}
+		printf("%i ", result.down);
+		printf("down.\033[0m There are ");
+		if(result.up-result.down != 0)
+		{
+			printf("\033[1;31m");
+		}
+		printf("%i ", room_count);
+		printf("\033[0mpeople in the room.\n\n");
 		
 		/* the show_image should be called after the IpProcess to correctly display the rectangles 
 		 * found by pipeline */
@@ -436,7 +457,7 @@ static void draw_rect(Mat *image)
 		pt_max.x = temp.max_x; 
 		pt_max.y = temp.max_y; 
 		rectangle(*image, pt_min, pt_max, Scalar(255));
-		printf("rid: %d, area: %d\n", temp.rid, temp.area);
+		// printf("rid: %d, area: %d\n", temp.rid, temp.area);
 	}
 }
 
