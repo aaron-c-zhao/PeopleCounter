@@ -11,15 +11,22 @@
 #define WHITE 		255
 /* the start number of the rid */
 #define RID 		42
-/* 1000 milliseconds = 1 sencond */
-#define DELTAT 		(uint8_t)(1000 / FRAME_RATE )
+/* the time gap between to frames. NOTE: all the parameter in the kalman filter are configured upon 8 FPS */
+#define DELTAT 		1	
 /* amount of control parameter of kalman filter */
 #define PARAM_NUM	4
 /* amount of measurable parameters of kalmanm filter */
 #define MEAS_NUM	2 
+/* indicator for that the grid is available in the hash map */
+#define PROB 		255
 
 /* struct that keeps the information of configurations */
 extern ip_config config;
+
+/* the hashmap that keeps the trackable objects */
+static hashmap tracked_list = {0, {PROB, 0, 0, 0, 0}};
+/* the counter used to generate the hash value */
+static tcounter = 0;
 
 #ifdef __TESTING_HARNESS
 // include for printf
@@ -35,6 +42,7 @@ extern rec hrects[RECTS_MAX_SIZE];
 extern uint8_t *th_frame;
 #endif
 
+/* ---------------------------------------------------prototypes-------------------------------------------*/
 void background_substraction(uint16_t, ip_mat *, ip_mat *, ip_mat *);
 void nthreshold(uint16_t, uint8_t, ip_mat *, ip_mat *);
 void LoG(uint8_t, int8_t **, ip_mat *, ip_mat *);
@@ -45,6 +53,12 @@ rec bfs(uint8_t *, queue *, uint8_t, uint8_t);
 void blob_filter(uint8_t *, recs *, uint8_t, uint8_t);
 void area_adjust(uint8_t *, rec *, recs *, uint8_t);
 void erosion(uint8_t *, rec *);
+void blob_tracking(recs *);
+static void hash(uint8_t, uint8_t, hashmap *);
+static void hash_insert(uint8_t, hashmp *, trackable_object);
+static void hash_delete(uint8_t, hashmap *);
+/*----------------------------------------------------------------------------------------------------------*/
+
 
 ip_result IpProcess(void *frame, void *background_image, void *count, void *log_kernel)
 {	
@@ -60,7 +74,7 @@ ip_result IpProcess(void *frame, void *background_image, void *count, void *log_
 	int8_t **kernel = (int8_t **)log_kernel;
 	background_substraction(SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT, background_image, frame, frame);
 	LoG(LOG_KSIZE, kernel, frame_mat, &log_mat); 
-	static recs blobs = {0, {}};
+	recs blobs = {0, {}};
 
 #ifdef __TESTING_HARNESS
 	uint64_t before_blob_tsc = readTSC();
@@ -68,7 +82,7 @@ ip_result IpProcess(void *frame, void *background_image, void *count, void *log_
 
 	find_blob(log_frame, &blobs, 0, RID, WHITE); 
 	blob_filter(log_frame, &blobs, REC_MAX_AREA, REC_MIN_AREA); 
-
+	blob_tracking(tracked_list, blobs);
 #ifdef __TESTING_HARNESS
 	uint64_t end_tsc = readTSC();
 	uint64_t total_tsc = end_tsc - start_tsc;
@@ -222,7 +236,10 @@ void find_blob(uint8_t *src, recs *blobs, uint8_t start_i, uint8_t rid, uint8_t 
 				/* the first pixel of the blob should be marked to prevent infinite loop */
 				sframe[i * SENSOR_IMAGE_WIDTH + j] = rid;
 				/* do the BFS */
-				blobs->nodes[blob_counter++] = bfs(sframe, &pqueue, rid++, tvalue);
+				rec temp = bfs(sframe, &pqueue, rid++, tvalue);
+				/* filter out tiny blobs */
+				if (temp.area < amin) continue;
+				blobs->nodes[blob_counter++] = temp;
 			}
 		}
 	}
@@ -306,6 +323,7 @@ rec bfs(uint8_t *frame, queue *q, uint8_t rid, uint8_t white)
 			}
 		}
 	}
+	/* TODO: instead of saving blobs, convert it into trable objects */
 	rec result = {min_x, min_y, max_x, max_y, rid, area};
 	return result;
 }
@@ -444,32 +462,155 @@ uint64_t readTSC() {
 
 
 
+void blob_tracking(hashmap *track_list, recs *blobs){
+	if (blobs.count > tracked_list.count) handle_new_blob(track_list, blobs);
+	else if (blobs.count == tracked_list.count) blob_assignment();
+	else blob_predict();
+}
+
+
+static void handle_new_blob(hashmap *list, recs *blobs) {
+	uint8_t blob_count = 0;
+	trackable_object objects[blobs->count]; 
+	/* extract valid blobs and convert them into trackable object */
+	for (uint8_t i = 0; blob_count < blobs->count; ++i) {
+		rec temp = blobs->nodes[i];
+		if (temp == REC_IGNORE) continue;
+		objects[blob_count++] = {temp.rid, (temp.min_x + temp.max_x) /2, (temp.min_y + temp.max_y) / 2, 0, 0};
+	}
+	assign_tid(list, objects, blob_count);
+		 
+}
+
+
+/**
+ * @brief nearest neighbour algorithm. 
+ */
+static void assign_tid(hashmap *list, trackable_object *blobs, uint8_t blob_num) {
+	trackable_object _track_list[list->count]; 
+	/* match the existing trackable object to the blobs */
+	if (list->count) {
+		find_nearest_neighbour(&_track_list, hash_get_list(list, &_track_list), blobs, blob_num);
+	}
+	/* assign the new blobs with tid */
+	for (uint8_t i = 0; ; ++i) {
+		if (blobs[i].tid == PROB) continue;
+		blobs[i].tid = tcounter;
+		hash_insert(tcounter++, list, blobs[i]);
+	} 
+}
+
+static void blob_assignment() {
+	
+}
+
+
+
+/**
+ * @brief Generate a unique hash value for the deteced blob. This value will be used to track the blob, as welll as 
+ *                 the index for direct access to the object_list
+ * @param tcount an 8 bit counter used to generate a unique index for each detected blob. The counter will wrap up to 0 after
+ *               overflow which does not affect the generation of the hash value since the hashmap employed the prob mechanism.
+ * @param capacity the capacity of the hash map
+ * @param hp the hash map
+ */
+static uint8_t hash(uint8_t tcount, uint8_t capacity, hashmap *hp) {
+	uint8_t _count;
+	uint8_t index = tcount % capacity;
+	uint8_t _tid;
+	/* find the next available slot, if the hashmap is full then the count will be equal to the capacity */
+	while  ((_tid = hp->object_list[index++].tid) != PROB && count < capacity) _count++;
+	/* if the hashmap is full, return capacity +1 */
+	return (_count < capacity)? index : capacity + 1;
+}
+
+
+/**
+ * @brief insert an element into the hashmap
+ * @param tcount the counter value
+ * @param hp the hashmap to be inserted into
+ * @param data the trackable object to be inserted into the hashmap
+ */ 
+static void hash_insert(uint8_t tcount, hashmp *hp, trackable_object data) {
+	uint8_t index = hash(tcount, TRACK_CAPACITY, hp); 
+	/* TODO: error handling */
+	if (index > TRACK_CAPACITY) return;
+	hp->count++;
+	hp->object_list[index] = data; 
+}
+
+
+/**
+ * @brief delete an element from the hashmap.
+ * @param index the index of the element to be deleted
+ * @param hp the hashmap to be operated on
+ */
+static void hash_delete(uint8_t index, hashmap *hp) {
+	/*TODO: error handling */
+	if (!hp->count || index >= TRACK_CAPACITY) return;
+	hp->object_list[index].tid = PROB;
+}
+
+/**
+ * @brief reutnr an array of all the elements in the hashmap
+ * @param hp the hashmap 
+ */
+static uint8_t hash_get_list(hashmap *hp, trackable_object *objects) {
+	if (!hp->count) return 0;
+	uint8_t count;
+	for (uint8_t i = 0; count < hp->count; ++i) {
+		trackable_object temp = hp->object_list[i];
+		if (temp->tid == PROB) continue;
+		objects[count++] = temp;
+	}
+	return hp->count;	
+}
+
+
+
 
 void kalman_filter() {
-	/*                                 x   y vx  vy
-	                                   |   |  |  |   */
-	static uint8_t pstate[PARAM_NUM] = [0, 0, 0, 0];
+	/* initialize the fixed matraixes involved in the kalman filter */
+	/*                                          x   y vx  vy
+						    |   |  |  |   */
+	static uint8_t initial_pstate[PARAM_NUM] = {0, 0, 0, 0};
 	uint8_t delta_t = DELTAT;
 	/* x(k)			       x(k-1)
 	   y(k)  = transition_matrix * y(k-1)
 	   vx(k)		       vx(k-1)
 	   vy(k)		       vy(k-1)
-	   */
+	 */
 	uint8_t transition_matrix[PARAM_NUM][PARAM_NUM] = { {1, 0, delta_t, 0},
-						 	    {0, 1, 0, delta_t},
-							    {0, 0, 1, 0},
-							    {0, 0, 0, 1}};
+		{0, 1, 0, delta_t},
+		{0, 0, 1, 0},
+		{0, 0, 0, 1}};
+	uint8_t transition_matraix_transpose[PARAM_NUM][PARAM_NUM] = {{1, 0, 0, 0},
+		{0, 1, 0, 0},
+		{delta_t, 9, 1, 0},
+		{0, delta_t, 0, 1}};
 	/*     				 x(k-1)
-	   x(k)                          y(k-1)
-	   y(k) =  measurement_matrix *  vx(k-1)
-	                                 vy(k-1)
-	*/
+					 x(k)                          y(k-1)
+					 y(k) =  measurement_matrix *  vx(k-1)
+					 vy(k-1)
+	 */
 	uint8_t measurement_matrix[PARAM_NUM][MEAS_NUM] = {{1, 0, 0, 0},
-							  {0, 1, 0, 0}};
-	
+		{0, 1, 0, 0}};
+	uint8_t measurement_matrix_transpose[MEAS_NUM][PARAM_NUM] = {{1, 0},
+		{0, 1},
+		{0, 0},
+		{0, 0}};
 
 
+	uint8_t process_coveriance_matrix[PARAM_NUM][PARAM_NUM] = {{16, 0, 0, 0},
+		{0, 2, 0, 0},
+		{0, 0, 1, 0}
+		{0, 0, 0, 1}};
 
+	uint8_t measurement_coveriance_matrix[MEAS_NUM][MEAS_NUM] = {{9, 0},
+		{0, 9}};
+
+
+}
 
 
 

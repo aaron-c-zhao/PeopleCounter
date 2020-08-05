@@ -38,6 +38,8 @@ extern "C"
 #define REC_MIN_AREA @REC_MIN_AREA@
 /* erosion kernel size */
 #define ERO_KSIZE @ERO_KSIZE@
+/* upper limit of the amount of objects that could be tracked */
+#define TRACK_CAPACITY @TRACK_CAPACITY@
 
 #define REC_IGNORE 13
 // Directions
@@ -52,10 +54,10 @@ extern "C"
  *******************************************************************************/
 
   /* IMAGE STRUCT */
-  typedef struct mat
-  {
+typedef struct mat
+{
     uint8_t *data; /* pointer to array of grayscale 8bit pixels */
-  } ip_mat;
+} ip_mat;
 
   /* PEOPLE COUNT STRUCT */
   typedef struct count
@@ -87,6 +89,13 @@ typedef struct queue {
 	pixel pixels[QUEUE_SIZE];
 } queue;
 
+typedef struct kstate {
+	uint8_t px;
+	uint8_t py;
+	uint8_t vx;
+	uint8_t vy;
+} kstate;
+
 typedef struct rec {
 	uint8_t min_x;
 	uint8_t min_y;
@@ -96,17 +105,32 @@ typedef struct rec {
 	uint16_t area;
 } rec;
 
+typedef struct trackable_object {
+	uint8_t tid;
+	uint8_t p_x;
+	uint8_t p_y;
+	int8_t v_x;
+	int8_t v_y;
+} trackable_object;
+
+
+typedef struct hashmap {
+	uint8_t count;
+	trackable_object object_list[TRACK_CAPACITY];
+} hashmap;
+	
+
 typedef struct recs {
 	uint8_t count;
 	rec nodes[RECTS_MAX_SIZE];
 } recs;
 
 typedef struct result
-  {
+{
     uint8_t objects_length;
     uint8_t up;
     uint8_t down;
-  } ip_result;
+} ip_result;
 
 /* RESULT STATUS ENUM */
 typedef enum
