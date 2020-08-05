@@ -174,17 +174,27 @@ void LoG(uint8_t ksize, int8_t **kernel, ip_mat *src, ip_mat *dst)
 	uint8_t *dframe = dst->data;
 	/*printf("  ");
 	  for (uint8_t i = 0; i < SENSOR_IMAGE_WIDTH; ++i) printf("%5d", i);
-	  printf("\n");*/
+	  printf("\n");
+	  uint8_t print_count = 0;
+	  */
 	uint8_t count = 0;
+	int32_t gen_threshold = 0;
+	int16_t convolve_values[SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT] = {0};
 	for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i)
 	{
-		/*printf("%2d " , count++);*/
+		/*printf("%2d " ,print_count++);*/
 		for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j)
 		{
 			/* convolve the kernel with each pixel of the image */
 			int16_t c = convolve(ksize, kernel, sframe, i, j, pad_length);
 			/* binarization */
-			dframe[i * SENSOR_IMAGE_WIDTH + j] = (c < -config.threshold) ? 255 : 0;
+			if (c > -config.threshold) dframe[i * SENSOR_IMAGE_WIDTH + j] = 0;
+			else  {
+				gen_threshold += c;
+				convolve_values[i * SENSOR_IMAGE_WIDTH + j] = c;
+				count++;
+				
+			}
 			/*if ( c < -config.threshold ) 
 			  printf("\033[1;31m%5d\033[0m", c);
 			  else 
@@ -192,6 +202,19 @@ void LoG(uint8_t ksize, int8_t **kernel, ip_mat *src, ip_mat *dst)
 		}
 		/*printf("\n");*/
 	}
+	if (count) {
+		gen_threshold = (int32_t)(gen_threshold / count);
+		printf("threshold is : %d\n", gen_threshold);
+
+		for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i) {
+			for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j) {
+				if (convolve_values[i * SENSOR_IMAGE_WIDTH + j] > 0.9 * gen_threshold)
+					dframe[i * SENSOR_IMAGE_WIDTH +j] = 0;
+				else dframe[i * SENSOR_IMAGE_WIDTH +j] = 255;
+			}
+		}
+	}
+
 	/*printf("-------------------------------------------------------------------\n");*/
 }
 
