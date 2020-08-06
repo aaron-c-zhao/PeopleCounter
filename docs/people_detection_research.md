@@ -21,12 +21,13 @@ Tests based on opencv's Background Subtractor MOG (implemented with Gaussian mix
 Computation intensive.
 
 ### Relevant materials
-Adaptive background mixture models for real-time tracking
-[http://www.ai.mit.edu/projects/vsam/Publications/stauffer_cvpr98_track.pdf](http://www.ai.mit.edu/projects/vsam/Publications/stauffer_cvpr98_track.pdf)
+Adaptive background mixture models for real-time tracking  
+http://www.ai.mit.edu/projects/vsam/Publications/stauffer_cvpr98_track.pdf
 
-Link for OpenCV and its source code
-[https://docs.opencv.org/master/d7/d7b/classcv_1_1BackgroundSubtractorMOG2.html](https://docs.opencv.org/master/d7/d7b/classcv_1_1BackgroundSubtractorMOG2.html)
-[https://android.googlesource.com/platform/external/opencv/+/6acb9a7ea3d7564944e12cbc73a857b88c1301ee/cvaux/src/cvbgfg_gaussmix.cpp](https://android.googlesource.com/platform/external/opencv/+/6acb9a7ea3d7564944e12cbc73a857b88c1301ee/cvaux/src/cvbgfg_gaussmix.cpp)
+Link for OpenCV and its source code  
+https://docs.opencv.org/master/d7/d7b/classcv_1_1BackgroundSubtractorMOG2.html
+https://android.googlesource.com/platform/external/opencv/+/6acb9a7ea3d7564944e12cbc73a857b88c1301ee/cvaux/src/cvbgfg_gaussmix.cpp
+
 
 
 # Background subtraction method comparasion
@@ -48,12 +49,13 @@ Easy to solve the time of day problems (the background could be different in dif
 
 Computation intensive (could be reduced by online incremental eigen analysis algorithm)
 
-### Relevant Materials
-Adaptive eigen-background for object detection
-[http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.99.4948&rep=rep1&type=pdf]
+### Relevant materials
+Adaptive eigen-background for object detection  
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.99.4948&rep=rep1&type=pdf
 
-Background subtraction with eigen background method using matlab
-[https://pdfs.semanticscholar.org/1075/3b35f955885cc3c171c893145c875ab4e804.pdf?_ga=2.85050078.654736628.1596722918-388301654.1594697158](https://pdfs.semanticscholar.org/1075/3b35f955885cc3c171c893145c875ab4e804.pdf?_ga=2.85050078.654736628.1596722918-388301654.1594697158)
+Background subtraction with eigen background method using matlab  
+https://pdfs.semanticscholar.org/1075/3b35f955885cc3c171c893145c875ab4e804.pdf?_ga=2.85050078.654736628.1596722918-388301654.1594697158
+
 
 
 ```
