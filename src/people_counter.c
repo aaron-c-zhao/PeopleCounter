@@ -475,6 +475,7 @@ ip_result people_tracking(recs *original_rects)
 {
     uint8_t total_up = 0, total_down = 0;
 
+    /* create a temporary copy of the rectangles filtering out the ones to be ignored */
     uint8_t rec_length = 0;
     rec rects[original_rects->count];
     for(uint8_t i = 0; i < original_rects->count; ++i)
@@ -484,11 +485,6 @@ ip_result people_tracking(recs *original_rects)
             rects[rec_length++] = original_rects->nodes[i];
         }
     }
-
-    /* for (uint8_t i = 0; i < rec_length; ++i)
-    {
-        printf("Rect %i: [(%i, %i), (%i, %i)]\n", i, rects[i].min_x, rects[i].min_y, rects[i].max_x, rects[i].max_y);
-    } */
 
     /* if there are no blobs in the frame, then increase the count of disappeared frames of every tracked object */
     if (rec_length == 0)
@@ -513,11 +509,6 @@ ip_result people_tracking(recs *original_rects)
         input_centroids[i] = (pixel){(uint8_t)((rects[i].min_x + rects[i].max_x) >> 1),
                                      (uint8_t)((rects[i].min_y + rects[i].max_y) >> 1)};
     }
-
-    /* for (uint8_t i = 0; i < rec_length; ++i)
-    {
-        printf("Centroid %i: (%i, %i)\n", i, input_centroids[i].x, input_centroids[i].y);
-    } */
 
     /* if no objects are being tracked, then the new centroids are all new objects */
     if (objects.length == 0)
@@ -658,12 +649,15 @@ void deleteOldObjects(object_list *objects)
     uint8_t original_size = objects->length;
     for (uint8_t i = 0; i < original_size; ++i)
     {
+        /* decrease objects' length if has disappeared for more than CT_MAX_DISAPPEARED and skip this object */
         if (objects->object[i].disappeared_frames_count > CT_MAX_DISAPPEARED)
         {
             --objects->length;
             continue;
         }
-        if (i < temp)
+        /* if index i is higher than temp, then it means that some objects were deleted, therefore we need to swap the
+        two objects to fill in the empty spot */
+        if (i > temp)
         {
             objects->object[temp].id = objects->object[i].id;
             objects->object[temp].disappeared_frames_count = objects->object[i].disappeared_frames_count;
@@ -683,7 +677,7 @@ void bubbleSort(object_rect_pair *array, uint8_t length)
     uint8_t i, j;
     for (i = 0; i < length - 1; ++i)
     {
-        // Last i elements are already in place
+        /* Last i elements are already in place */
         for (j = 0; j < length - i - 1; ++j)
         {
             if (array[j].distance > array[j + 1].distance)
