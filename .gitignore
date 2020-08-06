@@ -4,3 +4,7 @@ build/
 src/inc/people_counter.h
 
 .vscode/
+
+*.pyc
+
+.idea/
