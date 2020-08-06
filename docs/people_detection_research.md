@@ -14,7 +14,7 @@ Robust to lighting changes.
 
 Robust to long-term scene changes.
 
-### Restrictions
+### Constraints
 
 Tests based on opencv's Background Subtractor MOG (implemented with Gaussian mixture model) found that it merged two people's blob when it comes very close to each other.
 
@@ -45,7 +45,7 @@ Robust to lighting switch.
 
 Easy to solve the time of day problems (the background could be different in different times of a day)
 
-### Restrictions
+### Constraints
 
 Computation intensive (could be reduced by online incremental eigen analysis algorithm)
 
@@ -57,5 +57,3 @@ Background subtraction with eigen background method using matlab
 https://pdfs.semanticscholar.org/1075/3b35f955885cc3c171c893145c875ab4e804.pdf?_ga=2.85050078.654736628.1596722918-388301654.1594697158
 
 
-
-```
