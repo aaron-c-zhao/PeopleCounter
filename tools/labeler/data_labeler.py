@@ -30,7 +30,7 @@ relative_path = 'data/mlx90640/vertical/'
 export_file = "../../data/labels/vertical/"
 
 # TODO change name of video file
-video_name = 'One_person_25c_09_36_08.json'
+video_name = 'One_standing_at_the_door_one_passing_by_25c_10_24_06.json'
 
 rdc = RawDataConverter(relative_path + video_name, 20, 40)
 frame_n = 0
