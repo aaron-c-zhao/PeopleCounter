@@ -530,7 +530,7 @@ ip_result people_tracking(recs *original_rects)
             /* calculate squared euclidean distance (skip the square root, because we just need to sort based on it) */
             uint16_t distance = delta_x * delta_x + delta_y * delta_y;
 
-            distance_vector[i * objects.length + j] = (object_rect_pair){distance, i, j};
+            distance_vector[i * rec_length + j] = (object_rect_pair){distance, i, j};
         }
     }
 
