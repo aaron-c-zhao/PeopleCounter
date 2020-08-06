@@ -8,3 +8,6 @@ src/inc/people_counter.h
 *.pyc
 
 .idea/
+man/*
+latex/*
+html/*
