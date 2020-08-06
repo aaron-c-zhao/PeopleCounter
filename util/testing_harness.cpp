@@ -172,6 +172,7 @@ int main(int argc, char *argv[])
 	get_LoG_kernel(LOG_SIGMA, LOG_KSIZE, log_kernel);
 
 	int8_t room_count = 0;
+	const object *objects = getObjectsAddress();
     
 	while (img_ptr < frame_count) {
 		/* first convert the raw thermal data into processable and displayable format, namely frame and Mat */
@@ -183,6 +184,17 @@ int main(int argc, char *argv[])
 		get_background(cur_frame, img_ptr);
 
 		ip_result result = IpProcess((void *)&mat, (void *)&mat_background, (void *)log_kernel);
+
+		printf("Object list\n");
+		if(result.objects_length > 0)
+		{
+		printf(" %-4s| %-10s| %-18s\n", "ID", "Position", "Disappeared count");
+		}
+		for (uint8_t i = 0; i < result.objects_length; ++i)
+		{
+			printf(" %-4i| (%2i, %2i)  | %-18i\n", objects[i].id,
+				objects[i].centroid.x, objects[i].centroid.y, objects[i].disappeared_frames_count);
+		}
 		
 		room_count += result.up - result.down;
 		printf("Frame %lu: ", img_ptr);

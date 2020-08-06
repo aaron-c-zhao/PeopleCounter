@@ -58,7 +58,7 @@ ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
     ip_mat *frame_mat = (ip_mat *)frame;
     ip_mat *frame_bak = (ip_mat *)background_image;
     int8_t **kernel = (int8_t **)log_kernel;
-    background_substraction(SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT, background_image, frame, frame);
+    background_substraction(SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT, frame_bak, frame_mat, frame_mat);
     LoG(LOG_KSIZE, kernel, frame_mat, &log_mat);
     static recs blobs = {0, {}};
 
@@ -86,16 +86,6 @@ ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
 
     //TODO get the correct values to return when the tracking gets implemented
     ip_result return_result = people_tracking(&blobs);
-
-    if(objects.length > 0)
-    {
-      printf("%-10s|%-10s|%-18s\n", "Object ID", "Position", "Disappeared count");
-    }
-    for (uint8_t i = 0; i < objects.length; ++i)
-    {
-        printf(" %-9i| (%2i, %2i) | %-18i\n", objects.object[i].id,
-               objects.object[i].centroid.x, objects.object[i].centroid.y, objects.object[i].disappeared_frames_count);
-    }
 
     return return_result;
 }
