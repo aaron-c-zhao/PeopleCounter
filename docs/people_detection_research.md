@@ -6,7 +6,7 @@ In the current pipeline, we use the Laplacian of Gaussian (LoG) to detect people
 ## 1. Gaussian mixture model
 
 ### Introduction
-Modeling each pixel as a mixture of Gaussians and using an online approximation to update the model. The Gaussian distributions of the adaptive mixture model are then evaluated to determine which are most likely to result from a background process. Each pixel is classified based on whether the Gaussian distribution which represents it most effectively is considered part of the background model.
+Modeling each pixel as a mixture of Gaussians and using an online approximation to update the model. The Gaussian distributions of the adaptive mixture model are then evaluated to determine which are most likely to result from a background process. Each pixel is classified based on whether the Gaussian distribution which represents it most effectively is considered part of the background model. To put it simple, each pixel will be classified as background or forebackground based on its previous value. In addition, instead of keeping only one previous value, we keep several gaussian distribution generated from the previous value, in that way if the newly pixel value is not covered in the tracked gaussian distribution (implies large change), it will be taken as foreground. 
 
 ### Advantages
 
@@ -36,7 +36,7 @@ Background subtraction is the first phase in most people detection algorithms. I
 
 ## 1. Eigen background
 
-### introduction
+### Introduction
 
 Frame based background model. The image is efficiently represented by a set of appearance models with few significant dimensions. The technique obtains good background with one eigen vector corresponding one largest eigen value. 
 
