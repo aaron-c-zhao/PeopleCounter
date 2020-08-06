@@ -30,7 +30,7 @@ https://android.googlesource.com/platform/external/opencv/+/6acb9a7ea3d7564944e1
 
 
 
-# Background subtraction method comparasion
+# Background subtraction method comparison
 
 Background subtraction is the first phase in most people detection algorithms. In our pipeline, we simply take the first frame as the background and use each frame to subtract it. We choose to do in this way mainly because our PIR sensor can help in detecting whether there are people in the targeting area. However, we also explored some other algorithms, they could be used in this phase to properly retrieve the background image without the help of PIR sensor, they are listed below.
 
