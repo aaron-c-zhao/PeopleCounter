@@ -206,13 +206,13 @@ int main(int argc, char *argv[])
 		printf("up\033[0m, ");
 		if(result.down)
 		{
-			printf("\033[1;32m");
+			printf("\033[1;31m");
 		}
 		printf("%i ", result.down);
 		printf("down.\033[0m There are ");
 		if(result.up-result.down != 0)
 		{
-			printf("\033[1;31m");
+			printf("\033[1;32m");
 		}
 		printf("%i ", room_count);
 		printf("\033[0mpeople in the room.\n\n");
