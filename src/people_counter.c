@@ -58,7 +58,7 @@ ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
     ip_mat *frame_mat = (ip_mat *)frame;
     ip_mat *frame_bak = (ip_mat *)background_image;
     int8_t **kernel = (int8_t **)log_kernel;
-    background_substraction(SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT, background_image, frame, frame);
+    background_substraction(SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT, frame_bak, frame_mat, frame_mat);
     LoG(LOG_KSIZE, kernel, frame_mat, &log_mat);
     static recs blobs = {0, {}};
 
@@ -85,13 +85,6 @@ ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
 #endif
 
     ip_result return_result = people_tracking(&blobs);
-
-    for (uint8_t i = 0; i < objects.length; ++i)
-    {
-        printf("Object %i: (%i, %i) [%i, %i]\n", objects.object[i].id,
-               objects.object[i].centroid.x, objects.object[i].centroid.y,
-               objects.object[i].disappeared_frames_count, objects.object[i].appeared_frames_count);
-    }
 
     return return_result;
 }
@@ -174,31 +167,54 @@ static inline int16_t convolve(uint8_t ksize, int8_t **kernel, uint8_t *m, uint8
  */
 void LoG(uint8_t ksize, int8_t **kernel, ip_mat *src, ip_mat *dst)
 {
-    /* decide the length of padding on each side of the image */
-    uint8_t pad_length = ksize / 2;
-    uint8_t *sframe = src->data;
-    uint8_t *dframe = dst->data;
-    /*printf("  ");
-	for (uint8_t i = 0; i < SENSOR_IMAGE_WIDTH; ++i) printf("%5d", i);
-	printf("\n");*/
-    uint8_t count = 0;
-    for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i)
-    {
-        /*printf("%2d " , count++);*/
-        for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j)
-        {
-            /* convolve the kernel with each pixel of the image */
-            int16_t c = convolve(ksize, kernel, sframe, i, j, pad_length);
-            /* binarization */
-            dframe[i * SENSOR_IMAGE_WIDTH + j] = (c < -config.threshold) ? 255 : 0;
-            /*if ( c < -config.threshold ) 
-				printf("\033[1;31m%5d\033[0m", c);
-			else 
-				printf("%5d", c);*/
-        }
-        /*printf("\n");*/
-    }
-    /*printf("-------------------------------------------------------------------\n");*/
+	/* decide the length of padding on each side of the image */
+	uint8_t pad_length = ksize / 2;
+	uint8_t *sframe = src->data;
+	uint8_t *dframe = dst->data;
+	/*printf("  ");
+	  for (uint8_t i = 0; i < SENSOR_IMAGE_WIDTH; ++i) printf("%5d", i);
+	  printf("\n");
+	  uint8_t print_count = 0;
+	  */
+	uint8_t count = 0;
+	int32_t gen_threshold = 0;
+	int16_t convolve_values[SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT] = {0};
+	for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i)
+	{
+		/*printf("%2d " ,print_count++);*/
+		for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j)
+		{
+			/* convolve the kernel with each pixel of the image */
+			int16_t c = convolve(ksize, kernel, sframe, i, j, pad_length);
+			/* binarization */
+			if (c > -config.threshold) dframe[i * SENSOR_IMAGE_WIDTH + j] = 0;
+			else  {
+				gen_threshold += c;
+				convolve_values[i * SENSOR_IMAGE_WIDTH + j] = c;
+				count++;
+				
+			}
+			/*if ( c < -config.threshold ) 
+			  printf("\033[1;31m%5d\033[0m", c);
+			  else 
+			  printf("%5d", c);*/
+		}
+		/*printf("\n");*/
+	}
+	if (count) {
+		gen_threshold = (int32_t)(gen_threshold / count);
+		// printf("threshold is : %d\n", gen_threshold);
+
+		for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i) {
+			for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j) {
+				if (convolve_values[i * SENSOR_IMAGE_WIDTH + j] > 0.9 * gen_threshold)
+					dframe[i * SENSOR_IMAGE_WIDTH +j] = 0;
+				else dframe[i * SENSOR_IMAGE_WIDTH +j] = 255;
+			}
+		}
+	}
+
+	/*printf("-------------------------------------------------------------------\n");*/
 }
 
 /**
@@ -513,7 +529,7 @@ ip_result people_tracking(recs *original_rects)
             /* calculate squared euclidean distance (skip the square root, because we just need to sort based on it) */
             uint16_t distance = delta_x * delta_x + delta_y * delta_y;
 
-            distance_vector[i * objects.length + j] = (object_rect_pair){distance, i, j};
+            distance_vector[i * rec_length + j] = (object_rect_pair){distance, i, j};
         }
     }
 
