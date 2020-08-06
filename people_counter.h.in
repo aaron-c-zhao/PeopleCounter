@@ -7,8 +7,9 @@
 **/
 
 #ifndef __PEOPLE_COUNTER
+/** */
 #define __PEOPLE_COUNTER
-
+/** */
 #define __ORIENTATION_VERTICAL
 
 #ifdef __cplusplus
@@ -20,35 +21,44 @@ extern "C"
 #include "testing_harness.h"
 
 // CT = Centroid Tracker
-#define CT_MAX_DISAPPEARED @CT_MAX_DISAPPEARED@
-#define CT_MAX_DISTANCE    @CT_MAX_DISTANCE@
+/** */
+#define CT_MAX_DISAPPEARED 2
+/** */
+#define CT_MAX_DISTANCE    8
 
 // Array max sizes
-#define RECTS_MAX_SIZE @RECTS_MAX_SIZE@
-#define TRACKABLE_OBJECT_MAX_SIZE @TRACKABLE_OBJECT_MAX_SIZE@
+/** */
+#define RECTS_MAX_SIZE 28
+/** */
+#define TRACKABLE_OBJECT_MAX_SIZE 18
 
 // Image size
-#define SENSOR_IMAGE_WIDTH  @SENSOR_IMAGE_WIDTH@
-#define SENSOR_IMAGE_HEIGHT @SENSOR_IMAGE_HEIGHT@
+/** */
+#define SENSOR_IMAGE_WIDTH  32
+/** */
+#define SENSOR_IMAGE_HEIGHT 24
 
-/* Kernel size of the LoG */
-#define LOG_KSIZE @LOG_KSIZE@
-/* Sigma from the gaussian kernel */
-#define LOG_SIGMA @LOG_SIGMA@
-/* how many pixels can the queue hold */
-#define QUEUE_SIZE @QUEUE_SIZE@
-/* Sensor frame rate */
-#define FRAME_RATE @FRAME_RATE@
-/* Max area that a single blob can be */
-#define REC_MAX_AREA @REC_MAX_AREA@
-/* Min area that a single blob can be */
-#define REC_MIN_AREA @REC_MIN_AREA@
-/* erosion kernel size */
-#define ERO_KSIZE @ERO_KSIZE@
+/** Kernel size of the LoG */
+#define LOG_KSIZE 5
+/** Sigma from the gaussian kernel */
+#define LOG_SIGMA 1.5
+/** how many pixels can the queue hold */
+#define QUEUE_SIZE 100
+/** Sensor frame rate */
+#define FRAME_RATE 8
+/** Max area that a single blob can be */
+#define REC_MAX_AREA 50
+/** Min area that a single blob can be */
+#define REC_MIN_AREA 4
+/** erosion kernel size */
+#define ERO_KSIZE 3
 
+/** */
 #define REC_IGNORE 13
 // Directions
+/** */
 #define DIRECTION_UP   0x00
+/** */
 #define DIRECTION_DOWN 0x01
 
 /* *******************************************************************************
@@ -59,86 +69,158 @@ extern "C"
  *******************************************************************************/
 
     /* IMAGE STRUCT */
+    /**
+     * @brief test
+     * 
+     */
     typedef struct mat
     {
-        uint8_t *data; /* pointer to array of grayscale 8bit pixels */
+        /** pointer to array of grayscale 8bit pixels */
+        uint8_t *data; 
     } ip_mat;
 
+    /** //TODO add coments
+     * @brief test
+     * @details o
+     */
     typedef struct config
     {
+        /** test */
         uint8_t kernel_1;
+        /** test */
         int16_t threshold;
+        /** test */
         uint8_t max_area;
     } ip_config;
 
+    /**
+     * @brief 
+     * 
+     */
     typedef struct pixel
     {
-        /* coordinates of the pixel */
+        /** x coordinate of the pixel */
         uint8_t x;
+        /** y coordinate of the pixel */
         uint8_t y;
     } pixel;
 
+    /**
+     * @brief 
+     * 
+     */
     typedef struct queue
     {
+        /** */
         uint8_t count;
+        /** */
         uint8_t top;
+        /** */
         uint8_t bottom;
+        /** */
         pixel pixels[QUEUE_SIZE];
     } queue;
 
+    /**
+     * @brief 
+     * 
+     */
     typedef struct rec
     {
+        /** */
         uint8_t min_x;
+        /** */
         uint8_t min_y;
+        /** */
         uint8_t max_x;
+        /** */
         uint8_t max_y;
+        /** */
         uint8_t rid;
+        /** */
         uint16_t area;
     } rec;
 
+    /**
+     * @brief 
+     * 
+     */
     typedef struct recs
     {
+        /** */
         uint8_t count;
+        /** */
         rec nodes[RECTS_MAX_SIZE];
     } recs;
 
-    /* OBJECT (PERSON) STRUCT */
+    /**
+     * @brief OBJECT (PERSON) STRUCT
+     * 
+     */
     typedef struct object
     {
-        uint16_t id;                      /* id of a tracked object */
-        pixel centroid;                   /* the center position of this object */
-        uint8_t disappeared_frames_count; /* number of frames this object has disappered */
+        /** id of a tracked object */
+        uint16_t id;                      
+        /** the center position of this object */
+        pixel centroid;                   
+        /** number of frames this object has disappered */
+        uint8_t disappeared_frames_count; 
     } object;
 
-    /* HELPER STRUCT: LIST OF OBJECTS */
+    /**
+     * @brief HELPER STRUCT: LIST OF OBJECTS
+     * 
+     */
     typedef struct object_list
     {
-        uint16_t next_id;                         /* id of the next new object */
-        uint8_t length;                           /* length of cyclical list */
-        object object[TRACKABLE_OBJECT_MAX_SIZE]; /* fixed sized array of objects used as cyclical list */
+        /** id of the next new object */
+        uint16_t next_id;                         
+        /** length of cyclical list */
+        uint8_t length;                           
+        /** fixed sized array of objects used as cyclical list */
+        object object[TRACKABLE_OBJECT_MAX_SIZE]; 
     } object_list;
 
-    /* HELPER STRUCT: DISTANCE OF OBJECT AND BOUNDING BOX PAIRING */
+    /**
+     * @brief HELPER STRUCT: DISTANCE OF OBJECT AND BOUNDING BOX PAIRING
+     * 
+     */
     typedef struct object_rect_pair
     {
-        uint16_t distance;    /* distance between the tracked object and the new bounding box centroid */
-        uint8_t object_index; /* array index of the tracked object */
-        uint8_t rect_index;   /* array index of the new bounding box */
+        /** distance between the tracked object and the new bounding box centroid */
+        uint16_t distance;    
+        /** array index of the tracked object */
+        uint8_t object_index; 
+        /** array index of the new bounding box */
+        uint8_t rect_index;   
     } object_rect_pair;
 
+    /**
+     * @brief 
+     * 
+     */
     typedef struct result
     {
+        /** */
         uint8_t objects_length;
+        /** */
         uint8_t up;
+        /** */
         uint8_t down;
     } ip_result;
 
-    /* RESULT STATUS ENUM */
+    /**
+     * @brief RESULT STATUS ENUM
+     * 
+     */
     typedef enum
     {
-        IP_UPDATE, /* count of people is changed */
-        IP_STILL,  /* count of people is unchanged, but there are still people in frame */
-        IP_EMPTY   /* no people are being tracked and no people detected in frame */
+        /** count of people is changed */
+        IP_UPDATE, 
+        /** count of people is unchanged, but there are still people in frame */
+        IP_STILL, 
+        /** no people are being tracked and no people detected in frame */
+        IP_EMPTY   
     } ip_status;
 
 #ifdef __TESTING_HARNESS
