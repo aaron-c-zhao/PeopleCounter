@@ -108,6 +108,8 @@ extern "C"
         uint16_t id;                      /* id of a tracked object */
         pixel centroid;                   /* the center position of this object */
         uint8_t disappeared_frames_count; /* number of frames this object has disappered */
+        uint16_t appeared_frames_count;   /* number of frames this object has appeared;
+        all objects that appeared only for one frame should be ignored because it might be noise */
     } object;
 
     /* HELPER STRUCT: LIST OF OBJECTS */

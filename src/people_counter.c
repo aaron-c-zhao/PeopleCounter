@@ -84,13 +84,13 @@ ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
     memcpy(hrects, blobs.nodes, RECTS_MAX_SIZE * sizeof(rec));
 #endif
 
-    //TODO get the correct values to return when the tracking gets implemented
     ip_result return_result = people_tracking(&blobs);
 
     for (uint8_t i = 0; i < objects.length; ++i)
     {
-        printf("Object %i: (%i, %i) [%i]\n", objects.object[i].id,
-               objects.object[i].centroid.x, objects.object[i].centroid.y, objects.object[i].disappeared_frames_count);
+        printf("Object %i: (%i, %i) [%i, %i]\n", objects.object[i].id,
+               objects.object[i].centroid.x, objects.object[i].centroid.y,
+               objects.object[i].disappeared_frames_count, objects.object[i].appeared_frames_count);
     }
 
     return return_result;
@@ -489,7 +489,7 @@ ip_result people_tracking(recs *original_rects)
         /* register all centroids as new objects */
         for (uint8_t i = 0; i < rec_length; ++i)
         {
-            objects.object[objects.length] = (object){objects.next_id, input_centroids[i], 0};
+            objects.object[objects.length] = (object){objects.next_id, input_centroids[i], 0, 1};
 
             ++objects.length;
             ++objects.next_id;
@@ -570,8 +570,9 @@ ip_result people_tracking(recs *original_rects)
         /* update the object centroid to the assigned closest input centroid */
         objects.object[object_id].centroid = input_centroids[distance_vector[i].rect_index];
 
-        /* reset the disapperead counter of that object */
+        /* reset the disapperead counter of that object and increase appeared count */
         objects.object[object_id].disappeared_frames_count = 0;
+        ++objects.object[object_id].appeared_frames_count;
     }
 
     /* increase disappeared count of unused objects */
@@ -599,7 +600,7 @@ ip_result people_tracking(recs *original_rects)
         {
             if (!(temp & 1))
             {
-                objects.object[objects.length] = (object){objects.next_id, input_centroids[i], 0};
+                objects.object[objects.length] = (object){objects.next_id, input_centroids[i], 0, 1};
 
                 ++objects.length;
                 ++objects.next_id;
@@ -622,8 +623,10 @@ void deleteOldObjects(object_list *objects)
     uint8_t original_size = objects->length;
     for (uint8_t i = 0; i < original_size; ++i)
     {
-        /* decrease objects' length if has disappeared for more than CT_MAX_DISAPPEARED and skip this object */
-        if (objects->object[i].disappeared_frames_count > CT_MAX_DISAPPEARED)
+        /* decrease objects' length and skip this object if has disappeared for more than CT_MAX_DISAPPEARED or 
+        has only appeared for one frame (because it might be noise) */
+        if (objects->object[i].disappeared_frames_count > CT_MAX_DISAPPEARED ||
+            (objects->object[i].appeared_frames_count < 2 && objects->object[i].disappeared_frames_count > 0))
         {
             --objects->length;
             continue;
