@@ -22,36 +22,36 @@ extern "C"
 
 // CT = Centroid Tracker
 /** */
-#define CT_MAX_DISAPPEARED 2
+#define CT_MAX_DISAPPEARED @CT_MAX_DISAPPEARED@
 /** */
-#define CT_MAX_DISTANCE    8
+#define CT_MAX_DISTANCE    @CT_MAX_DISTANCE@
 
 // Array max sizes
 /** */
-#define RECTS_MAX_SIZE 28
+#define RECTS_MAX_SIZE @RECTS_MAX_SIZE@
 /** */
-#define TRACKABLE_OBJECT_MAX_SIZE 18
+#define TRACKABLE_OBJECT_MAX_SIZE @TRACKABLE_OBJECT_MAX_SIZE@
 
 // Image size
 /** */
-#define SENSOR_IMAGE_WIDTH  32
+#define SENSOR_IMAGE_WIDTH  @SENSOR_IMAGE_WIDTH@
 /** */
-#define SENSOR_IMAGE_HEIGHT 24
+#define SENSOR_IMAGE_HEIGHT @SENSOR_IMAGE_HEIGHT@
 
 /** Kernel size of the LoG */
-#define LOG_KSIZE 5
+#define LOG_KSIZE @LOG_KSIZE@
 /** Sigma from the gaussian kernel */
-#define LOG_SIGMA 1.5
+#define LOG_SIGMA @LOG_SIGMA@
 /** how many pixels can the queue hold */
-#define QUEUE_SIZE 100
+#define QUEUE_SIZE @QUEUE_SIZE@
 /** Sensor frame rate */
-#define FRAME_RATE 8
+#define FRAME_RATE @FRAME_RATE@
 /** Max area that a single blob can be */
-#define REC_MAX_AREA 50
+#define REC_MAX_AREA @REC_MAX_AREA@
 /** Min area that a single blob can be */
-#define REC_MIN_AREA 4
+#define REC_MIN_AREA @REC_MIN_AREA@
 /** erosion kernel size */
-#define ERO_KSIZE 3
+#define ERO_KSIZE @ERO_KSIZE@
 
 /** */
 #define REC_IGNORE 13
@@ -127,11 +127,11 @@ extern "C"
      */
     typedef struct rec
     {
-        /** */
+        /** @brief test */
         uint8_t min_x;
-        /** */
+        /** test */
         uint8_t min_y;
-        /** */
+        /** @details test2 */
         uint8_t max_x;
         /** */
         uint8_t max_y;
