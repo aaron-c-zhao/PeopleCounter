@@ -99,86 +99,98 @@ extern "C"
  *******************************************************************************/
 
     /**
-     * @brief test 
+     * @brief the datastructure that represents the thermal image 
      * 
      */
     typedef struct mat
     {
-        /** pointer to array of grayscale 8bit pixels */
+        /** @brief pointer to array of grayscale 8bit pixels */
         uint8_t *data; 
     } ip_mat;
 
-    /** //TODO add coments
-     * @brief test
-     * @details o
+    /** 
+     * @brief parameters that will affect the performance of the pipeline
      */
     typedef struct config
     {
-        /** test */
+        /** @brief the size of the LoG kernel */
         uint8_t kernel_1;
-        /** test */
+        /** 
+	 * @brief the threshold for binarizing the image
+	 * @details The whole thresholding process is divided into two parts. In the first step, all the pixels that has a 
+	 *          larger value(the value is negative, so that means a smaller absolute value), will be rendered black(0),
+	 *          of which this parameter is used for. The good choice for this threshold would be the one just above the
+	 *          background noises.
+	 */
         int16_t threshold;
-        /** test */
+        /** 
+	 * @brief the max area that a single blob can be.
+	 * @details the max area is for detecting huge blobs which might be composed by two individual blobs merged together.
+	 *          if the blob has an area larger than this value, it will be eroded. 
+	 */
         uint8_t max_area;
+	/**
+	 * @brief the sensitivity of the adaptive thresholding
+	 * @details the threshold in the second step of adative thresholding is calculated based on the distribution of the value
+	 *          of the pixels of the blobs. This parameters controls how sensitive the second threshold will be, the higher the
+	 *          value the more sensitive it is. 
+	 */ 	
+	uint8_t sensitivity;
     } ip_config;
 
     /**
-     * @brief 
-     * 
+     * @brief the structure that represent the position of a pixel. 
      */
     typedef struct pixel
     {
-        /** x coordinate of the pixel */
+        /** @brief x coordinate of the pixel */
         uint8_t x;
-        /** y coordinate of the pixel */
+        /** @brief y coordinate of the pixel */
         uint8_t y;
     } pixel;
 
     /**
-     * @brief 
-     * 
+     * @brief the datastrure used in the BFS
      */
     typedef struct queue
     {
-        /** */
+        /** @brief how many elements are there in the queue. Note: should be less than the QUEUE_SIZE*/
         uint8_t count;
-        /** */
+        /** @brief the queue is implemented in a circular manner, this is the pointer points to the front of the queue*/
         uint8_t top;
-        /** */
+        /** @brief the pointer that points to the bottom of the queue*/
         uint8_t bottom;
-        /** */
+        /** @brief the array under the hood that holds the elements*/
         pixel pixels[QUEUE_SIZE];
     } queue;
 
     /**
-     * @brief 
-     * 
+     * @brief  the struct that represents a rectangle
      */
     typedef struct rec
     {
-        /** @brief test */
+        /** @brief the minimum x coordinate of the rectangle */
         uint8_t min_x;
-        /** test */
+        /** @brief the minimum y coordiante of the rectangle */
         uint8_t min_y;
-        /** @details test2 */
+        /** @brief the maximum x coordiante of the rectangle */
         uint8_t max_x;
-        /** */
+        /** @brief the maximum y coordinate of the rectangle*/
         uint8_t max_y;
-        /** */
+        /** @brief the id of the rectangle for distinguish the rectangle from the others in the same frame*/
         uint8_t rid;
-        /** */
+        /** @brief the area of the rectagle(count of pixels)*/
         uint16_t area;
     } rec;
 
     /**
-     * @brief 
-     * 
+     * @brief rectangles
      */
     typedef struct recs
     {
-        /** */
+        /** @brief the count of the rectangles*/
         uint8_t count;
-        /** */
+        /** @brief the array that holds the rectangles*/
         rec nodes[RECTS_MAX_SIZE];
     } recs;
 
