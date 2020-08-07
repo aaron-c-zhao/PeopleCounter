@@ -1,3 +1,4 @@
+\mainpage
 # PEOPLE COUNTER IP PIPELINE TESTING HARNESS
 This program was made to run and test the image processing pipeline of the people counter project. 
 
