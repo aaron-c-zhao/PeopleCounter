@@ -1,15 +1,16 @@
 /**
   ******************************************************************************
-  * @file           : people_counter.h
-  * @brief          : Header file for storing the configurations of image processing pipeline.
+  * @file           : people_counter.h.in
+  * @brief          : Header file template that will read by CMake which will generate the people_counter.h afterward.
   *                   This file contains all of the parameters of the image processing pipeline.
   ******************************************************************************
 **/
 
 #ifndef __PEOPLE_COUNTER
-/** */
 #define __PEOPLE_COUNTER
-/** */
+/**
+ * @brief the orientation of sensor(delete or comment out this line if the orientation is horizontal)
+ */
 #define __ORIENTATION_VERTICAL
 
 #ifdef __cplusplus
@@ -21,13 +22,20 @@ extern "C"
 #include "testing_harness.h"
 
 // CT = Centroid Tracker
-/** */
+/** 
+ * @brief the maximum number of frames that a blob can be disappeared before it get deleted from thne tracking list
+ */
 #define CT_MAX_DISAPPEARED 2
-/** */
+/** 
+ * @brief the maximum distance that a blob can be from itselft in the last frame. If the distance is larger than this value, the blob
+ *        will not be considered as the same one.
+ */
 #define CT_MAX_DISTANCE    8
 
 // Array max sizes
-/** */
+/** 
+ * @brief the maximum
+ */
 #define RECTS_MAX_SIZE 28
 /** */
 #define TRACKABLE_OBJECT_MAX_SIZE 18
