@@ -378,6 +378,7 @@ void blob_filter(uint8_t *frame, recs *blobs, uint8_t amax, uint8_t amin)
 			temp->rid = REC_IGNORE;
 			continue;
 		}
+		/* filter out huge blobs */
 		if (temp->area > amax)
 		{
 			area_adjust(frame, temp, blobs, amax);
@@ -394,7 +395,7 @@ void blob_filter(uint8_t *frame, recs *blobs, uint8_t amax, uint8_t amin)
  */
 void area_adjust(uint8_t *frame, rec *blob, recs *blobs, uint8_t amax)
 {
-	//TODO coment for code readability
+	/* apply erosion on the huge blobs */
 	while (blob->area > amax)
 	{
 		erosion(frame, blob);
@@ -405,14 +406,15 @@ void area_adjust(uint8_t *frame, rec *blob, recs *blobs, uint8_t amax)
 	blob->rid = REC_IGNORE;
 };
 
-/** //TODO add info about fit
- * @brief determine whether the structuring element fit inside the shape
- * @param frame 
- * @param rid 
- * @param x 
- * @param y 
- * @param kernel 
- * @return uint8_t 
+/** 
+ * @brief determine whether the structuring element fit in the shape
+ * @param frame the binarized frame where the blobs resides 
+ * @param rid the blob's id in the frame
+ * @param x the x-coordinate of the blob's pixel needs to be checked
+ * @param y the y-coordinate of the blob's pixel needs to be checked
+ * @param kernel the structuring element used to do erosion
+ * @return uint8_t 1 represents the structuring element fits in the shape
+ *                 0 represents the structuring element doesn't fit in the shape
  */
 static inline uint8_t fit(uint8_t *frame, uint8_t rid, uint8_t x, uint8_t y, uint8_t kernel[ERO_KSIZE][ERO_KSIZE])
 {
