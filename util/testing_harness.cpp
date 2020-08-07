@@ -41,9 +41,6 @@ static unsigned long frame_count = 0;
 /* background image that will be passed into pipeline */
 static uint8_t *background;
 
-/* counting result */
-ip_count count = {0, 0};
-
 /* configuration of the pipeline */
 ip_config config = {
 	.kernel_1 = 5,
@@ -110,9 +107,9 @@ void get_LoG_kernel(double sigma, int ksize, int8_t** result)
         for (int i = 0; i < ksize; ++i) {
                 for (int j = 0; j < ksize; ++j) {
                         result[i][j] = (int8_t)(kernel[i][j]* 500);
-			printf("%d " , result[i][j]);
+			// printf("%d " , result[i][j]);
                 }   
-		printf("\n");
+		// printf("\n");
         }   
 
 }
@@ -157,8 +154,11 @@ int main(int argc, char *argv[])
 
 	namedWindow(thermal_window, WINDOW_NORMAL);
 	namedWindow(threshold_window, WINDOW_NORMAL);
+	uint8_t black_img[SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT] = {0};
 	moveWindow(thermal_window, 0, 0);
-	moveWindow(threshold_window, 500, 0);
+	moveWindow(threshold_window, 320, 0);
+	show_image(black_img, thermal_window, NULL);
+	show_image(black_img, threshold_window, NULL);
 	resizeWindow(thermal_window, 320, 240);
 	resizeWindow(threshold_window, 320, 240);
 	create_trackbar(thermal_window, NULL);
@@ -168,8 +168,11 @@ int main(int argc, char *argv[])
 	for (int i = 0; i < LOG_KSIZE; ++i) {
 		log_kernel[i] = (int8_t *)malloc(LOG_KSIZE * sizeof(int8_t));
 	}
-	printf("sigma is %f\n", LOG_SIGMA);
+	// printf("sigma is %f\n", LOG_SIGMA);
 	get_LoG_kernel(LOG_SIGMA, LOG_KSIZE, log_kernel);
+
+	int8_t room_count = 0;
+	const object *objects = getObjectsAddress();
     
 	while (img_ptr < frame_count) {
 		/* first convert the raw thermal data into processable and displayable format, namely frame and Mat */
@@ -180,7 +183,39 @@ int main(int argc, char *argv[])
 		/* get the background TODO: should be done by the pipeline */
 		get_background(cur_frame, img_ptr);
 
-		ip_result result = IpProcess((void *)&mat, (void *)&mat_background, (void *)&count, (void *)log_kernel);
+		ip_result result = IpProcess((void *)&mat, (void *)&mat_background, (void *)log_kernel);
+
+		printf("Object list\n");
+		if(result.objects_length > 0)
+		{
+		printf(" %-4s| %-10s| %-18s\n", "ID", "Position", "Disappeared count");
+		}
+		for (uint8_t i = 0; i < result.objects_length; ++i)
+		{
+			printf(" %-4i| (%2i, %2i)  | %-18i\n", objects[i].id,
+				objects[i].centroid.x, objects[i].centroid.y, objects[i].disappeared_frames_count);
+		}
+		
+		room_count += result.up - result.down;
+		printf("Frame %lu: ", img_ptr);
+		if(result.up)
+		{
+			printf("\033[1;32m");
+		}
+		printf("%i ", result.up);
+		printf("up\033[0m, ");
+		if(result.down)
+		{
+			printf("\033[1;31m");
+		}
+		printf("%i ", result.down);
+		printf("down.\033[0m There are ");
+		if(result.up-result.down != 0)
+		{
+			printf("\033[1;32m");
+		}
+		printf("%i ", room_count);
+		printf("\033[0mpeople in the room.\n\n");
 		
 		/* the show_image should be called after the IpProcess to correctly display the rectangles 
 		 * found by pipeline */
@@ -202,8 +237,8 @@ int main(int argc, char *argv[])
 		// 	printf("\033[1;32m");
 		// 	printf("Frame[%ld], Dir: %s, Count: %d", img_ptr, (count.direc == DIRECTION_UP) ? "UP" : "DOWN", count.num);
 		// }
-		printf(", [%d] rects detected\n", rec_num);
-		printf("\033[0m");
+		// printf(", [%d] rects detected\n", rec_num);
+		// printf("\033[0m");
 		
 		/* wait for keyboard input to continue to next frame */
 		waitKey(0);
@@ -434,7 +469,7 @@ static void draw_rect(Mat *image)
 		pt_max.x = temp.max_x; 
 		pt_max.y = temp.max_y; 
 		rectangle(*image, pt_min, pt_max, Scalar(255));
-		printf("rid: %d, area: %d\n", temp.rid, temp.area);
+		// printf("rid: %d, area: %d\n", temp.rid, temp.area);
 	}
 }
 

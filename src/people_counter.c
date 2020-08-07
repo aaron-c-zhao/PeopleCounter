@@ -39,55 +39,55 @@ rec bfs(uint8_t *, queue *, uint8_t, uint8_t);
 void blob_filter(uint8_t *, recs *, uint8_t, uint8_t);
 void area_adjust(uint8_t *, rec *, recs *, uint8_t);
 void erosion(uint8_t *, rec *);
+ip_result people_tracking(recs *);
+void deleteOldObjects(object_list *);
+void bubbleSort(object_rect_pair *, uint8_t);
 
-ip_result IpProcess(void *frame, void *background_image, void *count, void *log_kernel)
-{	
+/* list of objects (people) used for people tracking */
+static object_list objects = {0, 0, {}};
+
+ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
+{
 #ifdef __TESTING_HARNESS
-	uint64_t start_tsc = readTSC();
-	static uint64_t max_tsc = 0;
+    uint64_t start_tsc = readTSC();
+    static uint64_t max_tsc = 0;
 #endif
 
-	uint8_t log_frame[SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT] = {0};
-	ip_mat log_mat = {.data = log_frame };
-	ip_mat* frame_mat = (ip_mat *)frame;
-	ip_mat* frame_bak = (ip_mat *)background_image;
-	int8_t **kernel = (int8_t **)log_kernel;
-	background_substraction(SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT, background_image, frame, frame);
-	LoG(LOG_KSIZE, kernel, frame_mat, &log_mat); 
-	static recs blobs = {0, {}};
+    uint8_t log_frame[SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT] = {0};
+    ip_mat log_mat = {.data = log_frame};
+    ip_mat *frame_mat = (ip_mat *)frame;
+    ip_mat *frame_bak = (ip_mat *)background_image;
+    int8_t **kernel = (int8_t **)log_kernel;
+    background_substraction(SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT, frame_bak, frame_mat, frame_mat);
+    LoG(LOG_KSIZE, kernel, frame_mat, &log_mat);
+    static recs blobs = {0, {}};
 
 #ifdef __TESTING_HARNESS
-	uint64_t before_blob_tsc = readTSC();
+    uint64_t before_blob_tsc = readTSC();
 #endif
 
-	find_blob(log_frame, &blobs, 0, RID, WHITE); 
-	blob_filter(log_frame, &blobs, REC_MAX_AREA, REC_MIN_AREA); 
+    find_blob(log_frame, &blobs, 0, RID, WHITE);
+    blob_filter(log_frame, &blobs, REC_MAX_AREA, REC_MIN_AREA);
 
 #ifdef __TESTING_HARNESS
-	uint64_t before_tracking_tsc = readTSC();
+    uint64_t end_tsc = readTSC();
+    uint64_t total_tsc = end_tsc - start_tsc;
+    uint64_t without_blob_tsc = before_blob_tsc - start_tsc;
+    if (max_tsc < total_tsc)
+    {
+        max_tsc = total_tsc;
+    }
+    /* printf("total instructions: %llu\nwithout blobfilter: %llu\nmax: %llu\n", total_tsc, without_blob_tsc, max_tsc); */
+
+    memcpy(th_frame, log_frame, SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT * sizeof(uint8_t));
+    rec_num = blobs.count;
+    memcpy(hrects, blobs.nodes, RECTS_MAX_SIZE * sizeof(rec));
 #endif
 
-	//TODO put people tracking here!!
+    //TODO get the correct values to return when the tracking gets implemented
+    ip_result return_result = people_tracking(&blobs);
 
-#ifdef __TESTING_HARNESS
-	uint64_t end_tsc = readTSC();
-	uint64_t total_tsc = end_tsc - start_tsc;
-	uint64_t people_detection_without_blob_tsc = before_blob_tsc - start_tsc;
-	uint64_t tracking_tsc = end_tsc - before_tracking_tsc;
-	if (max_tsc < total_tsc) {
-		max_tsc = total_tsc;
-	}
-	printf("total instructions: %lu\nPeople detection without blobfilter: %lu\
-			\nmax: %lu\nPeople Tracking: %lu\n", total_tsc, people_detection_without_blob_tsc, max_tsc, tracking_tsc);
-
-	memcpy(th_frame, log_frame, SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT * sizeof(uint8_t));
-	rec_num = blobs.count;
-	memcpy(hrects, blobs.nodes, RECTS_MAX_SIZE * sizeof(rec));	
-#endif
-
-	//TODO get the correct values to return when the tracking gets implemented
-	ip_result return_result = {0, 0, 0};
-	return return_result;
+    return return_result;
 }
 
 /**
@@ -174,17 +174,27 @@ void LoG(uint8_t ksize, int8_t **kernel, ip_mat *src, ip_mat *dst)
 	uint8_t *dframe = dst->data;
 	/*printf("  ");
 	  for (uint8_t i = 0; i < SENSOR_IMAGE_WIDTH; ++i) printf("%5d", i);
-	  printf("\n");*/
+	  printf("\n");
+	  uint8_t print_count = 0;
+	  */
 	uint8_t count = 0;
+	int32_t gen_threshold = 0;
+	int16_t convolve_values[SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT] = {0};
 	for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i)
 	{
-		/*printf("%2d " , count++);*/
+		/*printf("%2d " ,print_count++);*/
 		for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j)
 		{
 			/* convolve the kernel with each pixel of the image */
 			int16_t c = convolve(ksize, kernel, sframe, i, j, pad_length);
 			/* binarization */
-			dframe[i * SENSOR_IMAGE_WIDTH + j] = (c < -config.threshold) ? 255 : 0;
+			if (c > -config.threshold) dframe[i * SENSOR_IMAGE_WIDTH + j] = 0;
+			else  {
+				gen_threshold += c;
+				convolve_values[i * SENSOR_IMAGE_WIDTH + j] = c;
+				count++;
+				
+			}
 			/*if ( c < -config.threshold ) 
 			  printf("\033[1;31m%5d\033[0m", c);
 			  else 
@@ -192,6 +202,19 @@ void LoG(uint8_t ksize, int8_t **kernel, ip_mat *src, ip_mat *dst)
 		}
 		/*printf("\n");*/
 	}
+	if (count) {
+		gen_threshold = (int32_t)(gen_threshold / count);
+		// printf("threshold is : %d\n", gen_threshold);
+
+		for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i) {
+			for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j) {
+				if (convolve_values[i * SENSOR_IMAGE_WIDTH + j] > 0.9 * gen_threshold)
+					dframe[i * SENSOR_IMAGE_WIDTH +j] = 0;
+				else dframe[i * SENSOR_IMAGE_WIDTH +j] = 255;
+			}
+		}
+	}
+
 	/*printf("-------------------------------------------------------------------\n");*/
 }
 
@@ -233,7 +256,7 @@ void find_blob(uint8_t *src, recs *blobs, uint8_t start_i, uint8_t rid, uint8_t 
 /**
  * @brief data structure operation, enqueue
  * @param q the queue to be operate on
- * @prarm p the pixel to be put in the back of the queue
+ * @param p the pixel to be put in the back of the queue
  */
 void enqueue(queue *q, pixel p)
 {
@@ -260,6 +283,7 @@ pixel dequeue(queue *q)
 	q->bottom = (q->bottom + 1) % QUEUE_SIZE;
 	return p;
 }
+
 /**
  * @brief conduct a breath first search on the image
  * @param frame the image to be searched
@@ -430,6 +454,239 @@ void erosion(uint8_t *frame, rec *blob)
 		/* update the area of the blob which is the criteria of when to stop the area adjustment */
 		blob->area--;
 	}
+}
+
+/**
+ * @brief perform people tracking given the blobs of people in every frame
+ * @param rects list of blobs' bounding boxes
+ * @return the list of objects being tracked and the number of people that went up and down.
+ */
+ip_result people_tracking(recs *original_rects)
+{
+    uint8_t total_up = 0, total_down = 0;
+
+    /* create a temporary copy of the rectangles filtering out the ones to be ignored */
+    uint8_t rec_length = 0;
+    rec rects[original_rects->count];
+    for(uint8_t i = 0; i < original_rects->count; ++i)
+    {
+        if(original_rects->nodes[i].rid != REC_IGNORE)
+        {
+            rects[rec_length++] = original_rects->nodes[i];
+        }
+    }
+
+    /* if there are no blobs in the frame, then increase the count of disappeared frames of every tracked object */
+    if (rec_length == 0)
+    {
+        /* increase disappered count of every object */
+        for (uint8_t i = 0; i < objects.length; ++i)
+        {
+            ++objects.object[i].disappeared_frames_count;
+        }
+
+        deleteOldObjects(&objects);
+
+        return ((ip_result){objects.length, 0, 0});
+    }
+
+    /* convert bounding boxes to their centroid points */
+    pixel input_centroids[rec_length];
+
+    for (uint8_t i = 0; i < rec_length; ++i)
+    {
+        /* use the bounding box coordinates to derive the centroid */
+        input_centroids[i] = (pixel){(uint8_t)((rects[i].min_x + rects[i].max_x) >> 1),
+                                     (uint8_t)((rects[i].min_y + rects[i].max_y) >> 1)};
+    }
+
+    /* if no objects are being tracked, then the new centroids are all new objects */
+    if (objects.length == 0)
+    {
+        /* register all centroids as new objects */
+        for (uint8_t i = 0; i < rec_length; ++i)
+        {
+            objects.object[objects.length] = (object){objects.next_id, input_centroids[i], 0};
+
+            ++objects.length;
+            ++objects.next_id;
+        }
+
+        return ((ip_result){objects.length, 0, 0});
+    }
+
+    /* create an object to new centroids map (matrix) as a 1D array */
+    uint8_t dv_length = objects.length * rec_length;
+    object_rect_pair distance_vector[dv_length];
+
+    /* calculate the squared euclidean distance between each object and new centroid */
+    for (uint8_t i = 0; i < objects.length; ++i)
+    {
+        for (uint8_t j = 0; j < rec_length; ++j)
+        {
+            int8_t delta_x = objects.object[i].centroid.x - input_centroids[j].x;
+            int8_t delta_y = objects.object[i].centroid.y - input_centroids[j].y;
+
+            /* calculate squared euclidean distance (skip the square root, because we just need to sort based on it) */
+            uint16_t distance = delta_x * delta_x + delta_y * delta_y;
+
+            distance_vector[i * rec_length + j] = (object_rect_pair){distance, i, j};
+        }
+    }
+
+    /* sort the object-input centroid pairings based on their distance */
+    bubbleSort(distance_vector, dv_length);
+
+    /* use boolean flags in an integer to mark if an object or rect index has already been used */
+    uint16_t objects_used = 0;
+    uint16_t rects_used = 0;
+
+    /* iterate at most max(#objects, #input_centroids) times */
+    for (uint8_t i = 0; i < dv_length; ++i)
+    {
+        /* if the current pair's distance is higher than the max distance, then this and all following pairs are too far away */
+        if (distance_vector[i].distance > CT_MAX_DISTANCE * CT_MAX_DISTANCE)
+        {
+            break;
+        }
+
+        /* if the input centroids has already been assigned to a previous object, then skip this object */
+        if (objects_used & (1 << distance_vector[i].object_index) || rects_used & (1 << distance_vector[i].rect_index))
+        {
+            continue;
+        }
+
+        /* flag this object as used */
+        objects_used = objects_used | (1 << distance_vector[i].object_index);
+        rects_used = rects_used | (1 << distance_vector[i].rect_index);
+
+        uint8_t object_id = distance_vector[i].object_index;
+        uint8_t rect_id = distance_vector[i].rect_index;
+
+        /* check if this object has crossed the middle line, if so increase the count depending on the direction */
+#ifdef __ORIENTATION_VERTICAL
+        if (objects.object[object_id].centroid.x < (SENSOR_IMAGE_WIDTH >> 1) && input_centroids[rect_id].x >= (SENSOR_IMAGE_WIDTH >> 1))
+        {
+            ++total_up;
+        }
+        else if (objects.object[object_id].centroid.x >= (SENSOR_IMAGE_WIDTH >> 1) && input_centroids[rect_id].x < (SENSOR_IMAGE_WIDTH >> 1))
+        {
+            ++total_down;
+        }
+#else
+        if (objects.object[object_id].centroid.y < (SENSOR_IMAGE_HEIGHT >> 1) && input_centroids[rect_id].y >= (SENSOR_IMAGE_HEIGHT >> 1))
+        {
+            ++total_up;
+        }
+        else if (objects.object[object_id].centroid.y >= (SENSOR_IMAGE_HEIGHT >> 1) && input_centroids[rect_id].y < (SENSOR_IMAGE_HEIGHT >> 1))
+        {
+            ++total_down;
+        }
+#endif
+
+        /* update the object centroid to the assigned closest input centroid */
+        objects.object[object_id].centroid = input_centroids[distance_vector[i].rect_index];
+
+        /* reset the disapperead counter of that object */
+        objects.object[object_id].disappeared_frames_count = 0;
+    }
+
+    /* increase disappeared count of unused objects */
+    if (objects_used < (1 << objects.length) - 1)
+    {
+        uint16_t temp = objects_used;
+        uint8_t old_length = objects.length;
+        for (uint8_t i = 0; i < old_length; ++i)
+        {
+            if (!(temp & 1))
+            {
+                ++objects.object[i].disappeared_frames_count;
+            }
+            temp = temp >> 1;
+        }
+
+        deleteOldObjects(&objects);
+    }
+
+    /* register all the unused rectangles as new objects. */
+    if (rects_used < (1 << rec_length) - 1)
+    {
+        uint16_t temp = rects_used;
+        for (uint8_t i = 0; i < rec_length; ++i)
+        {
+            if (!(temp & 1))
+            {
+                objects.object[objects.length] = (object){objects.next_id, input_centroids[i], 0};
+
+                ++objects.length;
+                ++objects.next_id;
+            }
+            temp = temp >> 1;
+        }
+    }
+
+    return ((ip_result){objects.length, total_up, total_down});
+}
+
+/**
+ * @brief deletes all objects that have disappeared for more than (CT_MAX_DISAPPEARED)
+ * @param objects the list of objects
+ * TODO: remove parameter objects since objects is static globally.
+ */
+void deleteOldObjects(object_list *objects)
+{
+    uint8_t temp = 0;
+    uint8_t original_size = objects->length;
+    for (uint8_t i = 0; i < original_size; ++i)
+    {
+        /* decrease objects' length if has disappeared for more than CT_MAX_DISAPPEARED and skip this object */
+        if (objects->object[i].disappeared_frames_count > CT_MAX_DISAPPEARED)
+        {
+            --objects->length;
+            continue;
+        }
+        /* if index i is higher than temp, then it means that some objects were deleted, therefore we need to swap the
+        two objects to fill in the empty spot */
+        if (i > temp)
+        {
+            objects->object[temp].id = objects->object[i].id;
+            objects->object[temp].disappeared_frames_count = objects->object[i].disappeared_frames_count;
+            objects->object[temp].centroid = objects->object[i].centroid;
+        }
+        ++temp;
+    }
+}
+
+/**
+ * @brief perform bubble sort on the array of object-rectangle pairs
+ * @param array array of object-rectangle pairings
+ * @param length length of the array
+ */
+void bubbleSort(object_rect_pair *array, uint8_t length)
+{
+    uint8_t i, j;
+    for (i = 0; i < length - 1; ++i)
+    {
+        /* Last i elements are already in place */
+        for (j = 0; j < length - i - 1; ++j)
+        {
+            if (array[j].distance > array[j + 1].distance)
+            {
+                object_rect_pair temp = array[j];
+                array[j] = array[j + 1];
+                array[j + 1] = temp;
+            }
+        }
+    }
+}
+
+/**
+ * @brief returns the memory address of the list of objects
+ * @return memory address of the list of objects
+ */
+const object *getObjectsAddress()
+{
+    return objects.object;
 }
 
 #ifdef __TESTING_HARNESS
