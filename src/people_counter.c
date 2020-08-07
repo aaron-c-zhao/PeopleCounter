@@ -13,7 +13,7 @@
 /** @brief the start number of the rid */
 #define RID 42
 
-/** struct that keeps the information of configurations */
+/** @brief struct that keeps the information of configurations */
 extern ip_config config;
 
 // exclude this what it isn't run from the harness
@@ -45,17 +45,17 @@ ip_result people_tracking(recs *);
 void deleteOldObjects(object_list *);
 void bubbleSort(object_rect_pair *, uint8_t);
 
-/** list of objects (people) used for people tracking */
+/** @brief list of objects (people) used for people tracking */
 static object_list objects = {0, 0, {}};
 
 /** 
  * @brief the image processing pipeline, including people detection and people tracking.
  * @details we first subtract the background from each frame to get the foreground image, then apply Laplacian of Gaussian to detect people. 
  *          In the end, centroid tracking algorithm is used to track people.
- * @param frame 
- * @param background_image 
- * @param log_kernel 
- * @return ip_result 
+ * @param frame //TODO add info
+ * @param background_image //TODO add info
+ * @param log_kernel //TODO add info
+ * @return ip_result //TODO add info
  */
 ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
 {
@@ -110,6 +110,7 @@ ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
  */
 void background_substraction(uint16_t resolution, ip_mat *background, ip_mat *src, ip_mat *dst)
 {
+	//TODO add comments for code readability
 	uint8_t *bframe = background->data;
 	uint8_t *sframe = src->data;
 	uint8_t *dframe = dst->data;
@@ -130,6 +131,7 @@ void background_substraction(uint16_t resolution, ip_mat *background, ip_mat *sr
  */
 void nthreshold(uint16_t resolution, uint8_t thre, ip_mat *src, ip_mat *dst)
 {
+	//TODO add comments for code readability
 	uint8_t *sframe = src->data;
 	uint8_t *dframe = src->data;
 
@@ -375,13 +377,14 @@ void blob_filter(uint8_t *frame, recs *blobs, uint8_t amax, uint8_t amin)
 
 /**
  * @brief adjust the area of the blob for the sake of seprating oversized blobs
- * @param frame the bninarized image where the blobs resides
+ * @param frame the binarized image where the blobs resides
  * @param blob the blob to be adjusted
  * @param blobs the data structure that holds the blobs
  * @param amax the maximum area that a single blob could have
  */
 void area_adjust(uint8_t *frame, rec *blob, recs *blobs, uint8_t amax)
 {
+	//TODO coment for code readability
 	while (blob->area > amax)
 	{
 		erosion(frame, blob);
@@ -392,7 +395,7 @@ void area_adjust(uint8_t *frame, rec *blob, recs *blobs, uint8_t amax)
 	blob->rid = REC_IGNORE;
 };
 
-/** 
+/** //TODO add info about fit
  * @brief determine whether the structuring element fit inside the shape
  * @param frame 
  * @param rid 
@@ -403,6 +406,7 @@ void area_adjust(uint8_t *frame, rec *blob, recs *blobs, uint8_t amax)
  */
 static inline uint8_t fit(uint8_t *frame, uint8_t rid, uint8_t x, uint8_t y, uint8_t kernel[ERO_KSIZE][ERO_KSIZE])
 {
+	//TODO add comment for code readability
 	uint8_t radius = ERO_KSIZE / 2;
 	for (uint8_t i = 0; i < ERO_KSIZE; ++i)
 	{
