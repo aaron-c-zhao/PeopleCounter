@@ -1,4 +1,4 @@
-@page "people detection research"
+@page detectionResearch People detection research
 # People detection algorithms
 
 In the current pipeline, we use the Laplacian of Gaussian (LoG) to detect people. However, several other algorithms were also explored by the team to detect people in the frame effectively and efficiently. Due to different reasons (mainly time constraints), they are not included in the pipeline. We list them here to make it an inspiration for other developers.

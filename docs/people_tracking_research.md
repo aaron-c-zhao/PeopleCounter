@@ -1,4 +1,4 @@
-@page "people tracking research"
+@page trackingResearch People tracking research
 # Options in centroid tracking algorithm
 
 In the current pipeline, we use the Centroid tracking algorithm to track people. It associates blobs in consecutive frames based on their distance (the blobs with the smallest distance will be assigned the same ID). We take a greedy strategy to sort the distance matrix (the distance between n tracked objects and m newly detected rectangles) from the smallest to biggest and associate relevant blobs. It works perfectly when the distance matrix is small but when it comes to large distance matrix, it might not be the best option. Here we list several other algorithms we did research on which might produce better association. However, due to time constraints, we didn't implement all of them.
