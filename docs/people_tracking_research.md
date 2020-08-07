@@ -49,7 +49,7 @@ It is a rather complicated algorithm.
 
 ### Current progress
 
-The prediction and correction were already finished. But due to the time constraint, the kalman gain was not completely implemented. 
+The prediction and correction were already finished. But due to the time constraint, the kalman gain was not completely implemented. The current progress is in the branch kalman_filter.
 
 ### Relevant materials
 Wikipedia page  
@@ -58,8 +58,3 @@ Wikipedia page
 The Kalman Filter: An algorithm for making sense of fused sensor insight  
 [https://towardsdatascience.com/kalman-filter-an-algorithm-for-making-sense-from-the-insights-of-various-sensors-fused-together-ddf67597f35e](https://towardsdatascience.com/kalman-filter-an-algorithm-for-making-sense-from-the-insights-of-various-sensors-fused-together-ddf67597f35e)
   
-
-
-
-
-
