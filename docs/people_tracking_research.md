@@ -37,7 +37,7 @@ Besides centroid tracking algorithm, we also explored several other alternative 
 
 ### Introduction
 
-Apart from centroid tracking algorithm, another algorithm we have looked into is the Kalman filter, it is an algorithm uses a series of measurements observed over time and produces estimates of unknown variables. In our scenario, we will predict the position of a blob based on its previous positions, in that way, we can easily associate the blob with the correct ID.
+Apart from centroid tracking algorithm, another algorithm we have looked into is the Kalman filter, it is an algorithm uses a series of measurements observed over time and produces estimates of unknown variables. It mainly consists of 3 phases, prediction, kalman gain and correction. In our scenario, we will predict the position of a blob based on its previous positions, in that way, we can easily associate the blob with the correct ID.
 
 ### Advantages
 Be able to predict a blob's position when it disappears, making our pipeline more robust.
@@ -46,6 +46,10 @@ Better accuracy.
 
 ### Constraints
 It is a rather complicated algorithm.
+
+### Current progress
+
+The prediction and correction were already finished. But due to the time constraint, the kalman gain was not completely implemented. 
 
 ### Relevant materials
 Wikipedia page  
