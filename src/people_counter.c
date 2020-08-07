@@ -409,7 +409,7 @@ void area_adjust(uint8_t *frame, rec *blob, recs *blobs, uint8_t amax)
 /** 
  * @brief determine whether the structuring element fit in the shape
  * @param frame the binarized frame where the blobs resides 
- * @param rid the blob's id in the frame
+ * @param rid the rid of the blob in the frame
  * @param x the x-coordinate of the blob's pixel needs to be checked
  * @param y the y-coordinate of the blob's pixel needs to be checked
  * @param kernel the structuring element used to do erosion
@@ -418,8 +418,9 @@ void area_adjust(uint8_t *frame, rec *blob, recs *blobs, uint8_t amax)
  */
 static inline uint8_t fit(uint8_t *frame, uint8_t rid, uint8_t x, uint8_t y, uint8_t kernel[ERO_KSIZE][ERO_KSIZE])
 {
-	//TODO add comment for code readability
+	//half of the kernel size will be the distance the checked pixel need to be shifted
 	uint8_t radius = ERO_KSIZE / 2;
+
 	for (uint8_t i = 0; i < ERO_KSIZE; ++i)
 	{
 		for (uint8_t j = 0; j < ERO_KSIZE; ++j)
