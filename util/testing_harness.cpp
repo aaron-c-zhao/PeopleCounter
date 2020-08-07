@@ -1,14 +1,8 @@
 /**
  * @file testing_harness.cpp
- * @author your name (you@domain.com)
  * @brief code to run the module without having hardware
  * @details THis will run the supplied Json videos and run is through the module, 
  * for earch frame it will display the image before and after thresholding also with the recs
- * @version 0.1
- * @date 2020-08-07
- * 
- * @copyright Copyright (c) 2020
- * 
  */
 #include <stdio.h>
 #include <stdlib.h>
