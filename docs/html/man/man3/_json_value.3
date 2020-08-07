@@ -1,0 +1,85 @@
+.TH "_json_value" 3 "Fri Aug 7 2020" "Version 0.2" "People counter" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+_json_value
+.SH SYNOPSIS
+.br
+.PP
+.SS "Public Attributes"
+
+.in +1c
+.ti -1c
+.RI "struct \fB_json_value\fP * \fBparent\fP"
+.br
+.ti -1c
+.RI "json_type \fBtype\fP"
+.br
+.ti -1c
+.RI "union {"
+.br
+.ti -1c
+.RI "   int \fBboolean\fP"
+.br
+.ti -1c
+.RI "   json_int_t \fBinteger\fP"
+.br
+.ti -1c
+.RI "   double \fBdbl\fP"
+.br
+.ti -1c
+.RI "   struct {"
+.br
+.ti -1c
+.RI "      unsigned int \fBlength\fP"
+.br
+.ti -1c
+.RI "      json_char * \fBptr\fP"
+.br
+.ti -1c
+.RI "   } \fBstring\fP"
+.br
+.ti -1c
+.RI "   struct {"
+.br
+.ti -1c
+.RI "      unsigned int \fBlength\fP"
+.br
+.ti -1c
+.RI "      \fBjson_object_entry\fP * \fBvalues\fP"
+.br
+.ti -1c
+.RI "   } \fBobject\fP"
+.br
+.ti -1c
+.RI "   struct {"
+.br
+.ti -1c
+.RI "      unsigned int \fBlength\fP"
+.br
+.ti -1c
+.RI "      struct \fB_json_value\fP ** \fBvalues\fP"
+.br
+.ti -1c
+.RI "   } \fBarray\fP"
+.br
+.ti -1c
+.RI "} \fBu\fP"
+.br
+.ti -1c
+.RI "union {"
+.br
+.ti -1c
+.RI "   struct \fB_json_value\fP * \fBnext_alloc\fP"
+.br
+.ti -1c
+.RI "   void * \fBobject_mem\fP"
+.br
+.ti -1c
+.RI "} \fB_reserved\fP"
+.br
+.in -1c
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for People counter from the source code\&.

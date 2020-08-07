@@ -1,4 +1,4 @@
-/**
+/** //TODO add more information? author, version, details, api etc?
  ******************************************************************************
  * @file           : people_counter.c
  * @brief          : Implementation of the image processing pipeline
@@ -8,13 +8,15 @@
 #include "people_counter.h"
 #include "string.h"
 
+/** @brief the value for a white pixel */
 #define WHITE 255
-/* the start number of the rid */
+/** @brief the start number of the rid */
 #define RID 42
 
-/* struct that keeps the information of configurations */
+/** @brief struct that keeps the information of configurations */
 extern ip_config config;
 
+// exclude this what it isn't run from the harness
 #ifdef __TESTING_HARNESS
 // include for printf
 #include <stdio.h>
@@ -43,9 +45,18 @@ ip_result people_tracking(recs *);
 void deleteOldObjects(object_list *);
 void bubbleSort(object_rect_pair *, uint8_t);
 
-/* list of objects (people) used for people tracking */
+/** @brief list of objects (people) used for people tracking */
 static object_list objects = {0, 0, {}};
 
+/** 
+ * @brief the image processing pipeline, including people detection and people tracking.
+ * @details we first subtract the background from each frame to get the foreground image, then apply Laplacian of Gaussian to detect people. 
+ *          In the end, centroid tracking algorithm is used to track people.
+ * @param frame frame the image to be processed
+ * @param background_image the background image chosed to do background subtraction
+ * @param log_kernel the kernel of the convolution of the LOG operator in people detection
+ * @return ip_result contains object length and the count of up and down
+ */
 ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
 {
 #ifdef __TESTING_HARNESS
@@ -58,7 +69,11 @@ ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
     ip_mat *frame_mat = (ip_mat *)frame;
     ip_mat *frame_bak = (ip_mat *)background_image;
     int8_t **kernel = (int8_t **)log_kernel;
+
+	/* subtract the background image from the frame */
     background_substraction(SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT, frame_bak, frame_mat, frame_mat);
+
+	/* apply Laplacian of Gaussian on the substracted frame */
     LoG(LOG_KSIZE, kernel, frame_mat, &log_mat);
     static recs blobs = {0, {}};
 
@@ -66,7 +81,10 @@ ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
     uint64_t before_blob_tsc = readTSC();
 #endif
 
+    /* find the blobs in the thresholded image */
     find_blob(log_frame, &blobs, 0, RID, WHITE);
+
+    /* filter out the blob which is out of the area range */
     blob_filter(log_frame, &blobs, REC_MAX_AREA, REC_MIN_AREA);
 
 #ifdef __TESTING_HARNESS
@@ -84,7 +102,7 @@ ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
     memcpy(hrects, blobs.nodes, RECTS_MAX_SIZE * sizeof(rec));
 #endif
 
-    //TODO get the correct values to return when the tracking gets implemented
+    /* apply centroid tracking algorithm on the blobs detected */
     ip_result return_result = people_tracking(&blobs);
 
     return return_result;
@@ -99,8 +117,11 @@ ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
  */
 void background_substraction(uint16_t resolution, ip_mat *background, ip_mat *src, ip_mat *dst)
 {
+	/* get the pixel values for the background image */
 	uint8_t *bframe = background->data;
+	/* get the pixel values for the frame */
 	uint8_t *sframe = src->data;
+    /* get the pixel values for the substracted image */
 	uint8_t *dframe = dst->data;
 
 	for (uint16_t i = 0; i < resolution; i++)
@@ -119,9 +140,11 @@ void background_substraction(uint16_t resolution, ip_mat *background, ip_mat *sr
  */
 void nthreshold(uint16_t resolution, uint8_t thre, ip_mat *src, ip_mat *dst)
 {
+	/* get the pixel values for the source image */
 	uint8_t *sframe = src->data;
+	/* get the pixel values for the destination image */
 	uint8_t *dframe = src->data;
-
+    /* apply threshold on the source image and put the result to the destination image */
 	for (uint16_t i = 0; i < resolution; i++)
 	{
 		dframe[i] = (sframe[i] > thre) ? 255 : 0;
@@ -208,7 +231,7 @@ void LoG(uint8_t ksize, int8_t **kernel, ip_mat *src, ip_mat *dst)
 
 		for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i) {
 			for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j) {
-				if (convolve_values[i * SENSOR_IMAGE_WIDTH + j] > 0.9 * gen_threshold)
+				if (convolve_values[i * SENSOR_IMAGE_WIDTH + j] > (config.sensitivity * gen_threshold) / 10)
 					dframe[i * SENSOR_IMAGE_WIDTH +j] = 0;
 				else dframe[i * SENSOR_IMAGE_WIDTH +j] = 255;
 			}
@@ -221,7 +244,7 @@ void LoG(uint8_t ksize, int8_t **kernel, ip_mat *src, ip_mat *dst)
 /**
  * @brief This function will find all the blobs in the thresholded image and mark the pixels
  *        that belong to different blobs with a unique rid
- * @pram src the source image
+ * @param src the source image
  * @param blobs the struct that holds the result blobs
  * @param start_i the start index of the blob_counter
  * @param rid the start point of the rid
@@ -273,7 +296,7 @@ void enqueue(queue *q, pixel p)
 /**
  * @brief data structure operation, dqueue
  * @param q the queue to be operate on
- * TODO: add a error handling to deal with empty queue
+ * //TODO: add a error handling to deal with empty queue
  */
 pixel dequeue(queue *q)
 {
@@ -355,6 +378,7 @@ void blob_filter(uint8_t *frame, recs *blobs, uint8_t amax, uint8_t amin)
 			temp->rid = REC_IGNORE;
 			continue;
 		}
+		/* filter out huge blobs */
 		if (temp->area > amax)
 		{
 			area_adjust(frame, temp, blobs, amax);
@@ -364,13 +388,14 @@ void blob_filter(uint8_t *frame, recs *blobs, uint8_t amax, uint8_t amin)
 
 /**
  * @brief adjust the area of the blob for the sake of seprating oversized blobs
- * @param frame the bninarized image where the blobs resides
+ * @param frame the binarized image where the blobs resides
  * @param blob the blob to be adjusted
  * @param blobs the data structure that holds the blobs
  * @param amax the maximum area that a single blob could have
  */
 void area_adjust(uint8_t *frame, rec *blob, recs *blobs, uint8_t amax)
 {
+	/* apply erosion on the huge blobs */
 	while (blob->area > amax)
 	{
 		erosion(frame, blob);
@@ -381,9 +406,21 @@ void area_adjust(uint8_t *frame, rec *blob, recs *blobs, uint8_t amax)
 	blob->rid = REC_IGNORE;
 };
 
+/** 
+ * @brief determine whether the structuring element fit in the shape
+ * @param frame the binarized frame where the blobs resides 
+ * @param rid the rid of the blob in the frame
+ * @param x the x-coordinate of the blob's pixel needs to be checked
+ * @param y the y-coordinate of the blob's pixel needs to be checked
+ * @param kernel the structuring element used to do erosion
+ * @return uint8_t 1 represents the structuring element fits in the shape
+ *                 0 represents the structuring element doesn't fit in the shape
+ */
 static inline uint8_t fit(uint8_t *frame, uint8_t rid, uint8_t x, uint8_t y, uint8_t kernel[ERO_KSIZE][ERO_KSIZE])
 {
+	//half of the kernel size will be the distance the checked pixel need to be shifted
 	uint8_t radius = ERO_KSIZE / 2;
+
 	for (uint8_t i = 0; i < ERO_KSIZE; ++i)
 	{
 		for (uint8_t j = 0; j < ERO_KSIZE; ++j)

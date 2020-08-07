@@ -1,0 +1,44 @@
+.TH "tracking_research" 3 "Fri Aug 7 2020" "Version 0.2" "People counter" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+tracking_research \- People tracking research 
+
+.SH "Options in centroid tracking algorithm"
+.PP
+.PP
+In the current pipeline, we use the Centroid tracking algorithm to track people\&. It associates blobs in consecutive frames based on their distance (the blobs with the smallest distance will be assigned the same ID)\&. We take a greedy strategy to sort the distance matrix (the distance between n tracked objects and m newly detected rectangles) from the smallest to biggest and associate relevant blobs\&. It works perfectly when the distance matrix is small but when it comes to large distance matrix, it might not be the best option\&. Here we list several other algorithms we did research on which might produce better association\&. However, due to time constraints, we didn't implement all of them\&.
+.PP
+.SS "1\&. SoftAssign"
+.PP
+.SS "Introduction"
+.PP
+The aim of the softassign algorithm is straightforward: retrieve the best match pairs with the smallest sum of distance\&. It achieves that by keeping normalizing values in each row and column until it coverges\&. In the end, the optimal pair will be the maximum value in each row and column\&.
+.PP
+.SS "Advantages"
+.PP
+Guarantee the optimal pairs will be found with any distance matrix\&.
+.PP
+.SS "Relevant materials"
+.PP
+Softmax to Softassign: Neural Network Algorithms for Combinatorial Optimization
+.PP
+\fChttps://www\&.researchgate\&.net/publication/2458489_Softmax_to_Softassign_Neural_Network_Algorithms_for_Combinatorial_Optimization\fP
+.PP
+The SoftAssign Procrustes Matching algorithm
+.PP
+\fChttps://www\&.cise\&.ufl\&.edu/~anand/pdf/ipsprfnl\&.pdf\fP
+.PP
+.SS "2\&. Network flow"
+.PP
+.SS "Introduction"
+.PP
+It is easy to associate the optimal pairing problem in our scenario to the Biparitite Matching problem in the network flow\&. With tracked objects as one set and newly detected rectangles as the other set, our job is to make a one-by-one association between these two sets\&. The thing needs to be noticed is that each edges between the two set would have some weight\&. The approach to solve this problem is the traditional Bellman-Ford algorithm, it can give us the match with the maximum weight\&.
+.PP
+.SS "Advantages"
+.PP
+Find the optimal pairs with relative less time\&.
+.PP
+.SS "Constraints"
+.PP
+It can only work when the numeber of tracked objects equals the number of newly found rectangles\&. Since there are many cases when those two numbers are not equal, this algorithm was ignored\&. 

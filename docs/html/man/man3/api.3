@@ -1,0 +1,39 @@
+.TH "api" 3 "Fri Aug 7 2020" "Version 0.2" "People counter" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+api \- api documentation 
+
+.SH "api"
+.PP
+.PP
+In this document the api is described, with what is handled the module and what will have to be handled by the firmware\&.
+.PP
+Background image is handled //TODO add info about background substraction IpProcess is the method responsible for detecting, tracking and counting people
+.PP
+.SS "input"
+.PP
+.IP "\(bu" 2
+frame
+.IP "  \(bu" 4
+null pointer of struct ip_mat 
+.PP
+.nf
+typedef struct mat
+  {
+    uint8_t *data;
+  } ip_mat;
+
+.fi
+.PP
+
+.PP
+
+.IP "\(bu" 2
+output null array pointer of ip_object\&.
+.IP "\(bu" 2
+output null pointer of ip_result
+.PP
+.PP
+.SS "Output"
+

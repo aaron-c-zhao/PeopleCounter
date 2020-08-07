@@ -1,3 +1,9 @@
+/**
+ * @file testing_harness.cpp
+ * @brief code to run the module without having hardware
+ * @details THis will run the supplied Json videos and run is through the module, 
+ * for earch frame it will display the image before and after thresholding also with the recs
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -7,54 +13,60 @@
 #include "json.h"
 #include "testing_harness.h"
 
+//TODO add comment
+/** @brief */
 #define RESOLUTION (width * height)
 
+//TODO add comment
+/** @brief */
 using namespace cv;
 
 /*---------------------------------------global variables--------------------------------------*/
 
-/* the width of the image and the height of the image, width * height = resolution */
+/** @brief the width of the image, width * height = resolution */
 static int width = 8;
+/** @brief the height of the image, width * height = resolution */
 static int height = 8;
-/* the lower limit of the temperature mapping and the upper limit */
+/** @brief the lower limit of the temperature mapping */
 static int llimit = 20;
+/** @brief the upper limit of the temperature mapping */
 static int hlimit = 40;
 
-/* frame rate */
+/** @brief frame rate */
 static int frame_rate = 10;
 
-/* the step of fowarding the image pointer */
+/** @brief the step of fowarding the image pointer */
 static int step = 0;
 
-/* pointer to the frame array */
+/** @brief pointer to the frame array */
 static double **frames_ptr;
 
-/* path to the configuration file */
+/** @brief path to the configuration file */
 static const char *config_path = "harness_config.json";
 
-/* image pointer which indicates which image should be processed next */
+/** @brief image pointer which indicates which image should be processed next */
 static unsigned long img_ptr = 0;
 
-/* how many frames are there in this video */
+/** @brief how many frames are there in this video */
 static unsigned long frame_count = 0;
 
-/* background image that will be passed into pipeline */
+/** @brief background image that will be passed into pipeline */
 static uint8_t *background;
 
-/* configuration of the pipeline */
+/** @brief configuration of the pipeline */
 ip_config config = {
 	.kernel_1 = 5,
 	.threshold = 32,
 	.max_area = 18
 };
 
-/* number of rectangles detected in the frame */
+/** @brief number of rectangles detected in the frame */
 uint8_t rec_num = 0;
 
-/* rectangles find by the pipeline */
+/** @brief rectangles find by the pipeline */
 rec hrects[RECTS_MAX_SIZE] = {{0, 0, 0, 0}};
 
-/* Intermedia result 1: image after thresholding */
+/** @brief Intermedia result 1: image after thresholding */
 uint8_t *th_frame;
 /*---------------------------------------------------------------------------------------------*/
 
@@ -71,21 +83,24 @@ static void draw_rect(Mat *);
 static void create_trackbar(const char*, void*);
 void rec_areaCallback(int, void*);
 void kernel_1Callback(int, void*);
-void kernel_2Callback(int, void*);
-void kernel_3Callback(int, void*);
 void threshold_Callback(int, void*);
-void updated_thresholdCallback(int, void*);
-void blob_width_minCallback(int, void*);
-void blob_height_minCallback(int, void*);
+void sensitivity_Callback(int, void*);
 void get_LoG_kernel(double, int, int8_t**);
 /*---------------------------------------------------------------------------------------------*/
 
-/* hash function that will map string to an int */
+/** @brief hash function that will map string to an int */
 constexpr unsigned int str2int(const char *str, int h = 0)
 {
 	return !str[h] ? 5381 : (str2int(str, h + 1) * 33) ^ str[h];
 }
 
+/** //TODO add comments
+ * @brief Get the LoG kernel object
+ * 
+ * @param sigma 
+ * @param ksize 
+ * @param result 
+ */
 void get_LoG_kernel(double sigma, int ksize, int8_t** result)
 {
         if (!(ksize % 2)) {
@@ -280,6 +295,10 @@ static void create_trackbar(const char *window, void* data) {
 	const char *threshold = "threshold";
 	int ithreshold= config.threshold;
 	createTrackbar(threshold, window, &ithreshold, 20000, threshold_Callback, data);
+	/* slide bar to adjust the sensitivity*/
+	const char *sensitivity = "sensitivity";
+	int isensitivity= config.sensitivity;
+	createTrackbar(sensitivity, window, &isensitivity, 20, sensitivity_Callback, data);
 }
 
 void rec_areaCallback(int value, void* data) {
@@ -292,6 +311,11 @@ void kernel_1Callback(int value, void* data) {
 
 void threshold_Callback(int value, void* data) {
 	config.threshold = (int16_t)value;
+}
+
+
+void sensitivity_Callback(int value, void *data) {
+	config.sensitivity = (uint8_t)value;
 }
 
 /**
@@ -507,6 +531,8 @@ static void read_config(json_value *value, int depth)
 			case str2int("threshold"): config.threshold = temp_value;
 			break;
 			case str2int("max_area"): config.max_area = temp_value;	  
+			break;
+			case str2int("sensitivity"): config.sensitivity = temp_value;
 			break;
 		case str2int("width"):
 			width = temp_value;

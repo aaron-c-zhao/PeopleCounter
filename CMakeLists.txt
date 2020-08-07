@@ -38,15 +38,26 @@ add_definitions(
 	-DLOG_KERNEL_SIZE=${LOG_KERNEL_SIZE}
 	-DQUEUE_SIZE=${QUEUE_SIZE}
 	-DERO_KSIZE=${ERO_KSIZE}
+	-DRECTS_MAX_SIZE=${RECTS_MAX_SIZE}
+	-DCT_MAX_DISAPPEARED=${CT_MAX_DISAPPEARED}
+	-DCT_MAX_DISTANCE=${CT_MAX_DISTANCE}
+	-DTRACKABLE_OBJECT_MAX_SIZE=${TRACKABLE_OBJECT_MAX_SIZE}
+	-DREC_MAX_AREA=${REC_MAX_AREA}
+	-DREC_MIN_AREA=${REC_MIN_AREA}
+	-DLOG_SIGMA=${LOG_SIGMA}
 	)
 
 message ( 
 	"${Red}-----------------------------------------------------------------------------------------${ColorRest}\n"
 	"${Green}Image width:${Red}${SENSOR_IMAGE_WIDTH}${ColourReset}\n" 
 	"${Green}Image height:${Red}${SENSOR_IMAGE_HEIGHT}${ColourReset}\n"
-	"${Green}Rects max amount:${Red}${RECTS_MAX_SIZE}${ColourReset}\n"
-	"${Green}Log kernel size:${Red}${LOG_KERNEL_SIZE}${ColorReset}\n"
 	"${Green}Frame rate:${Red}${FRAME_RATE}${ColouerReset}\n"
+	"${Green}LoG kernel size:${Red}${LOG_KERNEL_SIZE}${ColorReset}\n"
+	"${Green}LoG sigma:${Red}${LOG_SIGMA}${ColouerReset}\n"
+	"${Green}blob max area:${Red}${REC_MAX_AREA}${ColouerReset}\n"
+	"${Green}blob min area:${Red}${REC_MIN_AREA}${ColouerReset}\n"
+	"${Green}erosion kernel size:${Red}${ERO_KSIZE}${ColouerReset}\n"
+	"${Green}Rects max amount:${Red}${RECTS_MAX_SIZE}${ColourReset}\n"
 	"${Red}-----------------------------------------------------------------------------------------${ColourReset}\n"
 	)
 configure_file( people_counter.h.in ${CMAKE_SOURCE_DIR}/src/inc/people_counter.h )
@@ -79,4 +90,5 @@ target_compile_options( PeopleCounter PRIVATE
 target_link_libraries( PeopleCounter 
 	${OpenCV_LIBS} 
 	JSON)
+
 

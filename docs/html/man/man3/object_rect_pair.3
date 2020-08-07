@@ -1,0 +1,41 @@
+.TH "object_rect_pair" 3 "Fri Aug 7 2020" "Version 0.2" "People counter" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+object_rect_pair \- HELPER STRUCT: DISTANCE OF OBJECT AND BOUNDING BOX PAIRING\&.  
+
+.SH SYNOPSIS
+.br
+.PP
+.PP
+\fC#include <people_counter\&.h>\fP
+.SS "Public Attributes"
+
+.in +1c
+.ti -1c
+.RI "uint16_t \fBdistance\fP"
+.br
+.ti -1c
+.RI "uint8_t \fBobject_index\fP"
+.br
+.ti -1c
+.RI "uint8_t \fBrect_index\fP"
+.br
+.in -1c
+.SH "Detailed Description"
+.PP 
+HELPER STRUCT: DISTANCE OF OBJECT AND BOUNDING BOX PAIRING\&. 
+
+
+.SH "Member Data Documentation"
+.PP 
+.SS "uint16_t object_rect_pair::distance"
+distance between the tracked object and the new bounding box centroid 
+.SS "uint8_t object_rect_pair::object_index"
+array index of the tracked object 
+.SS "uint8_t object_rect_pair::rect_index"
+array index of the new bounding box 
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for People counter from the source code\&.

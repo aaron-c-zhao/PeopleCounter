@@ -1,0 +1,52 @@
+.TH "config" 3 "Fri Aug 7 2020" "Version 0.2" "People counter" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+config \- parameters that will affect the performance of the pipeline  
+
+.SH SYNOPSIS
+.br
+.PP
+.PP
+\fC#include <people_counter\&.h>\fP
+.SS "Public Attributes"
+
+.in +1c
+.ti -1c
+.RI "uint8_t \fBkernel_1\fP"
+.br
+.RI "the size of the LoG kernel "
+.ti -1c
+.RI "int16_t \fBthreshold\fP"
+.br
+.RI "the threshold for binarizing the image "
+.ti -1c
+.RI "uint8_t \fBmax_area\fP"
+.br
+.RI "the max area that a single blob can be\&. "
+.ti -1c
+.RI "uint8_t \fBsensitivity\fP"
+.br
+.RI "the sensitivity of the adaptive thresholding "
+.in -1c
+.SH "Detailed Description"
+.PP 
+parameters that will affect the performance of the pipeline 
+.SH "Member Data Documentation"
+.PP 
+.SS "uint8_t config::max_area"
+
+.PP
+the max area that a single blob can be\&. the max area is for detecting huge blobs which might be composed by two individual blobs merged together\&. if the blob has an area larger than this value, it will be eroded\&. 
+.SS "uint8_t config::sensitivity"
+
+.PP
+the sensitivity of the adaptive thresholding the threshold in the second step of adative thresholding is calculated based on the distribution of the value of the pixels of the blobs\&. This parameters controls how sensitive the second threshold will be, the higher the value the more sensitive it is\&. 
+.SS "int16_t config::threshold"
+
+.PP
+the threshold for binarizing the image The whole thresholding process is divided into two parts\&. In the first step, all the pixels that has a larger value(the value is negative, so that means a smaller absolute value), will be rendered black(0), of which this parameter is used for\&. The good choice for this threshold would be the one just above the background noises\&. 
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for People counter from the source code\&.

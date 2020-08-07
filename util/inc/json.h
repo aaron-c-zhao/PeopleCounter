@@ -1,4 +1,7 @@
 
+/**
+ * @brief A 3rd party library for using Json in C
+ */
 /* vim: set et ts=3 sw=3 sts=3 ft=c:
  *
  * Copyright (C) 2012, 2013, 2014 James McLaughlin et al.  All rights reserved.

@@ -1,14 +1,16 @@
 /**
   ******************************************************************************
-  * @file           : people_counter.h
-  * @brief          : Header file for storing the configurations of image processing pipeline.
+  * @file           : people_counter.h.in
+  * @brief          : Header file template that will read by CMake which will generate the people_counter.h afterward.
   *                   This file contains all of the parameters of the image processing pipeline.
   ******************************************************************************
 **/
 
 #ifndef __PEOPLE_COUNTER
 #define __PEOPLE_COUNTER
-
+/**
+ * @brief the orientation of sensor(delete or comment out this line if the orientation is horizontal)
+ */
 #define __ORIENTATION_VERTICAL
 
 #ifdef __cplusplus
@@ -19,36 +21,74 @@ extern "C"
 #include <stdint.h>
 #include "testing_harness.h"
 
-// CT = Centroid Tracker
+/** 
+ * @brief the maximum number of frames that a blob can be disappeared before it get deleted from thne tracking list
+ */
 #define CT_MAX_DISAPPEARED @CT_MAX_DISAPPEARED@
+/** 
+ * @brief the maximum distance that a blob can be from itselft in the last frame. If the distance is larger than this value, the blob
+ *        will not be considered as the same one.
+ */
 #define CT_MAX_DISTANCE    @CT_MAX_DISTANCE@
 
-// Array max sizes
+/** 
+ * @brief the length of the array that holds the rectangles. 
+ */
 #define RECTS_MAX_SIZE @RECTS_MAX_SIZE@
+/** 
+ * @brief the maximum amount of objects that could be tracked. 
+ */
 #define TRACKABLE_OBJECT_MAX_SIZE @TRACKABLE_OBJECT_MAX_SIZE@
 
-// Image size
+/** 
+ * @brief the amount of pixels in each row
+ */
 #define SENSOR_IMAGE_WIDTH  @SENSOR_IMAGE_WIDTH@
+/** 
+ * @brief the amount of pixels in each column
+ */
 #define SENSOR_IMAGE_HEIGHT @SENSOR_IMAGE_HEIGHT@
 
-/* Kernel size of the LoG */
+/** 
+ * @brief Kernel size of the LoG 
+ */
 #define LOG_KSIZE @LOG_KSIZE@
-/* Sigma from the gaussian kernel */
+/** 
+ * @brief Sigma from the gaussian kernel 
+ */
 #define LOG_SIGMA @LOG_SIGMA@
-/* how many pixels can the queue hold */
+/** 
+ * @brief how many pixels can the queue hold 
+ */
 #define QUEUE_SIZE @QUEUE_SIZE@
-/* Sensor frame rate */
+/** 
+ * @brief Sensor frame rate 
+ */
 #define FRAME_RATE @FRAME_RATE@
-/* Max area that a single blob can be */
+/** 
+ * @brief Max area that a single blob can be 
+ */
 #define REC_MAX_AREA @REC_MAX_AREA@
-/* Min area that a single blob can be */
+/** 
+ * @brief Min area that a single blob can be 
+ */
 #define REC_MIN_AREA @REC_MIN_AREA@
-/* erosion kernel size */
+/** 
+ * @brief erosion kernel size 
+ */
 #define ERO_KSIZE @ERO_KSIZE@
 
+/** 
+ * @brief the flag that indicated the blob detected should be ignored(probably it's a merged blob)
+ */
 #define REC_IGNORE 13
-// Directions
+/** 
+ * @brief magic number that indicates the person is going up
+ */
 #define DIRECTION_UP   0x00
+/** 
+ * @brief magic number that indicates the person is going down
+ */
 #define DIRECTION_DOWN 0x01
 
 /* *******************************************************************************
@@ -58,87 +98,170 @@ extern "C"
  *
  *******************************************************************************/
 
-    /* IMAGE STRUCT */
+    /**
+     * @brief the datastructure that represents the thermal image 
+     * 
+     */
     typedef struct mat
     {
-        uint8_t *data; /* pointer to array of grayscale 8bit pixels */
+        /** @brief pointer to array of grayscale 8bit pixels */
+        uint8_t *data; 
     } ip_mat;
 
+    /** 
+     * @brief parameters that will affect the performance of the pipeline
+     */
     typedef struct config
     {
+        /** @brief the size of the LoG kernel */
         uint8_t kernel_1;
+        /** 
+	 * @brief the threshold for binarizing the image
+	 * @details The whole thresholding process is divided into two parts. In the first step, all the pixels that has a 
+	 *          larger value(the value is negative, so that means a smaller absolute value), will be rendered black(0),
+	 *          of which this parameter is used for. The good choice for this threshold would be the one just above the
+	 *          background noises.
+	 */
         int16_t threshold;
+        /** 
+	 * @brief the max area that a single blob can be.
+	 * @details the max area is for detecting huge blobs which might be composed by two individual blobs merged together.
+	 *          if the blob has an area larger than this value, it will be eroded. 
+	 */
         uint8_t max_area;
+	/**
+	 * @brief the sensitivity of the adaptive thresholding
+	 * @details the threshold in the second step of adaptive thresholding is calculated based on the distribution of the value
+	 *          of the pixels of the blobs. This parameters controls how sensitive the second threshold will be, the higher the
+	 *          value the more sensitive it is. 
+	 */ 	
+	uint8_t sensitivity;
     } ip_config;
 
+    /**
+     * @brief the structure that represent the position of a pixel. 
+     */
     typedef struct pixel
     {
-        /* coordinates of the pixel */
+        /** @brief x coordinate of the pixel */
         uint8_t x;
+        /** @brief y coordinate of the pixel */
         uint8_t y;
     } pixel;
 
+    /**
+     * @brief the datastrure used in the BFS
+     */
     typedef struct queue
     {
+        /** @brief how many elements are there in the queue. Note: should be less than the QUEUE_SIZE*/
         uint8_t count;
+        /** @brief the queue is implemented in a circular manner, this is the pointer points to the front of the queue*/
         uint8_t top;
+        /** @brief the pointer that points to the bottom of the queue*/
         uint8_t bottom;
+        /** @brief the array under the hood that holds the elements*/
         pixel pixels[QUEUE_SIZE];
     } queue;
 
+    /**
+     * @brief  the struct that represents a rectangle
+     */
     typedef struct rec
     {
+        /** @brief the minimum x coordinate of the rectangle */
         uint8_t min_x;
+        /** @brief the minimum y coordiante of the rectangle */
         uint8_t min_y;
+        /** @brief the maximum x coordiante of the rectangle */
         uint8_t max_x;
+        /** @brief the maximum y coordinate of the rectangle*/
         uint8_t max_y;
+        /** @brief the id of the rectangle for distinguish the rectangle from the others in the same frame*/
         uint8_t rid;
+        /** @brief the area of the rectagle(count of pixels)*/
         uint16_t area;
     } rec;
 
+    /**
+     * @brief rectangles
+     */
     typedef struct recs
     {
+        /** @brief the count of the rectangles*/
         uint8_t count;
+        /** @brief the array that holds the rectangles*/
         rec nodes[RECTS_MAX_SIZE];
     } recs;
 
-    /* OBJECT (PERSON) STRUCT */
+    /**
+     * @brief OBJECT (PERSON) STRUCT
+     * 
+     */
     typedef struct object
     {
-        uint16_t id;                      /* id of a tracked object */
-        pixel centroid;                   /* the center position of this object */
-        uint8_t disappeared_frames_count; /* number of frames this object has disappered */
+        /** id of a tracked object */
+        uint16_t id;                      
+        /** the center position of this object */
+        pixel centroid;                   
+        /** number of frames this object has disappered */
+        uint8_t disappeared_frames_count; 
     } object;
 
-    /* HELPER STRUCT: LIST OF OBJECTS */
+    /**
+     * @brief HELPER STRUCT: LIST OF OBJECTS
+     * 
+     */
     typedef struct object_list
     {
-        uint16_t next_id;                         /* id of the next new object */
-        uint8_t length;                           /* length of cyclical list */
-        object object[TRACKABLE_OBJECT_MAX_SIZE]; /* fixed sized array of objects used as cyclical list */
+        /** id of the next new object */
+        uint16_t next_id;                         
+        /** length of cyclical list */
+        uint8_t length;                           
+        /** fixed sized array of objects used as cyclical list */
+        object object[TRACKABLE_OBJECT_MAX_SIZE]; 
     } object_list;
 
-    /* HELPER STRUCT: DISTANCE OF OBJECT AND BOUNDING BOX PAIRING */
+    /**
+     * @brief HELPER STRUCT: DISTANCE OF OBJECT AND BOUNDING BOX PAIRING
+     * 
+     */
     typedef struct object_rect_pair
     {
-        uint16_t distance;    /* distance between the tracked object and the new bounding box centroid */
-        uint8_t object_index; /* array index of the tracked object */
-        uint8_t rect_index;   /* array index of the new bounding box */
+        /** distance between the tracked object and the new bounding box centroid */
+        uint16_t distance;    
+        /** array index of the tracked object */
+        uint8_t object_index; 
+        /** array index of the new bounding box */
+        uint8_t rect_index;   
     } object_rect_pair;
 
+    /**
+     * @brief 
+     * 
+     */
     typedef struct result
     {
+        /** */
         uint8_t objects_length;
+        /** */
         uint8_t up;
+        /** */
         uint8_t down;
     } ip_result;
 
-    /* RESULT STATUS ENUM */
+    /**
+     * @brief RESULT STATUS ENUM
+     * 
+     */
     typedef enum
     {
-        IP_UPDATE, /* count of people is changed */
-        IP_STILL,  /* count of people is unchanged, but there are still people in frame */
-        IP_EMPTY   /* no people are being tracked and no people detected in frame */
+        /** count of people is changed */
+        IP_UPDATE, 
+        /** count of people is unchanged, but there are still people in frame */
+        IP_STILL, 
+        /** no people are being tracked and no people detected in frame */
+        IP_EMPTY   
     } ip_status;
 
 #ifdef __TESTING_HARNESS

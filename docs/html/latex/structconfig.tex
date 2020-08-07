@@ -1,0 +1,64 @@
+\hypertarget{structconfig}{}\section{config Struct Reference}
+\label{structconfig}\index{config@{config}}
+
+
+parameters that will affect the performance of the pipeline  
+
+
+
+
+{\ttfamily \#include $<$people\+\_\+counter.\+h$>$}
+
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{structconfig_a82c79528c83c09c93c04a3c54982fc24}\label{structconfig_a82c79528c83c09c93c04a3c54982fc24}} 
+uint8\+\_\+t \mbox{\hyperlink{structconfig_a82c79528c83c09c93c04a3c54982fc24}{kernel\+\_\+1}}
+\begin{DoxyCompactList}\small\item\em the size of the LoG kernel \end{DoxyCompactList}\item 
+int16\+\_\+t \mbox{\hyperlink{structconfig_ae0c9e09ec87f1a408ec356df5f468118}{threshold}}
+\begin{DoxyCompactList}\small\item\em the threshold for binarizing the image \end{DoxyCompactList}\item 
+uint8\+\_\+t \mbox{\hyperlink{structconfig_a7b01db4f29befbf3cc2925748fa3014a}{max\+\_\+area}}
+\begin{DoxyCompactList}\small\item\em the max area that a single blob can be. \end{DoxyCompactList}\item 
+uint8\+\_\+t \mbox{\hyperlink{structconfig_a91f6a75cc3ae6447712700387e89a9c2}{sensitivity}}
+\begin{DoxyCompactList}\small\item\em the sensitivity of the adaptive thresholding \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+parameters that will affect the performance of the pipeline 
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{structconfig_a7b01db4f29befbf3cc2925748fa3014a}\label{structconfig_a7b01db4f29befbf3cc2925748fa3014a}} 
+\index{config@{config}!max\_area@{max\_area}}
+\index{max\_area@{max\_area}!config@{config}}
+\subsubsection{\texorpdfstring{max\_area}{max\_area}}
+{\footnotesize\ttfamily uint8\+\_\+t config\+::max\+\_\+area}
+
+
+
+the max area that a single blob can be. 
+
+the max area is for detecting huge blobs which might be composed by two individual blobs merged together. if the blob has an area larger than this value, it will be eroded. \mbox{\Hypertarget{structconfig_a91f6a75cc3ae6447712700387e89a9c2}\label{structconfig_a91f6a75cc3ae6447712700387e89a9c2}} 
+\index{config@{config}!sensitivity@{sensitivity}}
+\index{sensitivity@{sensitivity}!config@{config}}
+\subsubsection{\texorpdfstring{sensitivity}{sensitivity}}
+{\footnotesize\ttfamily uint8\+\_\+t config\+::sensitivity}
+
+
+
+the sensitivity of the adaptive thresholding 
+
+the threshold in the second step of adative thresholding is calculated based on the distribution of the value of the pixels of the blobs. This parameters controls how sensitive the second threshold will be, the higher the value the more sensitive it is. \mbox{\Hypertarget{structconfig_ae0c9e09ec87f1a408ec356df5f468118}\label{structconfig_ae0c9e09ec87f1a408ec356df5f468118}} 
+\index{config@{config}!threshold@{threshold}}
+\index{threshold@{threshold}!config@{config}}
+\subsubsection{\texorpdfstring{threshold}{threshold}}
+{\footnotesize\ttfamily int16\+\_\+t config\+::threshold}
+
+
+
+the threshold for binarizing the image 
+
+The whole thresholding process is divided into two parts. In the first step, all the pixels that has a larger value(the value is negative, so that means a smaller absolute value), will be rendered black(0), of which this parameter is used for. The good choice for this threshold would be the one just above the background noises. 
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/inc/people\+\_\+counter.\+h\end{DoxyCompactItemize}

@@ -1,0 +1,117 @@
+.TH "util/testing_harness.cpp" 3 "Fri Aug 7 2020" "Version 0.2" "People counter" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+util/testing_harness.cpp \- code to run the module without having hardware  
+
+.SH SYNOPSIS
+.br
+.PP
+\fC#include <stdio\&.h>\fP
+.br
+\fC#include <stdlib\&.h>\fP
+.br
+\fC#include <sys/stat\&.h>\fP
+.br
+\fC#include <opencv2/opencv\&.hpp>\fP
+.br
+\fC#include 'people_counter\&.h'\fP
+.br
+\fC#include 'json\&.h'\fP
+.br
+\fC#include 'testing_harness\&.h'\fP
+.br
+
+.SS "Macros"
+
+.in +1c
+.ti -1c
+.RI "#define \fBRESOLUTION\fP   (width * height)"
+.br
+.in -1c
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "void \fBrec_areaCallback\fP (int, void *)"
+.br
+.ti -1c
+.RI "void \fBkernel_1Callback\fP (int, void *)"
+.br
+.ti -1c
+.RI "void \fBthreshold_Callback\fP (int, void *)"
+.br
+.ti -1c
+.RI "void \fBsensitivity_Callback\fP (int, void *)"
+.br
+.ti -1c
+.RI "void \fBget_LoG_kernel\fP (double sigma, int ksize, int8_t **\fBresult\fP)"
+.br
+.RI "Get the LoG kernel object\&. "
+.ti -1c
+.RI "constexpr unsigned int \fBstr2int\fP (const char *str, int h=0)"
+.br
+.RI "hash function that will map string to an int "
+.ti -1c
+.RI "int \fBmain\fP (int argc, char *argv[])"
+.br
+.in -1c
+.SS "Variables"
+
+.in +1c
+.ti -1c
+.RI "\fBip_config\fP \fBconfig\fP"
+.br
+.RI "configuration of the pipeline "
+.ti -1c
+.RI "uint8_t \fBrec_num\fP = 0"
+.br
+.RI "number of rectangles detected in the frame "
+.ti -1c
+.RI "\fBrec\fP \fBhrects\fP [RECTS_MAX_SIZE] = {{0, 0, 0, 0}}"
+.br
+.RI "rectangles find by the pipeline "
+.ti -1c
+.RI "uint8_t * \fBth_frame\fP"
+.br
+.RI "Intermedia result 1: image after thresholding\&. "
+.in -1c
+.SH "Detailed Description"
+.PP 
+code to run the module without having hardware 
+
+THis will run the supplied Json videos and run is through the module, for earch frame it will display the image before and after thresholding also with the recs 
+.SH "Function Documentation"
+.PP 
+.SS "void get_LoG_kernel (double sigma, int ksize, int8_t ** result)"
+
+.PP
+Get the LoG kernel object\&. //TODO add comments 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIsigma\fP 
+.br
+\fIksize\fP 
+.br
+\fIresult\fP 
+.RE
+.PP
+
+.SH "Variable Documentation"
+.PP 
+.SS "\fBip_config\fP \fBconfig\fP"
+\fBInitial value:\fP
+.PP
+.nf
+= {
+    \&.kernel_1 = 5,
+    \&.threshold = 32,
+    \&.max_area = 18
+}
+.fi
+.PP
+configuration of the pipeline struct that keeps the information of configurations 
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for People counter from the source code\&.

@@ -1,0 +1,38 @@
+.TH "queue" 3 "Fri Aug 7 2020" "Version 0.2" "People counter" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+queue \- the datastrure used in the BFS  
+
+.SH SYNOPSIS
+.br
+.PP
+.PP
+\fC#include <people_counter\&.h>\fP
+.SS "Public Attributes"
+
+.in +1c
+.ti -1c
+.RI "uint8_t \fBcount\fP"
+.br
+.RI "how many elements are there in the queue\&. Note: should be less than the QUEUE_SIZE "
+.ti -1c
+.RI "uint8_t \fBtop\fP"
+.br
+.RI "the queue is implemented in a circular manner, this is the pointer points to the front of the queue "
+.ti -1c
+.RI "uint8_t \fBbottom\fP"
+.br
+.RI "the pointer that points to the bottom of the queue "
+.ti -1c
+.RI "\fBpixel\fP \fBpixels\fP [QUEUE_SIZE]"
+.br
+.RI "the array under the hood that holds the elements "
+.in -1c
+.SH "Detailed Description"
+.PP 
+the datastrure used in the BFS 
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for People counter from the source code\&.
