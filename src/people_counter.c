@@ -52,10 +52,10 @@ static object_list objects = {0, 0, {}};
  * @brief the image processing pipeline, including people detection and people tracking.
  * @details we first subtract the background from each frame to get the foreground image, then apply Laplacian of Gaussian to detect people. 
  *          In the end, centroid tracking algorithm is used to track people.
- * @param frame //TODO add info
- * @param background_image //TODO add info
- * @param log_kernel //TODO add info
- * @return ip_result //TODO add info
+ * @param frame frame the image to be processed
+ * @param background_image the background image chosed to do background subtraction
+ * @param log_kernel the kernel of the convolution of the LOG operator in people detection
+ * @return ip_result contains object length and the count of up and down
  */
 ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
 {
@@ -69,7 +69,11 @@ ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
     ip_mat *frame_mat = (ip_mat *)frame;
     ip_mat *frame_bak = (ip_mat *)background_image;
     int8_t **kernel = (int8_t **)log_kernel;
+
+	/* subtract the background image from the frame */
     background_substraction(SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT, frame_bak, frame_mat, frame_mat);
+
+	/* apply Laplacian of Gaussian on the substracted frame */
     LoG(LOG_KSIZE, kernel, frame_mat, &log_mat);
     static recs blobs = {0, {}};
 
@@ -77,7 +81,10 @@ ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
     uint64_t before_blob_tsc = readTSC();
 #endif
 
+    /* find the blobs in the thresholded image */
     find_blob(log_frame, &blobs, 0, RID, WHITE);
+
+    /* filter out the blob which is out of the area range */
     blob_filter(log_frame, &blobs, REC_MAX_AREA, REC_MIN_AREA);
 
 #ifdef __TESTING_HARNESS
@@ -95,7 +102,7 @@ ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
     memcpy(hrects, blobs.nodes, RECTS_MAX_SIZE * sizeof(rec));
 #endif
 
-    //TODO get the correct values to return when the tracking gets implemented
+    /* apply centroid tracking algorithm on the blobs detected */
     ip_result return_result = people_tracking(&blobs);
 
     return return_result;
@@ -110,9 +117,11 @@ ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
  */
 void background_substraction(uint16_t resolution, ip_mat *background, ip_mat *src, ip_mat *dst)
 {
-	//TODO add comments for code readability
+	/* get the pixel values for the background image */
 	uint8_t *bframe = background->data;
+	/* get the pixel values for the frame */
 	uint8_t *sframe = src->data;
+    /* get the pixel values for the substracted image */
 	uint8_t *dframe = dst->data;
 
 	for (uint16_t i = 0; i < resolution; i++)
@@ -131,10 +140,11 @@ void background_substraction(uint16_t resolution, ip_mat *background, ip_mat *sr
  */
 void nthreshold(uint16_t resolution, uint8_t thre, ip_mat *src, ip_mat *dst)
 {
-	//TODO add comments for code readability
+	/* get the pixel values for the source image */
 	uint8_t *sframe = src->data;
+	/* get the pixel values for the destination image */
 	uint8_t *dframe = src->data;
-
+    /* apply threshold on the source image and put the result to the destination image */
 	for (uint16_t i = 0; i < resolution; i++)
 	{
 		dframe[i] = (sframe[i] > thre) ? 255 : 0;
