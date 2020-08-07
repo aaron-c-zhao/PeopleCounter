@@ -44,7 +44,7 @@ void \mbox{\hyperlink{people__counter_8c_a1b080698fa088cdcd9e671a1b37bf281}{dele
 void \mbox{\hyperlink{people__counter_8c_ab50ce7fbb496277086f8bfa1c357a038}{bubble\+Sort}} (\mbox{\hyperlink{structobject__rect__pair}{object\+\_\+rect\+\_\+pair}} $\ast$array, uint8\+\_\+t length)
 \begin{DoxyCompactList}\small\item\em perform bubble sort on the array of object-\/rectangle pairs \end{DoxyCompactList}\item 
 \mbox{\hyperlink{structresult}{ip\+\_\+result}} \mbox{\hyperlink{people__counter_8c_ae522302e36ee1502ddbc7ffdb964d778}{Ip\+Process}} (void $\ast$frame, void $\ast$background\+\_\+image, void $\ast$log\+\_\+kernel)
-\item 
+\begin{DoxyCompactList}\small\item\em the image processing pipeline, including people detection and people tracking. \end{DoxyCompactList}\item 
 const \mbox{\hyperlink{structobject}{object}} $\ast$ \mbox{\hyperlink{people__counter_8c_adfec8d4b829308482070ddd2c2928b1c}{get\+Objects\+Address}} ()
 \begin{DoxyCompactList}\small\item\em returns the memory address of the list of objects \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsection*{Variables}
@@ -72,7 +72,7 @@ the start number of the rid \mbox{\Hypertarget{people__counter_8c_a87b537f5fa5c1
 \doxysubsubsection{\texorpdfstring{WHITE}{WHITE}}
 {\footnotesize\ttfamily \#define W\+H\+I\+TE~255}
 
-/\+T\+O\+DO add comment 
+the value for a white pixel 
 
 \doxysubsection{Function Documentation}
 \mbox{\Hypertarget{people__counter_8c_ad88740f3e01ed1f48a03836b16b85231}\label{people__counter_8c_ad88740f3e01ed1f48a03836b16b85231}} 
@@ -282,7 +282,11 @@ memory address of the list of objects
 \doxysubsubsection{\texorpdfstring{IpProcess()}{IpProcess()}}
 {\footnotesize\ttfamily \mbox{\hyperlink{structresult}{ip\+\_\+result}} Ip\+Process (\begin{DoxyParamCaption}\item[{void $\ast$}]{frame,  }\item[{void $\ast$}]{background\+\_\+image,  }\item[{void $\ast$}]{log\+\_\+kernel }\end{DoxyParamCaption})}
 
-//\+T\+O\+DO add comment and comments in the code 
+
+
+the image processing pipeline, including people detection and people tracking. 
+
+we first subtract the background from each frame to get the foreground image, then apply Laplacian of Gaussian to detect people. In the end, centroid tracking algorithm is used to track people. 
 \begin{DoxyParams}{Parameters}
 {\em frame} & \\
 \hline

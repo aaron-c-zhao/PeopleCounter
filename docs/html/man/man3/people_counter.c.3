@@ -80,6 +80,7 @@ src/people_counter.c \- : Implementation of the image processing pipeline
 .ti -1c
 .RI "\fBip_result\fP \fBIpProcess\fP (void *frame, void *background_image, void *log_kernel)"
 .br
+.RI "the image processing pipeline, including people detection and people tracking\&. "
 .ti -1c
 .RI "const \fBobject\fP * \fBgetObjectsAddress\fP ()"
 .br
@@ -102,7 +103,7 @@ src/people_counter.c \- : Implementation of the image processing pipeline
 .SS "#define RID   42"
 the start number of the rid 
 .SS "#define WHITE   255"
-/TODO add comment 
+the value for a white pixel 
 .SH "Function Documentation"
 .PP 
 .SS "void area_adjust (uint8_t * frame, \fBrec\fP * blob, \fBrecs\fP * blobs, uint8_t amax)"
@@ -265,7 +266,9 @@ memory address of the list of objects
 .PP
 
 .SS "\fBip_result\fP IpProcess (void * frame, void * background_image, void * log_kernel)"
-//TODO add comment and comments in the code 
+
+.PP
+the image processing pipeline, including people detection and people tracking\&. we first subtract the background from each frame to get the foreground image, then apply Laplacian of Gaussian to detect people\&. In the end, centroid tracking algorithm is used to track people\&. 
 .PP
 \fBParameters\fP
 .RS 4

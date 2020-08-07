@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['white_46',['WHITE',['../people__counter_8c.html#a87b537f5fa5c109d3c05c13d6b18f382',1,'people_counter.c']]]
+  ['threshold_52',['threshold',['../structconfig.html#ae0c9e09ec87f1a408ec356df5f468118',1,'config']]],
+  ['top_53',['top',['../structqueue.html#a72f104687305eeaa5bb39b567f3ea3fa',1,'queue']]]
 ];

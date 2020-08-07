@@ -71,12 +71,8 @@ static void draw_rect(Mat *);
 static void create_trackbar(const char*, void*);
 void rec_areaCallback(int, void*);
 void kernel_1Callback(int, void*);
-void kernel_2Callback(int, void*);
-void kernel_3Callback(int, void*);
 void threshold_Callback(int, void*);
-void updated_thresholdCallback(int, void*);
-void blob_width_minCallback(int, void*);
-void blob_height_minCallback(int, void*);
+void sensitivity_Callback(int, void*);
 void get_LoG_kernel(double, int, int8_t**);
 /*---------------------------------------------------------------------------------------------*/
 
@@ -280,6 +276,10 @@ static void create_trackbar(const char *window, void* data) {
 	const char *threshold = "threshold";
 	int ithreshold= config.threshold;
 	createTrackbar(threshold, window, &ithreshold, 20000, threshold_Callback, data);
+	/* slide bar to adjust the sensitivity*/
+	const char *sensitivity = "sensitivity";
+	int isensitivity= config.sensitivity;
+	createTrackbar(sensitivity, window, &isensitivity, 20, sensitivity_Callback, data);
 }
 
 void rec_areaCallback(int value, void* data) {
@@ -292,6 +292,11 @@ void kernel_1Callback(int value, void* data) {
 
 void threshold_Callback(int value, void* data) {
 	config.threshold = (int16_t)value;
+}
+
+
+void sensitivity_Callback(int value, void *data) {
+	config.sensitivity = (uint8_t)value;
 }
 
 /**
@@ -507,6 +512,8 @@ static void read_config(json_value *value, int depth)
 			case str2int("threshold"): config.threshold = temp_value;
 			break;
 			case str2int("max_area"): config.max_area = temp_value;	  
+			break;
+			case str2int("sensitivity"): config.sensitivity = temp_value;
 			break;
 		case str2int("width"):
 			width = temp_value;

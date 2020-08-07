@@ -145,6 +145,7 @@ Functions</h2></td></tr>
 <tr class="memdesc:ab50ce7fbb496277086f8bfa1c357a038"><td class="mdescLeft">&#160;</td><td class="mdescRight">perform bubble sort on the array of object-rectangle pairs  <a href="people__counter_8c.html#ab50ce7fbb496277086f8bfa1c357a038">More...</a><br /></td></tr>
 <tr class="separator:ab50ce7fbb496277086f8bfa1c357a038"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae522302e36ee1502ddbc7ffdb964d778"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structresult.html">ip_result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="people__counter_8c.html#ae522302e36ee1502ddbc7ffdb964d778">IpProcess</a> (void *frame, void *background_image, void *log_kernel)</td></tr>
+<tr class="memdesc:ae522302e36ee1502ddbc7ffdb964d778"><td class="mdescLeft">&#160;</td><td class="mdescRight">the image processing pipeline, including people detection and people tracking.  <a href="people__counter_8c.html#ae522302e36ee1502ddbc7ffdb964d778">More...</a><br /></td></tr>
 <tr class="separator:ae522302e36ee1502ddbc7ffdb964d778"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adfec8d4b829308482070ddd2c2928b1c"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structobject.html">object</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="people__counter_8c.html#adfec8d4b829308482070ddd2c2928b1c">getObjectsAddress</a> ()</td></tr>
 <tr class="memdesc:adfec8d4b829308482070ddd2c2928b1c"><td class="mdescLeft">&#160;</td><td class="mdescRight">returns the memory address of the list of objects  <a href="people__counter_8c.html#adfec8d4b829308482070ddd2c2928b1c">More...</a><br /></td></tr>
@@ -185,7 +186,7 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>/TODO add comment </p>
+<p>the value for a white pixel </p>
 
 </div>
 </div>
@@ -666,7 +667,9 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>//TODO add comment and comments in the code </p><dl class="params"><dt>Parameters</dt><dd>
+
+<p>the image processing pipeline, including people detection and people tracking. </p>
+<p>we first subtract the background from each frame to get the foreground image, then apply Laplacian of Gaussian to detect people. In the end, centroid tracking algorithm is used to track people. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">frame</td><td></td></tr>
     <tr><td class="paramname">background_image</td><td></td></tr>

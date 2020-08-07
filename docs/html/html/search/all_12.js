@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['threshold_45',['threshold',['../structconfig.html#ae0c9e09ec87f1a408ec356df5f468118',1,'config']]]
+  ['sensitivity_51',['sensitivity',['../structconfig.html#a91f6a75cc3ae6447712700387e89a9c2',1,'config']]]
 ];

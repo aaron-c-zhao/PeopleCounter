@@ -8,9 +8,9 @@
 #include "people_counter.h"
 #include "string.h"
 
-/** the value for a white pixel */
+/** @brief the value for a white pixel */
 #define WHITE 255
-/** the start number of the rid */
+/** @brief the start number of the rid */
 #define RID 42
 
 /** struct that keeps the information of configurations */
@@ -219,7 +219,7 @@ void LoG(uint8_t ksize, int8_t **kernel, ip_mat *src, ip_mat *dst)
 
 		for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i) {
 			for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j) {
-				if (convolve_values[i * SENSOR_IMAGE_WIDTH + j] > 0.9 * gen_threshold)
+				if (convolve_values[i * SENSOR_IMAGE_WIDTH + j] > (config.sensitivity * gen_threshold) / 10)
 					dframe[i * SENSOR_IMAGE_WIDTH +j] = 0;
 				else dframe[i * SENSOR_IMAGE_WIDTH +j] = 255;
 			}

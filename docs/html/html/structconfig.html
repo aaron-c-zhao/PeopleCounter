@@ -90,40 +90,30 @@ $(document).ready(function(){initNavTree('structconfig.html',''); initResizable(
 </div><!--header-->
 <div class="contents">
 
-<p>test  
+<p>parameters that will affect the performance of the pipeline  
  <a href="structconfig.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="people__counter_8h_source.html">people_counter.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a82c79528c83c09c93c04a3c54982fc24"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structconfig.html#a82c79528c83c09c93c04a3c54982fc24">kernel_1</a></td></tr>
+<tr class="memitem:a82c79528c83c09c93c04a3c54982fc24"><td class="memItemLeft" align="right" valign="top"><a id="a82c79528c83c09c93c04a3c54982fc24"></a>
+uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structconfig.html#a82c79528c83c09c93c04a3c54982fc24">kernel_1</a></td></tr>
+<tr class="memdesc:a82c79528c83c09c93c04a3c54982fc24"><td class="mdescLeft">&#160;</td><td class="mdescRight">the size of the LoG kernel <br /></td></tr>
 <tr class="separator:a82c79528c83c09c93c04a3c54982fc24"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae0c9e09ec87f1a408ec356df5f468118"><td class="memItemLeft" align="right" valign="top">int16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structconfig.html#ae0c9e09ec87f1a408ec356df5f468118">threshold</a></td></tr>
+<tr class="memdesc:ae0c9e09ec87f1a408ec356df5f468118"><td class="mdescLeft">&#160;</td><td class="mdescRight">the threshold for binarizing the image  <a href="structconfig.html#ae0c9e09ec87f1a408ec356df5f468118">More...</a><br /></td></tr>
 <tr class="separator:ae0c9e09ec87f1a408ec356df5f468118"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7b01db4f29befbf3cc2925748fa3014a"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structconfig.html#a7b01db4f29befbf3cc2925748fa3014a">max_area</a></td></tr>
+<tr class="memdesc:a7b01db4f29befbf3cc2925748fa3014a"><td class="mdescLeft">&#160;</td><td class="mdescRight">the max area that a single blob can be.  <a href="structconfig.html#a7b01db4f29befbf3cc2925748fa3014a">More...</a><br /></td></tr>
 <tr class="separator:a7b01db4f29befbf3cc2925748fa3014a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a91f6a75cc3ae6447712700387e89a9c2"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structconfig.html#a91f6a75cc3ae6447712700387e89a9c2">sensitivity</a></td></tr>
+<tr class="memdesc:a91f6a75cc3ae6447712700387e89a9c2"><td class="mdescLeft">&#160;</td><td class="mdescRight">the sensitivity of the adaptive thresholding  <a href="structconfig.html#a91f6a75cc3ae6447712700387e89a9c2">More...</a><br /></td></tr>
+<tr class="separator:a91f6a75cc3ae6447712700387e89a9c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>test </p>
-<p>//TODO add coments</p>
-<p>o </p>
+<div class="textblock"><p>parameters that will affect the performance of the pipeline </p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
-<a id="a82c79528c83c09c93c04a3c54982fc24"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a82c79528c83c09c93c04a3c54982fc24">&#9670;&nbsp;</a></span>kernel_1</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">uint8_t config::kernel_1</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>test </p>
-
-</div>
-</div>
 <a id="a7b01db4f29befbf3cc2925748fa3014a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7b01db4f29befbf3cc2925748fa3014a">&#9670;&nbsp;</a></span>max_area</h2>
 
@@ -135,7 +125,26 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>test </p>
+
+<p>the max area that a single blob can be. </p>
+<p>the max area is for detecting huge blobs which might be composed by two individual blobs merged together. if the blob has an area larger than this value, it will be eroded. </p>
+
+</div>
+</div>
+<a id="a91f6a75cc3ae6447712700387e89a9c2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a91f6a75cc3ae6447712700387e89a9c2">&#9670;&nbsp;</a></span>sensitivity</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t config::sensitivity</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the sensitivity of the adaptive thresholding </p>
+<p>the threshold in the second step of adative thresholding is calculated based on the distribution of the value of the pixels of the blobs. This parameters controls how sensitive the second threshold will be, the higher the value the more sensitive it is. </p>
 
 </div>
 </div>
@@ -150,7 +159,9 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>test </p>
+
+<p>the threshold for binarizing the image </p>
+<p>The whole thresholding process is divided into two parts. In the first step, all the pixels that has a larger value(the value is negative, so that means a smaller absolute value), will be rendered black(0), of which this parameter is used for. The good choice for this threshold would be the one just above the background noises. </p>
 
 </div>
 </div>
