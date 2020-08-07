@@ -86,10 +86,10 @@ The functions in the pipleline are designed to be able to do inplace calculation
 3. Ohters
 During the processing of the image, each pixel will be iterated several times. But not all of the iterations are necessary, due to the time constraint, we can not optimize it to the optimal. So coners could be cut there. 
 
-### ALGORITHM OPTIMAZATION
+### ALGORITHM OPTIMIZATION
 1. People detection
-The pipeline now using the Laplacian of Gaussian algorithm to extract and detect blobs which is twice efficient than the previous thresholding + border tracing. But algorithms like [Watershed](./docs/watershed.pdf), and [Gaussian mixture](./docs/people_detection_research.md) have the potential to be more efficient.
+The pipeline now uses the Laplacian of Gaussian algorithm to extract and detect blobs which is twice efficient than the previous thresholding + border tracing. But algorithms like [Watershed](./docs/watershed.pdf), and [Gaussian mixture](./docs/people_detection_research.md) have the potential to be more efficient.
 2. People tracking
 The algorithm currently being used to track blobs is the nearest neighbour method, which is a basic tracking method. More advanced methods like [Kalman filter](./docs/people_tracking_research.md) will be more robust than the current one. But on the other hand, the robustness comes with a price that it will add a considerable amount of complexity to the system.
 3. Background substraction
-For now the pipeline takes the first frame as the background(In the final product, this should be the first frame of each time the device is waken up by the PIR). This way has a fatal flaw which is that it relays on the assumption that the Melexis sensor could be waken up early enough that there's still no person in the FOV. To sovle this [Eigen backgound](./docs/people_detection_research.md), [Morphological background substraction](./docs/people_detection.pdf) might be worthwhile to look into.
+For now the pipeline takes the first frame as the background (in the final product, this should be the first frame of each time the device is waken up by the PIR). This way has a fatal flaw which is that it relays on the assumption that the Melexis sensor could be waken up early enough that there's still no person in the FOV. To solve this [Eigen backgound](./docs/people_detection_research.md), [Morphological background substraction](./docs/people_detection.pdf) might be worthwhile to look into.
