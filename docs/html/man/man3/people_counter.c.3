@@ -18,9 +18,11 @@ src/people_counter.c \- : Implementation of the image processing pipeline
 .ti -1c
 .RI "#define \fBWHITE\fP   255"
 .br
+.RI "the value for a white pixel "
 .ti -1c
 .RI "#define \fBRID\fP   42"
 .br
+.RI "the start number of the rid "
 .in -1c
 .SS "Functions"
 
@@ -92,18 +94,13 @@ src/people_counter.c \- : Implementation of the image processing pipeline
 .ti -1c
 .RI "\fBip_config\fP \fBconfig\fP"
 .br
+.RI "struct that keeps the information of configurations "
 .in -1c
 .SH "Detailed Description"
 .PP 
 : Implementation of the image processing pipeline 
 
 //TODO add more information? author, version, details, api etc? 
-.SH "Macro Definition Documentation"
-.PP 
-.SS "#define RID   42"
-the start number of the rid 
-.SS "#define WHITE   255"
-the value for a white pixel 
 .SH "Function Documentation"
 .PP 
 .SS "void area_adjust (uint8_t * frame, \fBrec\fP * blob, \fBrecs\fP * blobs, uint8_t amax)"
@@ -111,9 +108,9 @@ the value for a white pixel
 .PP
 adjust the area of the blob for the sake of seprating oversized blobs 
 .PP
-\fBParameters\fP
+\fBParameters:\fP
 .RS 4
-\fIframe\fP the bninarized image where the blobs resides 
+\fIframe\fP the binarized image where the blobs resides 
 .br
 \fIblob\fP the blob to be adjusted 
 .br
@@ -128,7 +125,7 @@ adjust the area of the blob for the sake of seprating oversized blobs
 .PP
 substract the background from the current image, absolute different is used\&. 
 .PP
-\fBParameters\fP
+\fBParameters:\fP
 .RS 4
 \fIresolution\fP the number of pixels in the image 
 .br
@@ -145,7 +142,7 @@ substract the background from the current image, absolute different is used\&.
 .PP
 conduct a breath first search on the image 
 .PP
-\fBParameters\fP
+\fBParameters:\fP
 .RS 4
 \fIframe\fP the image to be searched 
 .br
@@ -162,7 +159,7 @@ conduct a breath first search on the image
 .PP
 This function filters the blobs according to their area, erosion and dilation will be conducte to adjust the blobs whose area is between amin and amax\&. 
 .PP
-\fBParameters\fP
+\fBParameters:\fP
 .RS 4
 \fIframe\fP thresholded image with each blob marked by different rids 
 .br
@@ -179,7 +176,7 @@ This function filters the blobs according to their area, erosion and dilation wi
 .PP
 perform bubble sort on the array of object-rectangle pairs 
 .PP
-\fBParameters\fP
+\fBParameters:\fP
 .RS 4
 \fIarray\fP array of object-rectangle pairings 
 .br
@@ -192,7 +189,7 @@ perform bubble sort on the array of object-rectangle pairs
 .PP
 deletes all objects that have disappeared for more than (CT_MAX_DISAPPEARED) 
 .PP
-\fBParameters\fP
+\fBParameters:\fP
 .RS 4
 \fIobjects\fP the list of objects TODO: remove parameter objects since objects is static globally\&. 
 .RE
@@ -203,7 +200,7 @@ deletes all objects that have disappeared for more than (CT_MAX_DISAPPEARED)
 .PP
 data structure operation, dqueue 
 .PP
-\fBParameters\fP
+\fBParameters:\fP
 .RS 4
 \fIq\fP the queue to be operate on //TODO: add a error handling to deal with empty queue 
 .RE
@@ -214,7 +211,7 @@ data structure operation, dqueue
 .PP
 data structure operation, enqueue 
 .PP
-\fBParameters\fP
+\fBParameters:\fP
 .RS 4
 \fIq\fP the queue to be operate on 
 .br
@@ -227,7 +224,7 @@ data structure operation, enqueue
 .PP
 conduct erosion on the a specific blob 
 .PP
-\fBParameters\fP
+\fBParameters:\fP
 .RS 4
 \fIframe\fP the binarized frame where the blobs resides 
 .br
@@ -240,7 +237,7 @@ conduct erosion on the a specific blob
 .PP
 This function will find all the blobs in the thresholded image and mark the pixels that belong to different blobs with a unique rid\&. 
 .PP
-\fBParameters\fP
+\fBParameters:\fP
 .RS 4
 \fIsrc\fP the source image 
 .br
@@ -259,7 +256,7 @@ This function will find all the blobs in the thresholded image and mark the pixe
 .PP
 returns the memory address of the list of objects 
 .PP
-\fBReturns\fP
+\fBReturns:\fP
 .RS 4
 memory address of the list of objects 
 .RE
@@ -270,18 +267,18 @@ memory address of the list of objects
 .PP
 the image processing pipeline, including people detection and people tracking\&. we first subtract the background from each frame to get the foreground image, then apply Laplacian of Gaussian to detect people\&. In the end, centroid tracking algorithm is used to track people\&. 
 .PP
-\fBParameters\fP
+\fBParameters:\fP
 .RS 4
-\fIframe\fP 
+\fIframe\fP frame the image to be processed 
 .br
-\fIbackground_image\fP 
+\fIbackground_image\fP the background image chosed to do background subtraction 
 .br
-\fIlog_kernel\fP 
+\fIlog_kernel\fP the kernel of the convolution of the LOG operator in people detection 
 .RE
 .PP
-\fBReturns\fP
+\fBReturns:\fP
 .RS 4
-ip_result 
+ip_result contains object length and the count of up and down 
 .RE
 .PP
 
@@ -290,7 +287,7 @@ ip_result
 .PP
 apply the laplacian of gaussian operator on the image for blob detection 
 .PP
-\fBParameters\fP
+\fBParameters:\fP
 .RS 4
 \fIksize\fP the kernel size of the LOG operator 
 .br
@@ -307,7 +304,7 @@ apply the laplacian of gaussian operator on the image for blob detection
 .PP
 function for normal threshold(deprecated) 
 .PP
-\fBParameters\fP
+\fBParameters:\fP
 .RS 4
 \fIresolution\fP the number of pixels in the image 
 .br
@@ -324,12 +321,12 @@ function for normal threshold(deprecated)
 .PP
 perform people tracking given the blobs of people in every frame 
 .PP
-\fBParameters\fP
+\fBParameters:\fP
 .RS 4
 \fIrects\fP list of blobs' bounding boxes 
 .RE
 .PP
-\fBReturns\fP
+\fBReturns:\fP
 .RS 4
 the list of objects being tracked and the number of people that went up and down\&. 
 .RE
@@ -338,7 +335,9 @@ the list of objects being tracked and the number of people that went up and down
 .SH "Variable Documentation"
 .PP 
 .SS "\fBip_config\fP \fBconfig\fP"
-struct that keeps the information of configurations 
+
+.PP
+struct that keeps the information of configurations struct that keeps the information of configurations 
 .SH "Author"
 .PP 
 Generated automatically by Doxygen for People counter from the source code\&.

@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['pixels_107',['pixels',['../structqueue.html#a8b1ecfe795fa89b298dfcfb99a85e38a',1,'queue']]]
+  ['object',['object',['../structobject__list.html#abcc549bdb02204da143d2efdd675861d',1,'object_list']]],
+  ['object_5findex',['object_index',['../structobject__rect__pair.html#a6e1fad724b69c75cb7702a545c1b8715',1,'object_rect_pair']]]
 ];

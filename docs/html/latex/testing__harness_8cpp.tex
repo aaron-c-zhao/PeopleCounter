@@ -1,0 +1,107 @@
+\hypertarget{testing__harness_8cpp}{}\section{util/testing\+\_\+harness.cpp File Reference}
+\label{testing__harness_8cpp}\index{util/testing\_harness.cpp@{util/testing\_harness.cpp}}
+
+
+code to run the module without having hardware  
+
+
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include $<$sys/stat.\+h$>$}\newline
+{\ttfamily \#include $<$opencv2/opencv.\+hpp$>$}\newline
+{\ttfamily \#include \char`\"{}people\+\_\+counter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}json.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}testing\+\_\+harness.\+h\char`\"{}}\newline
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{testing__harness_8cpp_a95d55ebfa2f2f1bd14867ad6a6cc9bfb}\label{testing__harness_8cpp_a95d55ebfa2f2f1bd14867ad6a6cc9bfb}} 
+\#define {\bfseries R\+E\+S\+O\+L\+U\+T\+I\+ON}~(width $\ast$ height)
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{testing__harness_8cpp_af92ff16db0725b4940abe068c9cd3232}\label{testing__harness_8cpp_af92ff16db0725b4940abe068c9cd3232}} 
+void {\bfseries rec\+\_\+area\+Callback} (int, void $\ast$)
+\item 
+\mbox{\Hypertarget{testing__harness_8cpp_a09121412b112e50f050840c8635defea}\label{testing__harness_8cpp_a09121412b112e50f050840c8635defea}} 
+void {\bfseries kernel\+\_\+1\+Callback} (int, void $\ast$)
+\item 
+\mbox{\Hypertarget{testing__harness_8cpp_ac3de58764eb3e42300d6333d970267d6}\label{testing__harness_8cpp_ac3de58764eb3e42300d6333d970267d6}} 
+void {\bfseries threshold\+\_\+\+Callback} (int, void $\ast$)
+\item 
+\mbox{\Hypertarget{testing__harness_8cpp_a0391de3e28b4739f1ea198dd122d25d2}\label{testing__harness_8cpp_a0391de3e28b4739f1ea198dd122d25d2}} 
+void {\bfseries sensitivity\+\_\+\+Callback} (int, void $\ast$)
+\item 
+void \mbox{\hyperlink{testing__harness_8cpp_a573ca4f3fd031f768186416cc03d21fb}{get\+\_\+\+Lo\+G\+\_\+kernel}} (double sigma, int ksize, int8\+\_\+t $\ast$$\ast$\mbox{\hyperlink{structresult}{result}})
+\begin{DoxyCompactList}\small\item\em Get the LoG kernel object. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{testing__harness_8cpp_ab29c200876205c3add1d71f053195658}\label{testing__harness_8cpp_ab29c200876205c3add1d71f053195658}} 
+constexpr unsigned int \mbox{\hyperlink{testing__harness_8cpp_ab29c200876205c3add1d71f053195658}{str2int}} (const char $\ast$str, int h=0)
+\begin{DoxyCompactList}\small\item\em hash function that will map string to an int \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{testing__harness_8cpp_a0ddf1224851353fc92bfbff6f499fa97}\label{testing__harness_8cpp_a0ddf1224851353fc92bfbff6f499fa97}} 
+int {\bfseries main} (int argc, char $\ast$argv\mbox{[}$\,$\mbox{]})
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structconfig}{ip\+\_\+config}} \mbox{\hyperlink{testing__harness_8cpp_ada6bcdaba7ef27a683d91ee165f3c389}{config}}
+\begin{DoxyCompactList}\small\item\em configuration of the pipeline \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{testing__harness_8cpp_add4a3aa55f5c04a0fc6bafc589f27884}\label{testing__harness_8cpp_add4a3aa55f5c04a0fc6bafc589f27884}} 
+uint8\+\_\+t \mbox{\hyperlink{testing__harness_8cpp_add4a3aa55f5c04a0fc6bafc589f27884}{rec\+\_\+num}} = 0
+\begin{DoxyCompactList}\small\item\em number of rectangles detected in the frame \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{testing__harness_8cpp_a48e44df355d27706bcdd9e36a5b98cc5}\label{testing__harness_8cpp_a48e44df355d27706bcdd9e36a5b98cc5}} 
+\mbox{\hyperlink{structrec}{rec}} \mbox{\hyperlink{testing__harness_8cpp_a48e44df355d27706bcdd9e36a5b98cc5}{hrects}} \mbox{[}R\+E\+C\+T\+S\+\_\+\+M\+A\+X\+\_\+\+S\+I\+ZE\mbox{]} = \{\{0, 0, 0, 0\}\}
+\begin{DoxyCompactList}\small\item\em rectangles find by the pipeline \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{testing__harness_8cpp_a55cc75bee9acba780819c0512b144394}\label{testing__harness_8cpp_a55cc75bee9acba780819c0512b144394}} 
+uint8\+\_\+t $\ast$ \mbox{\hyperlink{testing__harness_8cpp_a55cc75bee9acba780819c0512b144394}{th\+\_\+frame}}
+\begin{DoxyCompactList}\small\item\em Intermedia result 1\+: image after thresholding. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+code to run the module without having hardware 
+
+T\+His will run the supplied Json videos and run is through the module, for earch frame it will display the image before and after thresholding also with the recs 
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{testing__harness_8cpp_a573ca4f3fd031f768186416cc03d21fb}\label{testing__harness_8cpp_a573ca4f3fd031f768186416cc03d21fb}} 
+\index{testing\_harness.cpp@{testing\_harness.cpp}!get\_LoG\_kernel@{get\_LoG\_kernel}}
+\index{get\_LoG\_kernel@{get\_LoG\_kernel}!testing\_harness.cpp@{testing\_harness.cpp}}
+\subsubsection{\texorpdfstring{get\_LoG\_kernel()}{get\_LoG\_kernel()}}
+{\footnotesize\ttfamily void get\+\_\+\+Lo\+G\+\_\+kernel (\begin{DoxyParamCaption}\item[{double}]{sigma,  }\item[{int}]{ksize,  }\item[{int8\+\_\+t $\ast$$\ast$}]{result }\end{DoxyParamCaption})}
+
+
+
+Get the LoG kernel object. 
+
+//\+T\+O\+DO add comments 
+\begin{DoxyParams}{Parameters}
+{\em sigma} & \\
+\hline
+{\em ksize} & \\
+\hline
+{\em result} & \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Variable Documentation}
+\mbox{\Hypertarget{testing__harness_8cpp_ada6bcdaba7ef27a683d91ee165f3c389}\label{testing__harness_8cpp_ada6bcdaba7ef27a683d91ee165f3c389}} 
+\index{testing\_harness.cpp@{testing\_harness.cpp}!config@{config}}
+\index{config@{config}!testing\_harness.cpp@{testing\_harness.cpp}}
+\subsubsection{\texorpdfstring{config}{config}}
+{\footnotesize\ttfamily \mbox{\hyperlink{structconfig}{ip\+\_\+config}} \mbox{\hyperlink{structconfig}{config}}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{= \{}
+\DoxyCodeLine{    .kernel\_1 = 5,}
+\DoxyCodeLine{    .threshold = 32,}
+\DoxyCodeLine{    .max\_area = 18}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+configuration of the pipeline 
+
+struct that keeps the information of configurations 

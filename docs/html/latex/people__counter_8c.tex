@@ -1,4 +1,4 @@
-\hypertarget{people__counter_8c}{}\doxysection{src/people\+\_\+counter.c File Reference}
+\hypertarget{people__counter_8c}{}\section{src/people\+\_\+counter.c File Reference}
 \label{people__counter_8c}\index{src/people\_counter.c@{src/people\_counter.c}}
 
 
@@ -7,14 +7,16 @@
 
 {\ttfamily \#include \char`\"{}people\+\_\+counter.\+h\char`\"{}}\newline
 {\ttfamily \#include \char`\"{}string.\+h\char`\"{}}\newline
-\doxysubsection*{Macros}
+\subsection*{Macros}
 \begin{DoxyCompactItemize}
 \item 
+\mbox{\Hypertarget{people__counter_8c_a87b537f5fa5c109d3c05c13d6b18f382}\label{people__counter_8c_a87b537f5fa5c109d3c05c13d6b18f382}} 
 \#define \mbox{\hyperlink{people__counter_8c_a87b537f5fa5c109d3c05c13d6b18f382}{W\+H\+I\+TE}}~255
-\item 
+\begin{DoxyCompactList}\small\item\em the value for a white pixel \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{people__counter_8c_a377ec509999647cda55c7ce6fbf31d53}\label{people__counter_8c_a377ec509999647cda55c7ce6fbf31d53}} 
 \#define \mbox{\hyperlink{people__counter_8c_a377ec509999647cda55c7ce6fbf31d53}{R\+ID}}~42
-\end{DoxyCompactItemize}
-\doxysubsection*{Functions}
+\begin{DoxyCompactList}\small\item\em the start number of the rid \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
 void \mbox{\hyperlink{people__counter_8c_ae67d20f040b5b9455fc4ecf1a5ffc729}{background\+\_\+substraction}} (uint16\+\_\+t resolution, \mbox{\hyperlink{structmat}{ip\+\_\+mat}} $\ast$background, \mbox{\hyperlink{structmat}{ip\+\_\+mat}} $\ast$src, \mbox{\hyperlink{structmat}{ip\+\_\+mat}} $\ast$dst)
@@ -47,38 +49,23 @@ void \mbox{\hyperlink{people__counter_8c_ab50ce7fbb496277086f8bfa1c357a038}{bubb
 \begin{DoxyCompactList}\small\item\em the image processing pipeline, including people detection and people tracking. \end{DoxyCompactList}\item 
 const \mbox{\hyperlink{structobject}{object}} $\ast$ \mbox{\hyperlink{people__counter_8c_adfec8d4b829308482070ddd2c2928b1c}{get\+Objects\+Address}} ()
 \begin{DoxyCompactList}\small\item\em returns the memory address of the list of objects \end{DoxyCompactList}\end{DoxyCompactItemize}
-\doxysubsection*{Variables}
+\subsection*{Variables}
 \begin{DoxyCompactItemize}
 \item 
 \mbox{\hyperlink{structconfig}{ip\+\_\+config}} \mbox{\hyperlink{people__counter_8c_ada6bcdaba7ef27a683d91ee165f3c389}{config}}
-\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em struct that keeps the information of configurations \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
-\doxysubsection{Detailed Description}
+\subsection{Detailed Description}
 \+: Implementation of the image processing pipeline 
 
 //\+T\+O\+DO add more information? author, version, details, api etc? 
 
-\doxysubsection{Macro Definition Documentation}
-\mbox{\Hypertarget{people__counter_8c_a377ec509999647cda55c7ce6fbf31d53}\label{people__counter_8c_a377ec509999647cda55c7ce6fbf31d53}} 
-\index{people\_counter.c@{people\_counter.c}!RID@{RID}}
-\index{RID@{RID}!people\_counter.c@{people\_counter.c}}
-\doxysubsubsection{\texorpdfstring{RID}{RID}}
-{\footnotesize\ttfamily \#define R\+ID~42}
-
-the start number of the rid \mbox{\Hypertarget{people__counter_8c_a87b537f5fa5c109d3c05c13d6b18f382}\label{people__counter_8c_a87b537f5fa5c109d3c05c13d6b18f382}} 
-\index{people\_counter.c@{people\_counter.c}!WHITE@{WHITE}}
-\index{WHITE@{WHITE}!people\_counter.c@{people\_counter.c}}
-\doxysubsubsection{\texorpdfstring{WHITE}{WHITE}}
-{\footnotesize\ttfamily \#define W\+H\+I\+TE~255}
-
-the value for a white pixel 
-
-\doxysubsection{Function Documentation}
+\subsection{Function Documentation}
 \mbox{\Hypertarget{people__counter_8c_ad88740f3e01ed1f48a03836b16b85231}\label{people__counter_8c_ad88740f3e01ed1f48a03836b16b85231}} 
 \index{people\_counter.c@{people\_counter.c}!area\_adjust@{area\_adjust}}
 \index{area\_adjust@{area\_adjust}!people\_counter.c@{people\_counter.c}}
-\doxysubsubsection{\texorpdfstring{area\_adjust()}{area\_adjust()}}
+\subsubsection{\texorpdfstring{area\_adjust()}{area\_adjust()}}
 {\footnotesize\ttfamily void area\+\_\+adjust (\begin{DoxyParamCaption}\item[{uint8\+\_\+t $\ast$}]{frame,  }\item[{\mbox{\hyperlink{structrec}{rec}} $\ast$}]{blob,  }\item[{\mbox{\hyperlink{structrecs}{recs}} $\ast$}]{blobs,  }\item[{uint8\+\_\+t}]{amax }\end{DoxyParamCaption})}
 
 
@@ -87,7 +74,7 @@ adjust the area of the blob for the sake of seprating oversized blobs
 
 
 \begin{DoxyParams}{Parameters}
-{\em frame} & the bninarized image where the blobs resides \\
+{\em frame} & the binarized image where the blobs resides \\
 \hline
 {\em blob} & the blob to be adjusted \\
 \hline
@@ -99,7 +86,7 @@ adjust the area of the blob for the sake of seprating oversized blobs
 \mbox{\Hypertarget{people__counter_8c_ae67d20f040b5b9455fc4ecf1a5ffc729}\label{people__counter_8c_ae67d20f040b5b9455fc4ecf1a5ffc729}} 
 \index{people\_counter.c@{people\_counter.c}!background\_substraction@{background\_substraction}}
 \index{background\_substraction@{background\_substraction}!people\_counter.c@{people\_counter.c}}
-\doxysubsubsection{\texorpdfstring{background\_substraction()}{background\_substraction()}}
+\subsubsection{\texorpdfstring{background\_substraction()}{background\_substraction()}}
 {\footnotesize\ttfamily void background\+\_\+substraction (\begin{DoxyParamCaption}\item[{uint16\+\_\+t}]{resolution,  }\item[{\mbox{\hyperlink{structmat}{ip\+\_\+mat}} $\ast$}]{background,  }\item[{\mbox{\hyperlink{structmat}{ip\+\_\+mat}} $\ast$}]{src,  }\item[{\mbox{\hyperlink{structmat}{ip\+\_\+mat}} $\ast$}]{dst }\end{DoxyParamCaption})}
 
 
@@ -120,7 +107,7 @@ substract the background from the current image, absolute different is used.
 \mbox{\Hypertarget{people__counter_8c_a02dd4567ad6121736529e66d50ca7ab4}\label{people__counter_8c_a02dd4567ad6121736529e66d50ca7ab4}} 
 \index{people\_counter.c@{people\_counter.c}!bfs@{bfs}}
 \index{bfs@{bfs}!people\_counter.c@{people\_counter.c}}
-\doxysubsubsection{\texorpdfstring{bfs()}{bfs()}}
+\subsubsection{\texorpdfstring{bfs()}{bfs()}}
 {\footnotesize\ttfamily \mbox{\hyperlink{structrec}{rec}} bfs (\begin{DoxyParamCaption}\item[{uint8\+\_\+t $\ast$}]{frame,  }\item[{\mbox{\hyperlink{structqueue}{queue}} $\ast$}]{q,  }\item[{uint8\+\_\+t}]{rid,  }\item[{uint8\+\_\+t}]{white }\end{DoxyParamCaption})}
 
 
@@ -141,7 +128,7 @@ conduct a breath first search on the image
 \mbox{\Hypertarget{people__counter_8c_a6079a90283b869ac635516e89183f8fc}\label{people__counter_8c_a6079a90283b869ac635516e89183f8fc}} 
 \index{people\_counter.c@{people\_counter.c}!blob\_filter@{blob\_filter}}
 \index{blob\_filter@{blob\_filter}!people\_counter.c@{people\_counter.c}}
-\doxysubsubsection{\texorpdfstring{blob\_filter()}{blob\_filter()}}
+\subsubsection{\texorpdfstring{blob\_filter()}{blob\_filter()}}
 {\footnotesize\ttfamily void blob\+\_\+filter (\begin{DoxyParamCaption}\item[{uint8\+\_\+t $\ast$}]{frame,  }\item[{\mbox{\hyperlink{structrecs}{recs}} $\ast$}]{blobs,  }\item[{uint8\+\_\+t}]{amax,  }\item[{uint8\+\_\+t}]{amin }\end{DoxyParamCaption})}
 
 
@@ -162,7 +149,7 @@ This function filters the blobs according to their area, erosion and dilation wi
 \mbox{\Hypertarget{people__counter_8c_ab50ce7fbb496277086f8bfa1c357a038}\label{people__counter_8c_ab50ce7fbb496277086f8bfa1c357a038}} 
 \index{people\_counter.c@{people\_counter.c}!bubbleSort@{bubbleSort}}
 \index{bubbleSort@{bubbleSort}!people\_counter.c@{people\_counter.c}}
-\doxysubsubsection{\texorpdfstring{bubbleSort()}{bubbleSort()}}
+\subsubsection{\texorpdfstring{bubbleSort()}{bubbleSort()}}
 {\footnotesize\ttfamily void bubble\+Sort (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structobject__rect__pair}{object\+\_\+rect\+\_\+pair}} $\ast$}]{array,  }\item[{uint8\+\_\+t}]{length }\end{DoxyParamCaption})}
 
 
@@ -179,7 +166,7 @@ perform bubble sort on the array of object-\/rectangle pairs
 \mbox{\Hypertarget{people__counter_8c_a1b080698fa088cdcd9e671a1b37bf281}\label{people__counter_8c_a1b080698fa088cdcd9e671a1b37bf281}} 
 \index{people\_counter.c@{people\_counter.c}!deleteOldObjects@{deleteOldObjects}}
 \index{deleteOldObjects@{deleteOldObjects}!people\_counter.c@{people\_counter.c}}
-\doxysubsubsection{\texorpdfstring{deleteOldObjects()}{deleteOldObjects()}}
+\subsubsection{\texorpdfstring{deleteOldObjects()}{deleteOldObjects()}}
 {\footnotesize\ttfamily void delete\+Old\+Objects (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structobject__list}{object\+\_\+list}} $\ast$}]{objects }\end{DoxyParamCaption})}
 
 
@@ -194,7 +181,7 @@ deletes all objects that have disappeared for more than (C\+T\+\_\+\+M\+A\+X\+\_
 \mbox{\Hypertarget{people__counter_8c_ac51434a6dc15da921fbc4e91b8a14d1e}\label{people__counter_8c_ac51434a6dc15da921fbc4e91b8a14d1e}} 
 \index{people\_counter.c@{people\_counter.c}!dequeue@{dequeue}}
 \index{dequeue@{dequeue}!people\_counter.c@{people\_counter.c}}
-\doxysubsubsection{\texorpdfstring{dequeue()}{dequeue()}}
+\subsubsection{\texorpdfstring{dequeue()}{dequeue()}}
 {\footnotesize\ttfamily \mbox{\hyperlink{structpixel}{pixel}} dequeue (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structqueue}{queue}} $\ast$}]{q }\end{DoxyParamCaption})}
 
 
@@ -209,7 +196,7 @@ data structure operation, dqueue
 \mbox{\Hypertarget{people__counter_8c_abefdf0db00c125301e11f8a6a599ae30}\label{people__counter_8c_abefdf0db00c125301e11f8a6a599ae30}} 
 \index{people\_counter.c@{people\_counter.c}!enqueue@{enqueue}}
 \index{enqueue@{enqueue}!people\_counter.c@{people\_counter.c}}
-\doxysubsubsection{\texorpdfstring{enqueue()}{enqueue()}}
+\subsubsection{\texorpdfstring{enqueue()}{enqueue()}}
 {\footnotesize\ttfamily void enqueue (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structqueue}{queue}} $\ast$}]{q,  }\item[{\mbox{\hyperlink{structpixel}{pixel}}}]{p }\end{DoxyParamCaption})}
 
 
@@ -226,7 +213,7 @@ data structure operation, enqueue
 \mbox{\Hypertarget{people__counter_8c_ab0ee1be72aac6101f9be46723ec07fac}\label{people__counter_8c_ab0ee1be72aac6101f9be46723ec07fac}} 
 \index{people\_counter.c@{people\_counter.c}!erosion@{erosion}}
 \index{erosion@{erosion}!people\_counter.c@{people\_counter.c}}
-\doxysubsubsection{\texorpdfstring{erosion()}{erosion()}}
+\subsubsection{\texorpdfstring{erosion()}{erosion()}}
 {\footnotesize\ttfamily void erosion (\begin{DoxyParamCaption}\item[{uint8\+\_\+t $\ast$}]{frame,  }\item[{\mbox{\hyperlink{structrec}{rec}} $\ast$}]{blob }\end{DoxyParamCaption})}
 
 
@@ -243,7 +230,7 @@ conduct erosion on the a specific blob
 \mbox{\Hypertarget{people__counter_8c_a3c2729053243dab33f6c8b34546ac266}\label{people__counter_8c_a3c2729053243dab33f6c8b34546ac266}} 
 \index{people\_counter.c@{people\_counter.c}!find\_blob@{find\_blob}}
 \index{find\_blob@{find\_blob}!people\_counter.c@{people\_counter.c}}
-\doxysubsubsection{\texorpdfstring{find\_blob()}{find\_blob()}}
+\subsubsection{\texorpdfstring{find\_blob()}{find\_blob()}}
 {\footnotesize\ttfamily void find\+\_\+blob (\begin{DoxyParamCaption}\item[{uint8\+\_\+t $\ast$}]{src,  }\item[{\mbox{\hyperlink{structrecs}{recs}} $\ast$}]{blobs,  }\item[{uint8\+\_\+t}]{start\+\_\+i,  }\item[{uint8\+\_\+t}]{rid,  }\item[{uint8\+\_\+t}]{tvalue }\end{DoxyParamCaption})}
 
 
@@ -266,7 +253,7 @@ This function will find all the blobs in the thresholded image and mark the pixe
 \mbox{\Hypertarget{people__counter_8c_adfec8d4b829308482070ddd2c2928b1c}\label{people__counter_8c_adfec8d4b829308482070ddd2c2928b1c}} 
 \index{people\_counter.c@{people\_counter.c}!getObjectsAddress@{getObjectsAddress}}
 \index{getObjectsAddress@{getObjectsAddress}!people\_counter.c@{people\_counter.c}}
-\doxysubsubsection{\texorpdfstring{getObjectsAddress()}{getObjectsAddress()}}
+\subsubsection{\texorpdfstring{getObjectsAddress()}{getObjectsAddress()}}
 {\footnotesize\ttfamily const \mbox{\hyperlink{structobject}{object}}$\ast$ get\+Objects\+Address (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
 
 
@@ -279,7 +266,7 @@ memory address of the list of objects
 \mbox{\Hypertarget{people__counter_8c_ae522302e36ee1502ddbc7ffdb964d778}\label{people__counter_8c_ae522302e36ee1502ddbc7ffdb964d778}} 
 \index{people\_counter.c@{people\_counter.c}!IpProcess@{IpProcess}}
 \index{IpProcess@{IpProcess}!people\_counter.c@{people\_counter.c}}
-\doxysubsubsection{\texorpdfstring{IpProcess()}{IpProcess()}}
+\subsubsection{\texorpdfstring{IpProcess()}{IpProcess()}}
 {\footnotesize\ttfamily \mbox{\hyperlink{structresult}{ip\+\_\+result}} Ip\+Process (\begin{DoxyParamCaption}\item[{void $\ast$}]{frame,  }\item[{void $\ast$}]{background\+\_\+image,  }\item[{void $\ast$}]{log\+\_\+kernel }\end{DoxyParamCaption})}
 
 
@@ -288,20 +275,20 @@ the image processing pipeline, including people detection and people tracking.
 
 we first subtract the background from each frame to get the foreground image, then apply Laplacian of Gaussian to detect people. In the end, centroid tracking algorithm is used to track people. 
 \begin{DoxyParams}{Parameters}
-{\em frame} & \\
+{\em frame} & frame the image to be processed \\
 \hline
-{\em background\+\_\+image} & \\
+{\em background\+\_\+image} & the background image chosed to do background subtraction \\
 \hline
-{\em log\+\_\+kernel} & \\
+{\em log\+\_\+kernel} & the kernel of the convolution of the \+L\+O\+G operator in people detection \\
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-ip\+\_\+result 
+ip\+\_\+result contains object length and the count of up and down 
 \end{DoxyReturn}
 \mbox{\Hypertarget{people__counter_8c_a90cce19caa3c0581a5cad6d875234c59}\label{people__counter_8c_a90cce19caa3c0581a5cad6d875234c59}} 
 \index{people\_counter.c@{people\_counter.c}!LoG@{LoG}}
 \index{LoG@{LoG}!people\_counter.c@{people\_counter.c}}
-\doxysubsubsection{\texorpdfstring{LoG()}{LoG()}}
+\subsubsection{\texorpdfstring{LoG()}{LoG()}}
 {\footnotesize\ttfamily void LoG (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{ksize,  }\item[{int8\+\_\+t $\ast$$\ast$}]{kernel,  }\item[{\mbox{\hyperlink{structmat}{ip\+\_\+mat}} $\ast$}]{src,  }\item[{\mbox{\hyperlink{structmat}{ip\+\_\+mat}} $\ast$}]{dst }\end{DoxyParamCaption})}
 
 
@@ -322,7 +309,7 @@ apply the laplacian of gaussian operator on the image for blob detection
 \mbox{\Hypertarget{people__counter_8c_a7853615fbccefd8aeeab2fc214226318}\label{people__counter_8c_a7853615fbccefd8aeeab2fc214226318}} 
 \index{people\_counter.c@{people\_counter.c}!nthreshold@{nthreshold}}
 \index{nthreshold@{nthreshold}!people\_counter.c@{people\_counter.c}}
-\doxysubsubsection{\texorpdfstring{nthreshold()}{nthreshold()}}
+\subsubsection{\texorpdfstring{nthreshold()}{nthreshold()}}
 {\footnotesize\ttfamily void nthreshold (\begin{DoxyParamCaption}\item[{uint16\+\_\+t}]{resolution,  }\item[{uint8\+\_\+t}]{thre,  }\item[{\mbox{\hyperlink{structmat}{ip\+\_\+mat}} $\ast$}]{src,  }\item[{\mbox{\hyperlink{structmat}{ip\+\_\+mat}} $\ast$}]{dst }\end{DoxyParamCaption})}
 
 
@@ -343,7 +330,7 @@ function for normal threshold(deprecated)
 \mbox{\Hypertarget{people__counter_8c_a250fbad9dba1e2425c5f9807477cbe49}\label{people__counter_8c_a250fbad9dba1e2425c5f9807477cbe49}} 
 \index{people\_counter.c@{people\_counter.c}!people\_tracking@{people\_tracking}}
 \index{people\_tracking@{people\_tracking}!people\_counter.c@{people\_counter.c}}
-\doxysubsubsection{\texorpdfstring{people\_tracking()}{people\_tracking()}}
+\subsubsection{\texorpdfstring{people\_tracking()}{people\_tracking()}}
 {\footnotesize\ttfamily \mbox{\hyperlink{structresult}{ip\+\_\+result}} people\+\_\+tracking (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structrecs}{recs}} $\ast$}]{original\+\_\+rects }\end{DoxyParamCaption})}
 
 
@@ -360,11 +347,15 @@ the list of objects being tracked and the number of people that went up and down
 \end{DoxyReturn}
 
 
-\doxysubsection{Variable Documentation}
+\subsection{Variable Documentation}
 \mbox{\Hypertarget{people__counter_8c_ada6bcdaba7ef27a683d91ee165f3c389}\label{people__counter_8c_ada6bcdaba7ef27a683d91ee165f3c389}} 
 \index{people\_counter.c@{people\_counter.c}!config@{config}}
 \index{config@{config}!people\_counter.c@{people\_counter.c}}
-\doxysubsubsection{\texorpdfstring{config}{config}}
+\subsubsection{\texorpdfstring{config}{config}}
 {\footnotesize\ttfamily \mbox{\hyperlink{structconfig}{ip\+\_\+config}} \mbox{\hyperlink{structconfig}{config}}}
+
+
+
+struct that keeps the information of configurations 
 
 struct that keeps the information of configurations 
