@@ -21,52 +21,74 @@ extern "C"
 #include <stdint.h>
 #include "testing_harness.h"
 
-// CT = Centroid Tracker
 /** 
  * @brief the maximum number of frames that a blob can be disappeared before it get deleted from thne tracking list
  */
-#define CT_MAX_DISAPPEARED 2
+#define CT_MAX_DISAPPEARED @CT_MAX_DISAPPEARED@
 /** 
  * @brief the maximum distance that a blob can be from itselft in the last frame. If the distance is larger than this value, the blob
  *        will not be considered as the same one.
  */
-#define CT_MAX_DISTANCE    8
+#define CT_MAX_DISTANCE    @CT_MAX_DISTANCE@
 
-// Array max sizes
 /** 
- * @brief the maximum
+ * @brief the length of the array that holds the rectangles. 
  */
-#define RECTS_MAX_SIZE 28
-/** */
-#define TRACKABLE_OBJECT_MAX_SIZE 18
+#define RECTS_MAX_SIZE @RECTS_MAX_SIZE@
+/** 
+ * @brief the maximum amount of objects that could be tracked. 
+ */
+#define TRACKABLE_OBJECT_MAX_SIZE @TRACKABLE_OBJECT_MAX_SIZE@
 
-// Image size
-/** */
-#define SENSOR_IMAGE_WIDTH  32
-/** */
-#define SENSOR_IMAGE_HEIGHT 24
+/** 
+ * @brief the amount of pixels in each row
+ */
+#define SENSOR_IMAGE_WIDTH  @SENSOR_IMAGE_WIDTH@
+/** 
+ * @brief the amount of pixels in each column
+ */
+#define SENSOR_IMAGE_HEIGHT @SENSOR_IMAGE_HEIGHT@
 
-/** Kernel size of the LoG */
-#define LOG_KSIZE 5
-/** Sigma from the gaussian kernel */
-#define LOG_SIGMA 1.5
-/** how many pixels can the queue hold */
-#define QUEUE_SIZE 100
-/** Sensor frame rate */
-#define FRAME_RATE 8
-/** Max area that a single blob can be */
-#define REC_MAX_AREA 50
-/** Min area that a single blob can be */
-#define REC_MIN_AREA 4
-/** erosion kernel size */
-#define ERO_KSIZE 3
+/** 
+ * @brief Kernel size of the LoG 
+ */
+#define LOG_KSIZE @LOG_KSIZE@
+/** 
+ * @brief Sigma from the gaussian kernel 
+ */
+#define LOG_SIGMA @LOG_SIGMA@
+/** 
+ * @brief how many pixels can the queue hold 
+ */
+#define QUEUE_SIZE @QUEUE_SIZE@
+/** 
+ * @brief Sensor frame rate 
+ */
+#define FRAME_RATE @FRAME_RATE@
+/** 
+ * @brief Max area that a single blob can be 
+ */
+#define REC_MAX_AREA @REC_MAX_AREA@
+/** 
+ * @brief Min area that a single blob can be 
+ */
+#define REC_MIN_AREA @REC_MIN_AREA@
+/** 
+ * @brief erosion kernel size 
+ */
+#define ERO_KSIZE @ERO_KSIZE@
 
-/** */
+/** 
+ * @brief the flag that indicated the blob detected should be ignored(probably it's a merged blob)
+ */
 #define REC_IGNORE 13
-// Directions
-/** */
+/** 
+ * @brief magic number that indicates the person is going up
+ */
 #define DIRECTION_UP   0x00
-/** */
+/** 
+ * @brief magic number that indicates the person is going down
+ */
 #define DIRECTION_DOWN 0x01
 
 /* *******************************************************************************
@@ -76,9 +98,8 @@ extern "C"
  *
  *******************************************************************************/
 
-    /* IMAGE STRUCT */
     /**
-     * @brief test
+     * @brief test 
      * 
      */
     typedef struct mat
@@ -135,11 +156,11 @@ extern "C"
      */
     typedef struct rec
     {
-        /** */
+        /** @brief test */
         uint8_t min_x;
-        /** */
+        /** test */
         uint8_t min_y;
-        /** */
+        /** @details test2 */
         uint8_t max_x;
         /** */
         uint8_t max_y;

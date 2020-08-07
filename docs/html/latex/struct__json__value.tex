@@ -1,0 +1,47 @@
+\hypertarget{struct__json__value}{}\doxysection{\+\_\+json\+\_\+value Struct Reference}
+\label{struct__json__value}\index{\_json\_value@{\_json\_value}}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{struct__json__value_ad81b8fbce3bc5814ef79090fa2899ad8}\label{struct__json__value_ad81b8fbce3bc5814ef79090fa2899ad8}} 
+struct \mbox{\hyperlink{struct__json__value}{\+\_\+json\+\_\+value}} $\ast$ {\bfseries parent}
+\item 
+\mbox{\Hypertarget{struct__json__value_a3a3106e0e259510de33b4718208be4d3}\label{struct__json__value_a3a3106e0e259510de33b4718208be4d3}} 
+json\+\_\+type {\bfseries type}
+\item 
+\mbox{\Hypertarget{struct__json__value_aa74ef33a235ab2d22b7ecade77f141dd}\label{struct__json__value_aa74ef33a235ab2d22b7ecade77f141dd}} 
+\begin{tabbing}
+xx\=xx\=xx\=xx\=xx\=xx\=xx\=xx\=xx\=\kill
+union \{\\
+\>int {\bfseries boolean}\\
+\>json\_int\_t {\bfseries integer}\\
+\>double {\bfseries dbl}\\
+\>struct \{\\
+\>\>unsigned int {\bfseries length}\\
+\>\>json\_char $\ast$ {\bfseries ptr}\\
+\>\} {\bfseries string}\\
+\>struct \{\\
+\>\>unsigned int {\bfseries length}\\
+\>\>\mbox{\hyperlink{struct__json__object__entry}{json\_object\_entry}} $\ast$ {\bfseries values}\\
+\>\} {\bfseries object}\\
+\>struct \{\\
+\>\>unsigned int {\bfseries length}\\
+\>\>struct \mbox{\hyperlink{struct__json__value}{\_json\_value}} $\ast$$\ast$ {\bfseries values}\\
+\>\} {\bfseries array}\\
+\} {\bfseries u}\\
+
+\end{tabbing}\item 
+\mbox{\Hypertarget{struct__json__value_af1ca36d39f6e03eacfb746e3224cd15f}\label{struct__json__value_af1ca36d39f6e03eacfb746e3224cd15f}} 
+\begin{tabbing}
+xx\=xx\=xx\=xx\=xx\=xx\=xx\=xx\=xx\=\kill
+union \{\\
+\>struct \mbox{\hyperlink{struct__json__value}{\_json\_value}} $\ast$ {\bfseries next\_alloc}\\
+\>void $\ast$ {\bfseries object\_mem}\\
+\} {\bfseries \_reserved}\\
+
+\end{tabbing}\end{DoxyCompactItemize}
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+util/inc/json.\+h\end{DoxyCompactItemize}

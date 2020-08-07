@@ -1,0 +1,341 @@
+.TH "src/people_counter.c" 3 "Fri Aug 7 2020" "Version 0.2" "People counter" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+src/people_counter.c \- : Implementation of the image processing pipeline  
+
+.SH SYNOPSIS
+.br
+.PP
+\fC#include 'people_counter\&.h'\fP
+.br
+\fC#include 'string\&.h'\fP
+.br
+
+.SS "Macros"
+
+.in +1c
+.ti -1c
+.RI "#define \fBWHITE\fP   255"
+.br
+.ti -1c
+.RI "#define \fBRID\fP   42"
+.br
+.in -1c
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "void \fBbackground_substraction\fP (uint16_t resolution, \fBip_mat\fP *background, \fBip_mat\fP *src, \fBip_mat\fP *dst)"
+.br
+.RI "substract the background from the current image, absolute different is used\&. "
+.ti -1c
+.RI "void \fBnthreshold\fP (uint16_t resolution, uint8_t thre, \fBip_mat\fP *src, \fBip_mat\fP *dst)"
+.br
+.RI "function for normal threshold(deprecated) "
+.ti -1c
+.RI "void \fBLoG\fP (uint8_t ksize, int8_t **kernel, \fBip_mat\fP *src, \fBip_mat\fP *dst)"
+.br
+.RI "apply the laplacian of gaussian operator on the image for blob detection "
+.ti -1c
+.RI "void \fBfind_blob\fP (uint8_t *src, \fBrecs\fP *blobs, uint8_t start_i, uint8_t rid, uint8_t tvalue)"
+.br
+.RI "This function will find all the blobs in the thresholded image and mark the pixels that belong to different blobs with a unique rid\&. "
+.ti -1c
+.RI "void \fBenqueue\fP (\fBqueue\fP *q, \fBpixel\fP p)"
+.br
+.RI "data structure operation, enqueue "
+.ti -1c
+.RI "\fBpixel\fP \fBdequeue\fP (\fBqueue\fP *q)"
+.br
+.RI "data structure operation, dqueue "
+.ti -1c
+.RI "\fBrec\fP \fBbfs\fP (uint8_t *frame, \fBqueue\fP *q, uint8_t rid, uint8_t white)"
+.br
+.RI "conduct a breath first search on the image "
+.ti -1c
+.RI "void \fBblob_filter\fP (uint8_t *frame, \fBrecs\fP *blobs, uint8_t amax, uint8_t amin)"
+.br
+.RI "This function filters the blobs according to their area, erosion and dilation will be conducte to adjust the blobs whose area is between amin and amax\&. "
+.ti -1c
+.RI "void \fBarea_adjust\fP (uint8_t *frame, \fBrec\fP *blob, \fBrecs\fP *blobs, uint8_t amax)"
+.br
+.RI "adjust the area of the blob for the sake of seprating oversized blobs "
+.ti -1c
+.RI "void \fBerosion\fP (uint8_t *frame, \fBrec\fP *blob)"
+.br
+.RI "conduct erosion on the a specific blob "
+.ti -1c
+.RI "\fBip_result\fP \fBpeople_tracking\fP (\fBrecs\fP *original_rects)"
+.br
+.RI "perform people tracking given the blobs of people in every frame "
+.ti -1c
+.RI "void \fBdeleteOldObjects\fP (\fBobject_list\fP *objects)"
+.br
+.RI "deletes all objects that have disappeared for more than (CT_MAX_DISAPPEARED) "
+.ti -1c
+.RI "void \fBbubbleSort\fP (\fBobject_rect_pair\fP *array, uint8_t length)"
+.br
+.RI "perform bubble sort on the array of object-rectangle pairs "
+.ti -1c
+.RI "\fBip_result\fP \fBIpProcess\fP (void *frame, void *background_image, void *log_kernel)"
+.br
+.ti -1c
+.RI "const \fBobject\fP * \fBgetObjectsAddress\fP ()"
+.br
+.RI "returns the memory address of the list of objects "
+.in -1c
+.SS "Variables"
+
+.in +1c
+.ti -1c
+.RI "\fBip_config\fP \fBconfig\fP"
+.br
+.in -1c
+.SH "Detailed Description"
+.PP 
+: Implementation of the image processing pipeline 
+
+//TODO add more information? author, version, details, api etc? 
+.SH "Macro Definition Documentation"
+.PP 
+.SS "#define RID   42"
+the start number of the rid 
+.SS "#define WHITE   255"
+/TODO add comment 
+.SH "Function Documentation"
+.PP 
+.SS "void area_adjust (uint8_t * frame, \fBrec\fP * blob, \fBrecs\fP * blobs, uint8_t amax)"
+
+.PP
+adjust the area of the blob for the sake of seprating oversized blobs 
+.PP
+\fBParameters\fP
+.RS 4
+\fIframe\fP the bninarized image where the blobs resides 
+.br
+\fIblob\fP the blob to be adjusted 
+.br
+\fIblobs\fP the data structure that holds the blobs 
+.br
+\fIamax\fP the maximum area that a single blob could have 
+.RE
+.PP
+
+.SS "void background_substraction (uint16_t resolution, \fBip_mat\fP * background, \fBip_mat\fP * src, \fBip_mat\fP * dst)"
+
+.PP
+substract the background from the current image, absolute different is used\&. 
+.PP
+\fBParameters\fP
+.RS 4
+\fIresolution\fP the number of pixels in the image 
+.br
+\fIbackground\fP the background image 
+.br
+\fIsrc\fP the source image 
+.br
+\fIdst\fP the destination image 
+.RE
+.PP
+
+.SS "\fBrec\fP bfs (uint8_t * frame, \fBqueue\fP * q, uint8_t rid, uint8_t white)"
+
+.PP
+conduct a breath first search on the image 
+.PP
+\fBParameters\fP
+.RS 4
+\fIframe\fP the image to be searched 
+.br
+\fIq\fP the queue data structure used by BFS algorithm 
+.br
+\fIrid\fP the rid of the newly found blob 
+.br
+\fIwhite\fP the value of which is considered to be 'white' i\&.e\&. that target of the searching 
+.RE
+.PP
+
+.SS "void blob_filter (uint8_t * frame, \fBrecs\fP * blobs, uint8_t amax, uint8_t amin)"
+
+.PP
+This function filters the blobs according to their area, erosion and dilation will be conducte to adjust the blobs whose area is between amin and amax\&. 
+.PP
+\fBParameters\fP
+.RS 4
+\fIframe\fP thresholded image with each blob marked by different rids 
+.br
+\fIblobs\fP the struct that holds the rectangles 
+.br
+\fIamax\fP the maximum area that a single blob can be 
+.br
+\fIamin\fP the minimum area that a single blob can be 
+.RE
+.PP
+
+.SS "void bubbleSort (\fBobject_rect_pair\fP * array, uint8_t length)"
+
+.PP
+perform bubble sort on the array of object-rectangle pairs 
+.PP
+\fBParameters\fP
+.RS 4
+\fIarray\fP array of object-rectangle pairings 
+.br
+\fIlength\fP length of the array 
+.RE
+.PP
+
+.SS "void deleteOldObjects (\fBobject_list\fP * objects)"
+
+.PP
+deletes all objects that have disappeared for more than (CT_MAX_DISAPPEARED) 
+.PP
+\fBParameters\fP
+.RS 4
+\fIobjects\fP the list of objects TODO: remove parameter objects since objects is static globally\&. 
+.RE
+.PP
+
+.SS "\fBpixel\fP dequeue (\fBqueue\fP * q)"
+
+.PP
+data structure operation, dqueue 
+.PP
+\fBParameters\fP
+.RS 4
+\fIq\fP the queue to be operate on //TODO: add a error handling to deal with empty queue 
+.RE
+.PP
+
+.SS "void enqueue (\fBqueue\fP * q, \fBpixel\fP p)"
+
+.PP
+data structure operation, enqueue 
+.PP
+\fBParameters\fP
+.RS 4
+\fIq\fP the queue to be operate on 
+.br
+\fIp\fP the pixel to be put in the back of the queue 
+.RE
+.PP
+
+.SS "void erosion (uint8_t * frame, \fBrec\fP * blob)"
+
+.PP
+conduct erosion on the a specific blob 
+.PP
+\fBParameters\fP
+.RS 4
+\fIframe\fP the binarized frame where the blobs resides 
+.br
+\fIblob\fP the blob to be eroded 
+.RE
+.PP
+
+.SS "void find_blob (uint8_t * src, \fBrecs\fP * blobs, uint8_t start_i, uint8_t rid, uint8_t tvalue)"
+
+.PP
+This function will find all the blobs in the thresholded image and mark the pixels that belong to different blobs with a unique rid\&. 
+.PP
+\fBParameters\fP
+.RS 4
+\fIsrc\fP the source image 
+.br
+\fIblobs\fP the struct that holds the result blobs 
+.br
+\fIstart_i\fP the start index of the blob_counter 
+.br
+\fIrid\fP the start point of the rid 
+.br
+\fItvalue\fP target value of which the BFS will searh for 
+.RE
+.PP
+
+.SS "const \fBobject\fP* getObjectsAddress ()"
+
+.PP
+returns the memory address of the list of objects 
+.PP
+\fBReturns\fP
+.RS 4
+memory address of the list of objects 
+.RE
+.PP
+
+.SS "\fBip_result\fP IpProcess (void * frame, void * background_image, void * log_kernel)"
+//TODO add comment and comments in the code 
+.PP
+\fBParameters\fP
+.RS 4
+\fIframe\fP 
+.br
+\fIbackground_image\fP 
+.br
+\fIlog_kernel\fP 
+.RE
+.PP
+\fBReturns\fP
+.RS 4
+ip_result 
+.RE
+.PP
+
+.SS "void LoG (uint8_t ksize, int8_t ** kernel, \fBip_mat\fP * src, \fBip_mat\fP * dst)"
+
+.PP
+apply the laplacian of gaussian operator on the image for blob detection 
+.PP
+\fBParameters\fP
+.RS 4
+\fIksize\fP the kernel size of the LOG operator 
+.br
+\fIkernel\fP the kernel of the convolution of the LOG operator 
+.br
+\fIsrc\fP the source image 
+.br
+\fIdst\fP the destination that will hold the binarized image 
+.RE
+.PP
+
+.SS "void nthreshold (uint16_t resolution, uint8_t thre, \fBip_mat\fP * src, \fBip_mat\fP * dst)"
+
+.PP
+function for normal threshold(deprecated) 
+.PP
+\fBParameters\fP
+.RS 4
+\fIresolution\fP the number of pixels in the image 
+.br
+\fIthre\fP threshold according to which to binarize the image 
+.br
+\fIsrc\fP source image 
+.br
+\fIdst\fP destination image 
+.RE
+.PP
+
+.SS "\fBip_result\fP people_tracking (\fBrecs\fP * original_rects)"
+
+.PP
+perform people tracking given the blobs of people in every frame 
+.PP
+\fBParameters\fP
+.RS 4
+\fIrects\fP list of blobs' bounding boxes 
+.RE
+.PP
+\fBReturns\fP
+.RS 4
+the list of objects being tracked and the number of people that went up and down\&. 
+.RE
+.PP
+
+.SH "Variable Documentation"
+.PP 
+.SS "\fBip_config\fP \fBconfig\fP"
+struct that keeps the information of configurations 
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for People counter from the source code\&.
