@@ -8,7 +8,7 @@
 #include "people_counter.h"
 #include "string.h"
 
-/** /TODO add comment */
+/** the value for a white pixel */
 #define WHITE 255
 /** the start number of the rid */
 #define RID 42
@@ -48,9 +48,10 @@ void bubbleSort(object_rect_pair *, uint8_t);
 /** list of objects (people) used for people tracking */
 static object_list objects = {0, 0, {}};
 
-/** //TODO add comment and comments in the code
- * @brief 
- * 
+/** 
+ * @brief the image processing pipeline, including people detection and people tracking.
+ * @details we first subtract the background from each frame to get the foreground image, then apply Laplacian of Gaussian to detect people. 
+ *          In the end, centroid tracking algorithm is used to track people.
  * @param frame 
  * @param background_image 
  * @param log_kernel 
@@ -391,9 +392,8 @@ void area_adjust(uint8_t *frame, rec *blob, recs *blobs, uint8_t amax)
 	blob->rid = REC_IGNORE;
 };
 
-/** //TODO add comment, both for doxygen and in code
- * @brief 
- * 
+/** 
+ * @brief determine whether the structuring element fit inside the shape
  * @param frame 
  * @param rid 
  * @param x 
