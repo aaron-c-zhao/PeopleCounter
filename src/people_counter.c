@@ -1,4 +1,4 @@
-/**
+/** //TODO add more information? author, version, details, api etc?
  ******************************************************************************
  * @file           : people_counter.c
  * @brief          : Implementation of the image processing pipeline
@@ -8,13 +8,15 @@
 #include "people_counter.h"
 #include "string.h"
 
+/** /TODO add comment */
 #define WHITE 255
-/* the start number of the rid */
+/** the start number of the rid */
 #define RID 42
 
-/* struct that keeps the information of configurations */
+/** struct that keeps the information of configurations */
 extern ip_config config;
 
+// exclude this what it isn't run from the harness
 #ifdef __TESTING_HARNESS
 // include for printf
 #include <stdio.h>
@@ -43,9 +45,17 @@ ip_result people_tracking(recs *);
 void deleteOldObjects(object_list *);
 void bubbleSort(object_rect_pair *, uint8_t);
 
-/* list of objects (people) used for people tracking */
+/** list of objects (people) used for people tracking */
 static object_list objects = {0, 0, {}};
 
+/** //TODO add comment and comments in the code
+ * @brief 
+ * 
+ * @param frame 
+ * @param background_image 
+ * @param log_kernel 
+ * @return ip_result 
+ */
 ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
 {
 #ifdef __TESTING_HARNESS
@@ -221,7 +231,7 @@ void LoG(uint8_t ksize, int8_t **kernel, ip_mat *src, ip_mat *dst)
 /**
  * @brief This function will find all the blobs in the thresholded image and mark the pixels
  *        that belong to different blobs with a unique rid
- * @pram src the source image
+ * @param src the source image
  * @param blobs the struct that holds the result blobs
  * @param start_i the start index of the blob_counter
  * @param rid the start point of the rid
@@ -273,7 +283,7 @@ void enqueue(queue *q, pixel p)
 /**
  * @brief data structure operation, dqueue
  * @param q the queue to be operate on
- * TODO: add a error handling to deal with empty queue
+ * //TODO: add a error handling to deal with empty queue
  */
 pixel dequeue(queue *q)
 {
@@ -381,6 +391,16 @@ void area_adjust(uint8_t *frame, rec *blob, recs *blobs, uint8_t amax)
 	blob->rid = REC_IGNORE;
 };
 
+/** //TODO add comment, both for doxygen and in code
+ * @brief 
+ * 
+ * @param frame 
+ * @param rid 
+ * @param x 
+ * @param y 
+ * @param kernel 
+ * @return uint8_t 
+ */
 static inline uint8_t fit(uint8_t *frame, uint8_t rid, uint8_t x, uint8_t y, uint8_t kernel[ERO_KSIZE][ERO_KSIZE])
 {
 	uint8_t radius = ERO_KSIZE / 2;
