@@ -36,8 +36,8 @@ This program was made to run and test the image processing pipeline of the peopl
 
 After cloning this repository onto your local machine, first you need to configure the harness code and header file of the pipeline which could be accomplished by modify these two files:
 * harness_config.json
-	* parameters: the parameters of the ip pipeline that will affect its affectiveness
-		* kernel_1: gaussian blur kernel 1. Range 1 ~ 255, only odd numbers. Default value 5.
+	* parameters: the parameters of the ip pipeline that will affect its effectiveness(you can play around with these four parameters(with slide bars or change the values in harness_config.json) to achieve the best performance with your current setup, ML could be used here)
+		* kernel_1: gaussian blur kernel 1. Range 1 ~ 255, only odd numbers. Default value 5.(NOTE: this parameter could **only** be changed at the first black frame when using slide bars. Anywhere after that frame will crash the program)
 		* threshold: the threshold applied when binarize the image. Range 1 ~ 20000. Default value 2500
 		* max_area: the maximum area of a blob that is allowed, used as a trigger of updating threshold to detect overly large blobs. Range 1 ~ 255. Default value 18
 		* sensitivity: it controls the sensitivity of the adaptive threshold, in other words, it's the coefficient applied to the average pixel value. Range 1 ~ 255. Default value 9
@@ -47,7 +47,7 @@ After cloning this repository onto your local machine, first you need to configu
 		* llimit: the lower limit applied when map the floating point temperature figure to 8bit grey value
 		* hlimit: the upper limit applied when map the floating point temperature figure to 8bit grey value
 		* frame_rate: the frame rate of the video, this combined with the FRAME_RATE seeting in header_config.txt will decide the step of the image pointer.
-* header_config.txt
+* header_config.txt(NOTE: all the configurations here should be relatively fixed. Unless when the hardware configurations changes.)
 	* SENSOR_IMAGE_WIDTH: the width of the image to be processed by the pipeline, default value 32
 	* SENSOR_IMAGE_HEIGHT: the height of the image to be processed by the pipeline, default valut 24
 	* FRAME_RATE: the frame rate that the pipeline will work with. 

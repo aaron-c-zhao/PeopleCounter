@@ -56,8 +56,9 @@ static uint8_t *background;
 /** @brief configuration of the pipeline */
 ip_config config = {
 	.kernel_1 = 5,
-	.threshold = 32,
-	.max_area = 18
+	.threshold = 2500,
+	.max_area = 50,
+	.sens = 9
 };
 
 /** @brief number of rectangles detected in the frame */
@@ -80,11 +81,12 @@ static void get_background(uint8_t *, unsigned long);
 static void read_config(json_value *, int);
 static void frame_convert(uint8_t *);
 static void draw_rect(Mat *);
-static void create_trackbar(const char*, void*);
+static void create_trackbar_1(const char*, void*);
+static void create_trackbar_2(const char*, void*);
 void rec_areaCallback(int, void*);
 void kernel_1Callback(int, void*);
 void threshold_Callback(int, void*);
-void sensitivity_Callback(int, void*);
+void sens_Callback(int, void*);
 void get_LoG_kernel(double, int, int8_t**);
 /*---------------------------------------------------------------------------------------------*/
 
@@ -103,29 +105,29 @@ constexpr unsigned int str2int(const char *str, int h = 0)
  */
 void get_LoG_kernel(double sigma, int ksize, int8_t** result)
 {
-        if (!(ksize % 2)) {
-                fprintf(stderr, "Invalid kernel size %d\n, should be an odd number", ksize);
-                exit(1);
-        }   
-        double kernel[ksize][ksize];
-        int mean = ksize / 2;
-        for (int i = 0; i < ksize; ++i) {
-                for (int j = 0; j < ksize; ++j) {
-                        double temp  = ( -0.5 * (pow((i - mean)/sigma, 2.0) + pow((j - mean)/sigma, 2.0)));
-                        kernel[i][j] = (1 + temp) * exp(temp) / (-M_PI * pow(sigma, 4.0)); 
+	if (!(ksize % 2)) {
+		fprintf(stderr, "Invalid kernel size %d\n, should be an odd number", ksize);
+		exit(1);
+	}   
+	double kernel[ksize][ksize];
+	int mean = ksize / 2;
+	for (int i = 0; i < ksize; ++i) {
+		for (int j = 0; j < ksize; ++j) {
+			double temp  = ( -0.5 * (pow((i - mean)/sigma, 2.0) + pow((j - mean)/sigma, 2.0)));
+			kernel[i][j] = (1 + temp) * exp(temp) / (-M_PI * pow(sigma, 4.0)); 
 			/*double temp = ((i - mean) * (i - mean) + (j - mean) * (j - mean)) / (sigma * sigma);
-			kernel[i][j] = (temp - 2) * exp(-0.5 * temp);*/
-                }   
-        }   
+			  kernel[i][j] = (temp - 2) * exp(-0.5 * temp);*/
+		}   
+	}   
 
 
-        for (int i = 0; i < ksize; ++i) {
-                for (int j = 0; j < ksize; ++j) {
-                        result[i][j] = (int8_t)(kernel[i][j]* 500);
+	for (int i = 0; i < ksize; ++i) {
+		for (int j = 0; j < ksize; ++j) {
+			result[i][j] = (int8_t)(kernel[i][j]* 500);
 			// printf("%d " , result[i][j]);
-                }   
+		}   
 		// printf("\n");
-        }   
+	}   
 
 }
 
@@ -176,19 +178,22 @@ int main(int argc, char *argv[])
 	show_image(black_img, threshold_window, NULL);
 	resizeWindow(thermal_window, 320, 240);
 	resizeWindow(threshold_window, 320, 240);
-	create_trackbar(thermal_window, NULL);
+	create_trackbar_1(thermal_window, NULL);
+	create_trackbar_2(thermal_window, NULL);
+	/* wait here for the user to adjust the kernel size */
+	waitKey(0);
 
 	int8_t **log_kernel;
-	log_kernel = (int8_t**)malloc(LOG_KSIZE * sizeof(int8_t*));
-	for (int i = 0; i < LOG_KSIZE; ++i) {
-		log_kernel[i] = (int8_t *)malloc(LOG_KSIZE * sizeof(int8_t));
+	log_kernel = (int8_t**)malloc(config.kernel_1 * sizeof(int8_t*));
+	for (int i = 0; i < config.kernel_1; ++i) {
+		log_kernel[i] = (int8_t *)malloc(config.kernel_1 * sizeof(int8_t));
 	}
 	// printf("sigma is %f\n", LOG_SIGMA);
-	get_LoG_kernel(LOG_SIGMA, LOG_KSIZE, log_kernel);
+	get_LoG_kernel(LOG_SIGMA, config.kernel_1, log_kernel);
 
 	int8_t room_count = 0;
 	const object *objects = getObjectsAddress();
-    
+
 	while (img_ptr < frame_count) {
 		/* first convert the raw thermal data into processable and displayable format, namely frame and Mat */
 		frame_convert(cur_frame);
@@ -203,14 +208,14 @@ int main(int argc, char *argv[])
 		printf("Object list\n");
 		if(result.objects_length > 0)
 		{
-		printf(" %-4s| %-10s| %-18s\n", "ID", "Position", "Disappeared count");
+			printf(" %-4s| %-10s| %-18s\n", "ID", "Position", "Disappeared count");
 		}
 		for (uint8_t i = 0; i < result.objects_length; ++i)
 		{
 			printf(" %-4i| (%2i, %2i)  | %-18i\n", objects[i].id,
-				objects[i].centroid.x, objects[i].centroid.y, objects[i].disappeared_frames_count);
+					objects[i].centroid.x, objects[i].centroid.y, objects[i].disappeared_frames_count);
 		}
-		
+
 		room_count += result.up - result.down;
 		printf("Frame %lu: ", img_ptr);
 		if(result.up)
@@ -231,30 +236,12 @@ int main(int argc, char *argv[])
 		}
 		printf("%i ", room_count);
 		printf("\033[0mpeople in the room.\n\n");
-		
+
 		/* the show_image should be called after the IpProcess to correctly display the rectangles 
 		 * found by pipeline */
 		show_image(buf_frame, thermal_window, draw_rect);
 		show_image(th_frame, threshold_window, NULL);
-			
-		//TODO print info about the returned ip_result
-		// if (status == IP_EMPTY) {
-		// 	printf("\033[1;31m");	
-		// 	printf("Frame[%ld] is empty", img_ptr);
-		// }
-		// else if (status == IP_STILL)
-		// {
-		// 	printf("\033[1;33m");
-		// 	printf("Frame[%ld] is still", img_ptr);
-		// }
-		// else
-		// {
-		// 	printf("\033[1;32m");
-		// 	printf("Frame[%ld], Dir: %s, Count: %d", img_ptr, (count.direc == DIRECTION_UP) ? "UP" : "DOWN", count.num);
-		// }
-		// printf(", [%d] rects detected\n", rec_num);
-		// printf("\033[0m");
-		
+
 		/* wait for keyboard input to continue to next frame */
 		waitKey(0);
 		img_ptr += step;
@@ -269,8 +256,8 @@ int main(int argc, char *argv[])
 		free(frames_ptr[i]);
 	}
 	free(frames_ptr);
-    
-	for (int i = 0; i < LOG_KSIZE; i++) {
+
+	for (int i = 0; i < config.kernel_1; i++) {
 		free(log_kernel[i]);
 	}
 	free(log_kernel);
@@ -282,7 +269,7 @@ int main(int argc, char *argv[])
  * @param window on which window the call backs are going to be created
  * @param data user data with which global variable could be avoid.
  */
-static void create_trackbar(const char *window, void* data) {
+static void create_trackbar_1(const char *window, void* data) {
 	/* create slide bar to adjust the rectangles' max area */
 	const char* rec_max = "Rec max area";
 	int irec_max = config.max_area;
@@ -291,15 +278,21 @@ static void create_trackbar(const char *window, void* data) {
 	const char *kernel_1 = "kernel_1";
 	int ikernel_1 = config.kernel_1;
 	createTrackbar(kernel_1, window, &ikernel_1, 24, kernel_1Callback, data);
-	/* slide bar to adjust the threshold*/
+
+}
+
+static void create_trackbar_2(const char *window, void* data) {
 	const char *threshold = "threshold";
 	int ithreshold= config.threshold;
 	createTrackbar(threshold, window, &ithreshold, 20000, threshold_Callback, data);
-	/* slide bar to adjust the sensitivity*/
-	const char *sensitivity = "sensitivity";
-	int isensitivity= config.sensitivity;
-	createTrackbar(sensitivity, window, &isensitivity, 20, sensitivity_Callback, data);
+	/* slide bar to adjust the sens */
+	const char *sens = "sens";
+	int isens= config.sens;
+	createTrackbar(sens, window, &isens, 20, sens_Callback, data);
+
 }
+
+
 
 void rec_areaCallback(int value, void* data) {
 	config.max_area = (uint8_t)value;
@@ -310,12 +303,12 @@ void kernel_1Callback(int value, void* data) {
 }
 
 void threshold_Callback(int value, void* data) {
-	config.threshold = (int16_t)value;
+	config.threshold = (uint16_t)value;
 }
 
 
-void sensitivity_Callback(int value, void *data) {
-	config.sensitivity = (uint8_t)value;
+void sens_Callback(int value, void *data) {
+	config.sens = (uint8_t)value;
 }
 
 /**
@@ -525,35 +518,38 @@ static void read_config(json_value *value, int depth)
 		int temp_value = temp->u.integer;
 		switch (str2int(value->u.object.values[i].name))
 		{
-		case str2int("kernel_1"):
-			config.kernel_1 = temp_value;
-			break;
-			case str2int("threshold"): config.threshold = temp_value;
-			break;
-			case str2int("max_area"): config.max_area = temp_value;	  
-			break;
-			case str2int("sensitivity"): config.sensitivity = temp_value;
-			break;
-		case str2int("width"):
-			width = temp_value;
-			break;
-		case str2int("height"):
-			height = temp_value;
-			break;
-		case str2int("llimit"):
-			llimit = temp_value;
-			break;
-		case str2int("hlimit"):
-			hlimit = temp_value;
-			break;
-		case str2int("frame_rate"):
-			frame_rate = temp_value;
-			break;
-		default:
-		{
-			fprintf(stderr, "Unknown configuration: %s\n", value->u.object.values[i].name);
-			exit(1);
-		}
+			case str2int("kernel_1"): 
+				config.kernel_1 = temp_value;
+				break;
+			case str2int("threshold"): 
+				config.threshold = temp_value;
+				break;
+			case str2int("max_area"): 
+				config.max_area = temp_value;	  
+				break;
+			case str2int("sens"): 
+				config.sens = temp_value;
+				break;
+			case str2int("width"):
+				width = temp_value;
+				break;
+			case str2int("height"):
+				height = temp_value;
+				break;
+			case str2int("llimit"):
+				llimit = temp_value;
+				break;
+			case str2int("hlimit"):
+				hlimit = temp_value;
+				break;
+			case str2int("frame_rate"):
+				frame_rate = temp_value;
+				break;
+			default:
+				{
+					fprintf(stderr, "Unknown configuration: %s\n", value->u.object.values[i].name);
+					exit(1);
+				}
 		}
 	}
 }

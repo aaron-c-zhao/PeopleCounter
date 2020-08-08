@@ -50,10 +50,6 @@ extern "C"
 #define SENSOR_IMAGE_HEIGHT @SENSOR_IMAGE_HEIGHT@
 
 /** 
- * @brief Kernel size of the LoG 
- */
-#define LOG_KSIZE @LOG_KSIZE@
-/** 
  * @brief Sigma from the gaussian kernel 
  */
 #define LOG_SIGMA @LOG_SIGMA@
@@ -65,10 +61,6 @@ extern "C"
  * @brief Sensor frame rate 
  */
 #define FRAME_RATE @FRAME_RATE@
-/** 
- * @brief Max area that a single blob can be 
- */
-#define REC_MAX_AREA @REC_MAX_AREA@
 /** 
  * @brief Min area that a single blob can be 
  */
@@ -122,7 +114,7 @@ extern "C"
 	 *          of which this parameter is used for. The good choice for this threshold would be the one just above the
 	 *          background noises.
 	 */
-        int16_t threshold;
+        uint16_t threshold;
         /** 
 	 * @brief the max area that a single blob can be.
 	 * @details the max area is for detecting huge blobs which might be composed by two individual blobs merged together.
@@ -135,7 +127,8 @@ extern "C"
 	 *          of the pixels of the blobs. This parameters controls how sensitive the second threshold will be, the higher the
 	 *          value the more sensitive it is. 
 	 */ 	
-	uint8_t sensitivity;
+	uint8_t sens;
+
     } ip_config;
 
     /**
