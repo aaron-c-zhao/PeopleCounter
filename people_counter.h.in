@@ -62,10 +62,6 @@ extern "C"
  */
 #define FRAME_RATE @FRAME_RATE@
 /** 
- * @brief Max area that a single blob can be 
- */
-#define REC_MAX_AREA @REC_MAX_AREA@
-/** 
  * @brief Min area that a single blob can be 
  */
 #define REC_MIN_AREA @REC_MIN_AREA@
