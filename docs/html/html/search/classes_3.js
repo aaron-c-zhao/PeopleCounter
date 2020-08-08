@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['mat_62',['mat',['../structmat.html',1,'']]]
+  ['mat',['mat',['../structmat.html',1,'']]]
 ];

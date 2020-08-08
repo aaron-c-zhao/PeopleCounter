@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['object_37',['object',['../structobject.html',1,'object'],['../structobject__list.html#abcc549bdb02204da143d2efdd675861d',1,'object_list::object()']]],
-  ['object_5findex_38',['object_index',['../structobject__rect__pair.html#a6e1fad724b69c75cb7702a545c1b8715',1,'object_rect_pair']]],
-  ['object_5flist_39',['object_list',['../structobject__list.html',1,'']]],
-  ['object_5frect_5fpair_40',['object_rect_pair',['../structobject__rect__pair.html',1,'']]]
+  ['next_5fid',['next_id',['../structobject__list.html#a18c9ca5e7b3391aaeca34c1471311eb6',1,'object_list']]],
+  ['nodes',['nodes',['../structrecs.html#a5843c55a8291dd88487cac1c83429077',1,'recs']]],
+  ['nthreshold',['nthreshold',['../people__counter_8c.html#a7853615fbccefd8aeeab2fc214226318',1,'people_counter.c']]]
 ];

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['x_55',['x',['../structpixel.html#ae5db5c1abe80af4f592b6aea94ff29d3',1,'pixel']]]
+  ['white',['WHITE',['../people__counter_8c.html#a87b537f5fa5c109d3c05c13d6b18f382',1,'people_counter.c']]]
 ];

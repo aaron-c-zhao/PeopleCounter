@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['kernel_5f1_25',['kernel_1',['../structconfig.html#a82c79528c83c09c93c04a3c54982fc24',1,'config']]]
+  ['json_5fsettings',['json_settings',['../structjson__settings.html',1,'']]],
+  ['json_5fstate',['json_state',['../structjson__state.html',1,'']]]
 ];

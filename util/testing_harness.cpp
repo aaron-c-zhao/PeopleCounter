@@ -1,3 +1,9 @@
+/**
+ * @file testing_harness.cpp
+ * @brief code to run the module without having hardware
+ * @details THis will run the supplied Json videos and run is through the module, 
+ * for earch frame it will display the image before and after thresholding also with the recs
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -7,41 +13,47 @@
 #include "json.h"
 #include "testing_harness.h"
 
+//TODO add comment
+/** @brief */
 #define RESOLUTION (width * height)
 
+//TODO add comment
+/** @brief */
 using namespace cv;
 
 /*---------------------------------------global variables--------------------------------------*/
 
-/* the width of the image and the height of the image, width * height = resolution */
+/** @brief the width of the image, width * height = resolution */
 static int width = 8;
+/** @brief the height of the image, width * height = resolution */
 static int height = 8;
-/* the lower limit of the temperature mapping and the upper limit */
+/** @brief the lower limit of the temperature mapping */
 static int llimit = 20;
+/** @brief the upper limit of the temperature mapping */
 static int hlimit = 40;
 
-/* frame rate */
+/** @brief frame rate */
 static int frame_rate = 10;
 
-/* the step of fowarding the image pointer */
+/** @brief the step of fowarding the image pointer */
 static int step = 0;
 
-/* pointer to the frame array */
+/** @brief pointer to the frame array */
 static double **frames_ptr;
 
-/* path to the configuration file */
+/** @brief path to the configuration file */
 static const char *config_path = "harness_config.json";
 
-/* image pointer which indicates which image should be processed next */
+/** @brief image pointer which indicates which image should be processed next */
 static unsigned long img_ptr = 0;
 
-/* how many frames are there in this video */
+/** @brief how many frames are there in this video */
 static unsigned long frame_count = 0;
 
-/* background image that will be passed into pipeline */
+/** @brief background image that will be passed into pipeline */
 static uint8_t *background;
 
-/* configuration of the pipeline */
+/** @brief configuration of the pipeline */
 ip_config config = {
 	.kernel_1 = 5,
 	.threshold = 2500,
@@ -49,13 +61,13 @@ ip_config config = {
 	.sens = 9
 };
 
-/* number of rectangles detected in the frame */
+/** @brief number of rectangles detected in the frame */
 uint8_t rec_num = 0;
 
-/* rectangles find by the pipeline */
+/** @brief rectangles find by the pipeline */
 rec hrects[RECTS_MAX_SIZE] = {{0, 0, 0, 0}};
 
-/* Intermedia result 1: image after thresholding */
+/** @brief Intermedia result 1: image after thresholding */
 uint8_t *th_frame;
 /*---------------------------------------------------------------------------------------------*/
 
@@ -78,12 +90,19 @@ void sens_Callback(int, void*);
 void get_LoG_kernel(double, int, int8_t**);
 /*---------------------------------------------------------------------------------------------*/
 
-/* hash function that will map string to an int */
+/** @brief hash function that will map string to an int */
 constexpr unsigned int str2int(const char *str, int h = 0)
 {
 	return !str[h] ? 5381 : (str2int(str, h + 1) * 33) ^ str[h];
 }
 
+/** //TODO add comments
+ * @brief Get the LoG kernel object
+ * 
+ * @param sigma 
+ * @param ksize 
+ * @param result 
+ */
 void get_LoG_kernel(double sigma, int ksize, int8_t** result)
 {
         if (!(ksize % 2)) {

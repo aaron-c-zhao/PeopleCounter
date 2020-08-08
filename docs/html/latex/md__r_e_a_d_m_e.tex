@@ -1,0 +1,85 @@
+This program was made to run and test the image processing pipeline of the people counter project.
+
+\doxysection*{H\+OW TO I\+N\+S\+T\+A\+LL A\+ND R\+UN T\+HE H\+A\+R\+N\+E\+SS}
+
+\doxysubsection*{S\+U\+P\+P\+O\+R\+T\+ED E\+N\+V\+I\+R\+O\+N\+M\+E\+NT}
+
+
+\begin{DoxyItemize}
+\item Mac Darwin
+\item Linux
+\end{DoxyItemize}
+
+\doxysubsection*{D\+E\+P\+E\+N\+D\+E\+N\+C\+I\+ES}
+
+
+\begin{DoxyEnumerate}
+\item C\+Make\+: $>$ 3.\+15
+\item Open\+CV
+\end{DoxyEnumerate}
+\begin{DoxyItemize}
+\item G\+CC 4.\+4.\+x or later
+\item Git
+\item G\+T\+K+2.x or higher
+\item pkg-\/config
+\item Python2.\+6 or later
+\item ffmpeg or libav development packages\+: libavcodec-\/dev, libavformat-\/dev, libswscale-\/dev
+\end{DoxyItemize}
+
+\doxysubsection*{I\+N\+S\+T\+R\+U\+C\+T\+I\+O\+NS}
+
+\doxysubsubsection*{C\+O\+N\+F\+I\+G\+U\+R\+A\+T\+I\+ON}
+
+After clone this repository onto your local machine, first you need to configure the harness code and header file of the pipeline which could be accomplished by modify these two files\+:
+\begin{DoxyItemize}
+\item harness\+\_\+config.\+json
+\begin{DoxyItemize}
+\item parameters\+: the parameters of the ip pipeline that will affect its affectiveness
+\begin{DoxyItemize}
+\item kernel\+\_\+1\+: gaussian blur kernel 1, default value 5
+\item kernel\+\_\+2\+: gaussian blur kernel 2, default value 1
+\item kernel\+\_\+3\+: gaussian blur kernel 3, default value 1
+\item threshold\+: the threshold applied when binarize the image, defaule value 32
+\item blob\+\_\+width\+\_\+min\+: the minimum blob width used to filter out the noise, default value 0(ineffective)
+\item blob\+\_\+height\+\_\+min\+: the minimum blob height used to filter out the noise, default value 0(ineffective)
+\item updated\+\_\+threshold\+: the threshold applied when threshold updating is triggered, default value 84
+\item max\+\_\+area\+: the maximum area of a blob that is allowed, used as a trigger of updating threshold to detect overly large blobs, default value 18
+\end{DoxyItemize}
+\item harness\+\_\+setup\+: configurations of the harness code, this won\textquotesingle{}t affect the pipeline
+\begin{DoxyItemize}
+\item width\+: image width which will affect the image shown in the window
+\item height\+: image height which will affect the image shown in the window
+\item llimit\+: the lower limit applied when map the floating point temperature figure to 8bit grey value
+\item hlimit\+: the upper limit applied when map the floating point temperature figure to 8bit grey value
+\item frame\+\_\+rate\+: the frame rate of the video, this combined with the F\+R\+A\+M\+E\+\_\+\+R\+A\+TE seeting in header\+\_\+config.\+txt will decide the step of the image pointer.
+\end{DoxyItemize}
+\end{DoxyItemize}
+\item header\+\_\+config.\+txt
+\begin{DoxyItemize}
+\item S\+E\+N\+S\+O\+R\+\_\+\+I\+M\+A\+G\+E\+\_\+\+W\+I\+D\+TH\+: the width of the image to be processed by the pipeline, default value 32
+\item S\+E\+N\+S\+O\+R\+\_\+\+I\+M\+A\+G\+E\+\_\+\+H\+E\+I\+G\+HT\+: the height of the image to be processed by the pipeline, default valut 24
+\item C\+T\+\_\+\+M\+A\+X\+\_\+\+D\+I\+S\+A\+P\+P\+E\+A\+R\+ED\+: the maximum frames in which a blob is allowed to disappear, after that the B\+I\+D(blob id) will be reallocated
+\item C\+T\+\_\+\+M\+A\+X\+\_\+\+D\+I\+S\+T\+A\+N\+CE\+: the maximum distance that a blob is allowed to jump between frames
+\item R\+E\+C\+T\+S\+\_\+\+M\+A\+X\+\_\+\+S\+I\+ZE\+: the maximum size that a blob is allowd to be regared as a single blob, values above that indicates that the blob consists of two or more small blobs that merging together
+\item T\+R\+A\+C\+K\+A\+B\+L\+E\+\_\+\+O\+B\+J\+E\+C\+T\+\_\+\+M\+A\+X\+\_\+\+S\+I\+ZE\+: the maximum number of blobs that the pipeline could trace
+\item F\+R\+A\+M\+E\+\_\+\+R\+A\+TE\+: the frame rate that the pipeline will work with.
+\end{DoxyItemize}
+\end{DoxyItemize}
+
+\doxysubsubsection*{R\+UN T\+HE P\+I\+P\+E\+L\+I\+NE L\+I\+NE}
+
+If you agree with the current configuration, then you can run the pipeline by following the instructions below\+:
+\begin{DoxyEnumerate}
+\item change directory(cd) into the source folder of the project(People\+Counter/)
+\item run the script make.\+sh(./make.sh)
+\item cd into the build/ folder.
+\item run the executable(\+People\+Counter) with the argument of the path of the json file(./\+People\+Counter ../data/mlx90640/vertical/.....)
+\end{DoxyEnumerate}
+
+\doxysubsubsection*{I\+N\+T\+E\+R\+A\+C\+T\+I\+ON W\+I\+TH T\+HE H\+A\+R\+N\+E\+SS}
+
+The harness will run the pipeline while displaying the images frame by frame. (T\+O\+DO\+: add auto play) Press any key to go to the next frame. Press Ctrl+C to exit.
+
+\doxysubsubsection*{O\+U\+T\+P\+UT OF T\+HE H\+A\+R\+N\+E\+SS}
+
+The harness will output the frame number of the current frame and the result produced by the pipeline. (T\+O\+DO\+: add intermedia result inspection) 

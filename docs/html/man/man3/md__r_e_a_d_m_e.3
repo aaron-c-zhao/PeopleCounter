@@ -1,0 +1,122 @@
+.TH "md__r_e_a_d_m_e" 3 "Fri Aug 7 2020" "Version 0.2" "People counter" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+md__r_e_a_d_m_e \- PEOPLE COUNTER IP PIPELINE TESTING HARNESS 
+This program was made to run and test the image processing pipeline of the people counter project\&.
+.PP
+.SH "HOW TO INSTALL AND RUN THE HARNESS"
+.PP
+.PP
+.SS "SUPPORTED ENVIRONMENT"
+.PP
+.IP "\(bu" 2
+Mac Darwin
+.IP "\(bu" 2
+Linux
+.PP
+.PP
+.SS "DEPENDENCIES"
+.PP
+.IP "1." 4
+CMake: > 3\&.15
+.IP "2." 4
+OpenCV
+.PP
+.IP "\(bu" 2
+GCC 4\&.4\&.x or later
+.IP "\(bu" 2
+Git
+.IP "\(bu" 2
+GTK+2\&.x or higher
+.IP "\(bu" 2
+pkg-config
+.IP "\(bu" 2
+Python2\&.6 or later
+.IP "\(bu" 2
+ffmpeg or libav development packages: libavcodec-dev, libavformat-dev, libswscale-dev
+.PP
+.PP
+.SS "INSTRUCTIONS"
+.PP
+.SS "CONFIGURATION"
+.PP
+After clone this repository onto your local machine, first you need to configure the harness code and header file of the pipeline which could be accomplished by modify these two files:
+.IP "\(bu" 2
+harness_config\&.json
+.IP "  \(bu" 4
+parameters: the parameters of the ip pipeline that will affect its affectiveness
+.IP "    \(bu" 6
+kernel_1: gaussian blur kernel 1, default value 5
+.IP "    \(bu" 6
+kernel_2: gaussian blur kernel 2, default value 1
+.IP "    \(bu" 6
+kernel_3: gaussian blur kernel 3, default value 1
+.IP "    \(bu" 6
+threshold: the threshold applied when binarize the image, defaule value 32
+.IP "    \(bu" 6
+blob_width_min: the minimum blob width used to filter out the noise, default value 0(ineffective)
+.IP "    \(bu" 6
+blob_height_min: the minimum blob height used to filter out the noise, default value 0(ineffective)
+.IP "    \(bu" 6
+updated_threshold: the threshold applied when threshold updating is triggered, default value 84
+.IP "    \(bu" 6
+max_area: the maximum area of a blob that is allowed, used as a trigger of updating threshold to detect overly large blobs, default value 18
+.PP
+
+.IP "  \(bu" 4
+harness_setup: configurations of the harness code, this won't affect the pipeline
+.IP "    \(bu" 6
+width: image width which will affect the image shown in the window
+.IP "    \(bu" 6
+height: image height which will affect the image shown in the window
+.IP "    \(bu" 6
+llimit: the lower limit applied when map the floating point temperature figure to 8bit grey value
+.IP "    \(bu" 6
+hlimit: the upper limit applied when map the floating point temperature figure to 8bit grey value
+.IP "    \(bu" 6
+frame_rate: the frame rate of the video, this combined with the FRAME_RATE seeting in header_config\&.txt will decide the step of the image pointer\&.
+.PP
+
+.PP
+
+.IP "\(bu" 2
+header_config\&.txt
+.IP "  \(bu" 4
+SENSOR_IMAGE_WIDTH: the width of the image to be processed by the pipeline, default value 32
+.IP "  \(bu" 4
+SENSOR_IMAGE_HEIGHT: the height of the image to be processed by the pipeline, default valut 24
+.IP "  \(bu" 4
+CT_MAX_DISAPPEARED: the maximum frames in which a blob is allowed to disappear, after that the BID(blob id) will be reallocated
+.IP "  \(bu" 4
+CT_MAX_DISTANCE: the maximum distance that a blob is allowed to jump between frames
+.IP "  \(bu" 4
+RECTS_MAX_SIZE: the maximum size that a blob is allowd to be regared as a single blob, values above that indicates that the blob consists of two or more small blobs that merging together
+.IP "  \(bu" 4
+TRACKABLE_OBJECT_MAX_SIZE: the maximum number of blobs that the pipeline could trace
+.IP "  \(bu" 4
+FRAME_RATE: the frame rate that the pipeline will work with\&.
+.PP
+
+.PP
+.PP
+.SS "RUN THE PIPELINE LINE"
+.PP
+If you agree with the current configuration, then you can run the pipeline by following the instructions below:
+.IP "1." 4
+change directory(cd) into the source folder of the project(PeopleCounter/)
+.IP "2." 4
+run the script make\&.sh(\&./make\&.sh)
+.IP "3." 4
+cd into the build/ folder\&.
+.IP "4." 4
+run the executable(PeopleCounter) with the argument of the path of the json file(\&./PeopleCounter \&.\&./data/mlx90640/vertical/\&.\&.\&.\&.\&.)
+.PP
+.PP
+.SS "INTERACTION WITH THE HARNESS"
+.PP
+The harness will run the pipeline while displaying the images frame by frame\&. (TODO: add auto play) Press any key to go to the next frame\&. Press Ctrl+C to exit\&.
+.PP
+.SS "OUTPUT OF THE HARNESS"
+.PP
+The harness will output the frame number of the current frame and the result produced by the pipeline\&. (TODO: add intermedia result inspection) 

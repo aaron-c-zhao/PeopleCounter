@@ -123,7 +123,7 @@ extern "C"
         uint8_t max_area;
 	/**
 	 * @brief the sensitivity of the adaptive thresholding
-	 * @details the threshold in the second step of adative thresholding is calculated based on the distribution of the value
+	 * @details the threshold in the second step of adaptive thresholding is calculated based on the distribution of the value
 	 *          of the pixels of the blobs. This parameters controls how sensitive the second threshold will be, the higher the
 	 *          value the more sensitive it is. 
 	 */ 	
