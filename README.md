@@ -2,6 +2,8 @@
 
 # People counter
 
+**C IS THE MOST BEAUTIFUL LANGUAGE, ANY OTHER LANGUAGES SUCK!**
+
 This repo consist of 2 main parts, the people counting module and the test harness to run it. The people counter module in people_counter.c is supposed to be hardware independent and ready to be implemented on an embedded system. Because the team didn't have access to the hardware and firmware to test the module, a testing harness was created. This harness will run through recorded sensor data in the test footages saved in ./data folder and will call the module on each frame, according to the api. This way we could test and improve the pipeline.
 
 ## Documentation
