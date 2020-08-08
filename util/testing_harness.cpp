@@ -105,29 +105,29 @@ constexpr unsigned int str2int(const char *str, int h = 0)
  */
 void get_LoG_kernel(double sigma, int ksize, int8_t** result)
 {
-        if (!(ksize % 2)) {
-                fprintf(stderr, "Invalid kernel size %d\n, should be an odd number", ksize);
-                exit(1);
-        }   
-        double kernel[ksize][ksize];
-        int mean = ksize / 2;
-        for (int i = 0; i < ksize; ++i) {
-                for (int j = 0; j < ksize; ++j) {
-                        double temp  = ( -0.5 * (pow((i - mean)/sigma, 2.0) + pow((j - mean)/sigma, 2.0)));
-                        kernel[i][j] = (1 + temp) * exp(temp) / (-M_PI * pow(sigma, 4.0)); 
+	if (!(ksize % 2)) {
+		fprintf(stderr, "Invalid kernel size %d\n, should be an odd number", ksize);
+		exit(1);
+	}   
+	double kernel[ksize][ksize];
+	int mean = ksize / 2;
+	for (int i = 0; i < ksize; ++i) {
+		for (int j = 0; j < ksize; ++j) {
+			double temp  = ( -0.5 * (pow((i - mean)/sigma, 2.0) + pow((j - mean)/sigma, 2.0)));
+			kernel[i][j] = (1 + temp) * exp(temp) / (-M_PI * pow(sigma, 4.0)); 
 			/*double temp = ((i - mean) * (i - mean) + (j - mean) * (j - mean)) / (sigma * sigma);
-			kernel[i][j] = (temp - 2) * exp(-0.5 * temp);*/
-                }   
-        }   
+			  kernel[i][j] = (temp - 2) * exp(-0.5 * temp);*/
+		}   
+	}   
 
 
-        for (int i = 0; i < ksize; ++i) {
-                for (int j = 0; j < ksize; ++j) {
-                        result[i][j] = (int8_t)(kernel[i][j]* 500);
+	for (int i = 0; i < ksize; ++i) {
+		for (int j = 0; j < ksize; ++j) {
+			result[i][j] = (int8_t)(kernel[i][j]* 500);
 			// printf("%d " , result[i][j]);
-                }   
+		}   
 		// printf("\n");
-        }   
+	}   
 
 }
 
@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
 
 	int8_t room_count = 0;
 	const object *objects = getObjectsAddress();
-    
+
 	while (img_ptr < frame_count) {
 		/* first convert the raw thermal data into processable and displayable format, namely frame and Mat */
 		frame_convert(cur_frame);
@@ -208,14 +208,14 @@ int main(int argc, char *argv[])
 		printf("Object list\n");
 		if(result.objects_length > 0)
 		{
-		printf(" %-4s| %-10s| %-18s\n", "ID", "Position", "Disappeared count");
+			printf(" %-4s| %-10s| %-18s\n", "ID", "Position", "Disappeared count");
 		}
 		for (uint8_t i = 0; i < result.objects_length; ++i)
 		{
 			printf(" %-4i| (%2i, %2i)  | %-18i\n", objects[i].id,
-				objects[i].centroid.x, objects[i].centroid.y, objects[i].disappeared_frames_count);
+					objects[i].centroid.x, objects[i].centroid.y, objects[i].disappeared_frames_count);
 		}
-		
+
 		room_count += result.up - result.down;
 		printf("Frame %lu: ", img_ptr);
 		if(result.up)
@@ -236,12 +236,12 @@ int main(int argc, char *argv[])
 		}
 		printf("%i ", room_count);
 		printf("\033[0mpeople in the room.\n\n");
-		
+
 		/* the show_image should be called after the IpProcess to correctly display the rectangles 
 		 * found by pipeline */
 		show_image(buf_frame, thermal_window, draw_rect);
 		show_image(th_frame, threshold_window, NULL);
-			
+
 		/* wait for keyboard input to continue to next frame */
 		waitKey(0);
 		img_ptr += step;
@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
 		free(frames_ptr[i]);
 	}
 	free(frames_ptr);
-    
+
 	for (int i = 0; i < config.kernel_1; i++) {
 		free(log_kernel[i]);
 	}
@@ -278,7 +278,7 @@ static void create_trackbar_1(const char *window, void* data) {
 	const char *kernel_1 = "kernel_1";
 	int ikernel_1 = config.kernel_1;
 	createTrackbar(kernel_1, window, &ikernel_1, 24, kernel_1Callback, data);
-	
+
 }
 
 static void create_trackbar_2(const char *window, void* data) {
@@ -289,7 +289,7 @@ static void create_trackbar_2(const char *window, void* data) {
 	const char *sens = "sens";
 	int isens= config.sens;
 	createTrackbar(sens, window, &isens, 20, sens_Callback, data);
-	
+
 }
 
 
