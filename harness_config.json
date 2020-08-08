@@ -2,8 +2,8 @@
 	"parameters": {
 		"kernel_1": 5,
 		"threshold": 2500,
-		"max_area": 38,
-		"sensitivity": 9
+		"max_area": 50,
+		"sens": 9
 	},
 	"harness_setup": {
 		"width": 24,

@@ -1,5 +1,4 @@
 # PIPELINE PARAMETERS
-set(LOG_KSIZE 5 CACHE STRING "the kernel size of the Lapacian of Gaussian")
 set(LOG_SIGMA 1.5 CACHE STRING "the sigma(scale factor) of the laplacian of gaussian operator")
 set(REC_MAX_AREA 50 CACHE STRING "the maximum legit size of a single rectangle")
 set(REC_MIN_AREA 4 CACHE STRING "the minimum legit size of a single rectangle")

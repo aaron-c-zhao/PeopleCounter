@@ -82,7 +82,7 @@ target_compile_options( PeopleCounter PRIVATE
 	-Wall
 
 	$<$<CONFIG:Debug>:-O0>
-	$<$<CONFIG:Debug>:-g3>
+	$<$<CONFIG:Debug>:-g>
 	$<$<CONFIG:Debug>:-DDBUG>
 	)
 

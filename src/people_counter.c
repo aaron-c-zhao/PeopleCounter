@@ -1,4 +1,4 @@
-/** //TODO add more information? author, version, details, api etc?
+/**
  ******************************************************************************
  * @file           : people_counter.c
  * @brief          : Implementation of the image processing pipeline
@@ -31,6 +31,17 @@ extern rec hrects[RECTS_MAX_SIZE];
 extern uint8_t *th_frame;
 #endif
 
+
+
+/** list of objects (people) used for people tracking */
+static object_list objects = {0, 0, {}};
+
+
+
+
+
+
+
 void background_substraction(uint16_t, ip_mat *, ip_mat *, ip_mat *);
 void nthreshold(uint16_t, uint8_t, ip_mat *, ip_mat *);
 void LoG(uint8_t, int8_t **, ip_mat *, ip_mat *);
@@ -45,16 +56,23 @@ ip_result people_tracking(recs *);
 void deleteOldObjects(object_list *);
 void bubbleSort(object_rect_pair *, uint8_t);
 
-/** list of objects (people) used for people tracking */
-static object_list objects = {0, 0, {}};
+
+
+
+
+
+
+
+
+
 
 /** 
  * @brief the image processing pipeline, including people detection and people tracking.
  * @details we first subtract the background from each frame to get the foreground image, then apply Laplacian of Gaussian to detect people. 
  *          In the end, centroid tracking algorithm is used to track people.
- * @param frame 
- * @param background_image 
- * @param log_kernel 
+ * @param frame the frame to be processed
+ * @param background_image  the background image used in the background substraction
+ * @param log_kernel the kernel of the LoG operator. NOTO: this should be hardcoded in the header file in the final product.
  * @return ip_result 
  */
 ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
@@ -70,7 +88,7 @@ ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
     ip_mat *frame_bak = (ip_mat *)background_image;
     int8_t **kernel = (int8_t **)log_kernel;
     background_substraction(SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT, frame_bak, frame_mat, frame_mat);
-    LoG(LOG_KSIZE, kernel, frame_mat, &log_mat);
+    LoG(config.kernel_1, kernel, frame_mat, &log_mat);
     static recs blobs = {0, {}};
 
 #ifdef __TESTING_HARNESS
@@ -78,7 +96,7 @@ ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
 #endif
 
     find_blob(log_frame, &blobs, 0, RID, WHITE);
-    blob_filter(log_frame, &blobs, REC_MAX_AREA, REC_MIN_AREA);
+    blob_filter(log_frame, &blobs, config.max_area, REC_MIN_AREA);
 
 #ifdef __TESTING_HARNESS
     uint64_t end_tsc = readTSC();
@@ -95,7 +113,6 @@ ip_result IpProcess(void *frame, void *background_image, void *log_kernel)
     memcpy(hrects, blobs.nodes, RECTS_MAX_SIZE * sizeof(rec));
 #endif
 
-    //TODO get the correct values to return when the tracking gets implemented
     ip_result return_result = people_tracking(&blobs);
 
     return return_result;
@@ -154,7 +171,6 @@ static inline int16_t convolve(uint8_t ksize, int8_t **kernel, uint8_t *m, uint8
 	/* decide whether padding will be applied at location (x, y) */
 	uint8_t p_x = (x - padding < 0) ? padding - x : 0;
 	uint8_t p_y = (y - padding < 0) ? padding - y : 0;
-	uint8_t i_y, i_x;
 	/* the result of the convolution */
 	int16_t sum = 0;
 	/* the calculation should ignore the padding pixels and stop when exceed the boundary */
@@ -198,7 +214,7 @@ void LoG(uint8_t ksize, int8_t **kernel, ip_mat *src, ip_mat *dst)
 		{
 			/* convolve the kernel with each pixel of the image */
 			int16_t c = convolve(ksize, kernel, sframe, i, j, pad_length);
-			/* binarization */
+			/* the first step of adaptive thresholding */
 			if (c > -config.threshold) dframe[i * SENSOR_IMAGE_WIDTH + j] = 0;
 			else  {
 				gen_threshold += c;
@@ -213,13 +229,15 @@ void LoG(uint8_t ksize, int8_t **kernel, ip_mat *src, ip_mat *dst)
 		}
 		/*printf("\n");*/
 	}
+	/* the second step of adaptive thresholding */
 	if (count) {
 		gen_threshold = (int32_t)(gen_threshold / count);
 		// printf("threshold is : %d\n", gen_threshold);
+		gen_threshold = (config.sens * gen_threshold) / 10;
 
 		for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i) {
 			for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j) {
-				if (convolve_values[i * SENSOR_IMAGE_WIDTH + j] > (config.sensitivity * gen_threshold) / 10)
+				if (convolve_values[i * SENSOR_IMAGE_WIDTH + j] > gen_threshold)
 					dframe[i * SENSOR_IMAGE_WIDTH +j] = 0;
 				else dframe[i * SENSOR_IMAGE_WIDTH +j] = 255;
 			}
