@@ -197,7 +197,7 @@ static inline int16_t convolve(uint8_t ksize, int8_t **kernel, uint8_t *m, uint8
 }
 
 /**
- * @brief apply the laplacian of gaussian operator on the image for blob detection
+ * @brief apply the laplacian of gaussian operator on the image for blob detection. 
  * @param ksize the kernel size of the LOG operator
  * @param kernel the kernel of the convolution of the LOG operator
  * @param src the source image
@@ -209,17 +209,14 @@ void LoG(uint8_t ksize, int8_t **kernel, ip_mat *src, ip_mat *dst)
 	uint8_t pad_length = ksize / 2;
 	uint8_t *sframe = src->data;
 	uint8_t *dframe = dst->data;
-	/*printf("  ");
-	  for (uint8_t i = 0; i < SENSOR_IMAGE_WIDTH; ++i) printf("%5d", i);
-	  printf("\n");
-	  uint8_t print_count = 0;
-	 */
+	/* counts how many pixels have a value that is above the base threshold */
 	uint8_t count = 0;
+	/* the generated threshold applyed in the second step of adaptive thresholding */
 	int32_t gen_threshold = 0;
 	int16_t convolve_values[SENSOR_IMAGE_WIDTH * SENSOR_IMAGE_HEIGHT] = {0};
 	for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i)
 	{
-		/*printf("%2d " ,print_count++);*/
+
 		for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j)
 		{
 			/* convolve the kernel with each pixel of the image */
@@ -232,21 +229,18 @@ void LoG(uint8_t ksize, int8_t **kernel, ip_mat *src, ip_mat *dst)
 				count++;
 
 			}
-			/*if ( c < -config.threshold ) 
-			  printf("\033[1;31m%5d\033[0m", c);
-			  else 
-			  printf("%5d", c);*/
 		}
-		/*printf("\n");*/
 	}
 	/* the second step of adaptive thresholding */
 	if (count) {
 		gen_threshold = (int32_t)(gen_threshold / count);
-		// printf("threshold is : %d\n", gen_threshold);
+		/* apply the sensitivity */
 		gen_threshold = (config.sens * gen_threshold) / 10;
 
 		for (uint8_t i = 0; i < SENSOR_IMAGE_HEIGHT; ++i) {
 			for (uint8_t j = 0; j < SENSOR_IMAGE_WIDTH; ++j) {
+				/* after convolution the values of the pixels become negative, the higher the absolute value that a 
+				   pixel has the brighter it is. So here, the operator in the conditional statement is > */
 				if (convolve_values[i * SENSOR_IMAGE_WIDTH + j] > gen_threshold)
 					dframe[i * SENSOR_IMAGE_WIDTH +j] = 0;
 				else dframe[i * SENSOR_IMAGE_WIDTH +j] = 255;
@@ -510,6 +504,7 @@ void erosion(uint8_t *frame, rec *blob)
 }
 
 /**
+ * TODO: refactor this function.
  * @brief perform people tracking given the blobs of people in every frame
  * @param rects list of blobs' bounding boxes
  * @return the list of objects being tracked and the number of people that went up and down.
