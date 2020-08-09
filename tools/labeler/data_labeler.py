@@ -26,17 +26,20 @@ def ask_count(n):
     return n if s is None else s
 
 
-relative_path = 'data/mlx90640/vertical/'
-export_file = "../../data/labels/vertical/"
+input_folder = 'data/mlx90640/vertical/'
+export_folder = "../../data/labels/vertical/"
 
 # TODO change name of video file
 video_name = 'One_standing_at_the_door_one_passing_by_25c_10_24_06.json'
 
-rdc = RawDataConverter(relative_path + video_name, 20, 40)
+min_temp = 20
+max_temp = 40
+
+rdc = RawDataConverter(input_folder + video_name, min_temp, max_temp)
 frame_n = 0
 num_people = 0
 room_count = 0
-result = {"num_people": [], "room_count": []}  # if not os.path.isfile(export_file) else eval(open(export_file).read())
+result = {"num_people": [], "room_count": []} # if not os.path.isfile(export_file) else eval(open(export_file).read())
 
 ROOT = tk.Tk()
 ROOT.withdraw()
@@ -72,7 +75,7 @@ except FileNotFoundError:
 finally:
     # write result to file
     json = json.dumps(result)
-    f = open(export_file + video_name, "w+")
+    f = open(export_folder + video_name, "w+")
     f.write(json)
     f.close()
 
