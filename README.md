@@ -47,7 +47,7 @@ After cloning this repository onto your local machine, first you need to configu
 * header_config.txt(NOTE: all the configurations here should be relatively fixed. Unless when the hardware configurations changes.)
 	* SENSOR_IMAGE_WIDTH: the width of the image to be processed by the pipeline, default value 32
 	* SENSOR_IMAGE_HEIGHT: the height of the image to be processed by the pipeline, default valut 24
-	* FRAME_RATE: the frame rate that the pipeline will work with. 
+	* FRAME_RATE: the frame rate that the pipeline will work with. NOTE: this figure could be lower than the actual frame rate that the video is recorded with, which will result in skip one or several frames in between the two frames that are being processed by the pipeline. 
 	* RECTS_MAX_SIZE: the maximum array size of the rects array
 	* QUEUE_SIZE: the maximum array size of the queue for breach first search
 	* CT_MAX_DISAPPEARED: the maximum frames in which a blob is allowed to disappear, after that the BID(blob id) will be reallocated
